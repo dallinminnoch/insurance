@@ -1,4 +1,4 @@
-# Life Insurance Protection Planner Notes
+# Life Evaluation & Needs Analysis Notes
 
 ## Current state
 
@@ -18,7 +18,7 @@ The current file structure is:
 - `pages/recommendations.html`
 - `pages/planner.html`
 - `pages/summary.html`
-- `pages/lipp.html`
+- `pages/lens.html`
 
 ## What has been built
 
@@ -27,8 +27,8 @@ The current file structure is:
   - search bar
   - `Home` navigation item
   - `Financial Products` dropdown
-  - `LIPP` inside the dropdown
-- A dedicated `LIPP` landing page that contains the original planner start screen
+  - `LENS` inside the dropdown
+- A dedicated `LENS` landing page that contains the original planner start screen
 - A full multi-step workflow for:
   - Client Profile
   - Estimate Need
@@ -93,6 +93,6 @@ If resuming later, start by reviewing:
 - `styles.css`
 - `app.js`
 - `index.html`
-- `pages/lipp.html`
+- `pages/lens.html`
 
 These files contain most of the current UI and workflow behavior.

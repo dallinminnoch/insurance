@@ -15,7 +15,9 @@
   };
 
   const allSteps = [
-    { id: "profile", label: "Client Profile", path: "profile.html" },
+    { id: "profile-1", label: "Client Profile 1", path: "profile.html" },
+    { id: "profile-2", label: "Client Profile 2", path: "profile-2.html" },
+    { id: "profile-3", label: "Client Profile 3", path: "profile-3.html" },
     { id: "estimate", label: "Estimate Need", path: "analysis-estimate.html" },
     { id: "detail", label: "Detailed Analysis", path: "analysis-detail.html" },
     { id: "recommendations", label: "Coverage Options", path: "recommendations.html" },
@@ -448,13 +450,6 @@
   }
 
   function getActiveSteps(currentStep) {
-    const storedChoice = sessionStorage.getItem(STORAGE_KEYS.includeDetailed);
-    const shouldSkipDetailed = storedChoice === "false" && ["recommendations", "planner", "summary"].includes(currentStep);
-
-    if (shouldSkipDetailed) {
-      return allSteps.filter((step) => step.id !== "detail");
-    }
-
     return allSteps;
   }
 
@@ -470,9 +465,12 @@
     form.addEventListener("submit", (event) => {
       event.preventDefault();
       const formData = new FormData(form);
-      const profile = Object.fromEntries(formData.entries());
+      const existingProfile = loadJson(STORAGE_KEYS.profile) || {};
+      const profile = { ...existingProfile, ...Object.fromEntries(formData.entries()) };
       localStorage.setItem(STORAGE_KEYS.profile, JSON.stringify(profile));
-      window.location.href = "analysis-estimate.html";
+
+      const nextPage = form.dataset.nextPage || "analysis-estimate.html";
+      window.location.href = nextPage;
     });
   }
 

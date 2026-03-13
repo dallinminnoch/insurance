@@ -3,33 +3,37 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>LIPP | Life Insurance Protection Planner</title>
+  <title>LENS | Life Evaluation &amp; Needs Analysis</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@600&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../styles.css">
 </head>
-<body class="home-page lipp-page">
+<body class="home-page lens-page">
   <header class="site-header">
     <div class="site-header-inner">
       <a class="site-brand" href="../index.html">
-        <span class="site-brand-mark">LIPP</span>
-        <span class="site-brand-text">Advisor Planning Suite</span>
+        <span class="site-brand-mark">LENS</span>
       </a>
       <div class="site-header-actions">
-        <nav class="site-nav" aria-label="Main navigation">
-          <a class="site-nav-link" href="../index.html">Home</a>
-          <div data-admin-nav-slot></div>
-          <div class="site-dropdown">
-            <button class="site-nav-link site-dropdown-toggle is-active" type="button" aria-expanded="true">Financial Products</button>
-            <div class="site-dropdown-menu">
-              <a class="site-dropdown-link is-active" href="lipp.html">LIPP</a>
-            </div>
-          </div>
-        </nav>
         <form class="site-search" role="search">
           <input type="search" placeholder="Search">
         </form>
+        <nav class="site-nav" aria-label="Main navigation">
+          <div data-admin-nav-slot></div>
+          <div class="site-dropdown">
+            <button class="site-nav-link site-dropdown-toggle" type="button" aria-expanded="false">Records</button>
+            <div class="site-dropdown-menu">
+              <a class="site-dropdown-link" href="clients.html">Clients</a>
+            </div>
+          </div>
+          <div class="site-dropdown">
+            <button class="site-nav-link site-dropdown-toggle is-active" type="button" aria-expanded="true">Financial Products</button>
+            <div class="site-dropdown-menu">
+              <a class="site-dropdown-link is-active" href="lens.html">LENS</a>
+            </div>
+          </div>
+        </nav>
         <div class="account-slot" data-account-slot></div>
       </div>
     </div>
@@ -38,7 +42,7 @@
   <main class="home-shell">
     <section class="hero-card">
       <div class="eyebrow">Advisor Planning Workflow</div>
-      <h1>Life Insurance Protection Planner</h1>
+      <h1>Life Evaluation &amp; Needs Analysis</h1>
       <p class="hero-subtitle">A structured advisor tool for estimating life insurance needs and shaping durable protection strategies during client meetings.</p>
       <p class="hero-copy">Use a guided workflow to capture client data, evaluate death benefit needs, compare planning approaches, and frame thoughtful coverage recommendations without dropping into carrier-specific quoting.</p>
       <div class="hero-actions">

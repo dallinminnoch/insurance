@@ -3,16 +3,16 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Life Evaluation &amp; Needs Analysis</title>
+  <title>Clients | Advisor Planning Suite</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@600&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="../styles.css">
 </head>
-<body class="home-page app-home">
+<body class="home-page clients-page">
   <header class="site-header">
     <div class="site-header-inner">
-      <a class="site-brand" href="index.html">
+      <a class="site-brand" href="../index.html">
         <span class="site-brand-mark">LENS</span>
       </a>
       <div class="site-header-actions">
@@ -22,15 +22,15 @@
         <nav class="site-nav" aria-label="Main navigation">
           <div data-admin-nav-slot></div>
           <div class="site-dropdown">
-            <button class="site-nav-link site-dropdown-toggle" type="button" aria-expanded="false">Records</button>
+            <button class="site-nav-link site-dropdown-toggle is-active" type="button" aria-expanded="true">Records</button>
             <div class="site-dropdown-menu">
-              <a class="site-dropdown-link" href="pages/clients.html">Clients</a>
+              <a class="site-dropdown-link is-active" href="clients.html">Clients</a>
             </div>
           </div>
           <div class="site-dropdown">
             <button class="site-nav-link site-dropdown-toggle" type="button" aria-expanded="false">Financial Products</button>
             <div class="site-dropdown-menu">
-              <a class="site-dropdown-link" href="pages/lens.html">LENS</a>
+              <a class="site-dropdown-link" href="lens.html">LENS</a>
             </div>
           </div>
         </nav>
@@ -40,57 +40,54 @@
   </header>
 
   <main class="home-shell app-home-shell">
-    <section class="home-banner">
-      <p>Built by Agents, for Agents</p>
-    </section>
-
     <section class="portal-hero">
       <div class="portal-copy">
-        <div class="eyebrow">Home</div>
+        <h1>Client Directory</h1>
+        <p class="hero-subtitle">A dedicated space for client records and future case management tools.</p>
       </div>
       <div class="portal-actions">
-        <a class="btn btn-primary" href="pages/lens.html">Open LENS</a>
-        <p class="helper-text">Life Evaluation &amp; Needs Analysis is the active planning module currently available in this workspace.</p>
+        <a class="btn btn-primary" href="lens.html">Open LENS</a>
+        <p class="helper-text">This page is currently a placeholder for future client record workflows.</p>
       </div>
     </section>
 
     <section class="portal-layout">
       <article class="portal-main">
-        <div class="section-label">Active Module</div>
-        <h2>Life Evaluation &amp; Needs Analysis</h2>
-        <p class="panel-copy">Guide clients through profile intake, need estimation, analysis review, recommendation framing, policy strategy discussion, and a final planning summary.</p>
+        <div class="section-label">Client Records</div>
+        <h2>Client directory and saved case files</h2>
+        <p class="panel-copy">This section is ready for future client search, saved plans, case notes, and status tracking. For now it acts as the first records destination in the main navigation.</p>
         <div class="portal-metrics">
           <div class="portal-metric">
-            <span class="metric-label">Workflow</span>
-            <strong>Profile to Summary</strong>
+            <span class="metric-label">Status</span>
+            <strong>Placeholder</strong>
+          </div>
+          <div class="portal-metric">
+            <span class="metric-label">Next Build</span>
+            <strong>Client List</strong>
           </div>
           <div class="portal-metric">
             <span class="metric-label">Purpose</span>
-            <strong>Needs-Based Planning</strong>
-          </div>
-          <div class="portal-metric">
-            <span class="metric-label">Format</span>
-            <strong>Advisor-Facing</strong>
+            <strong>Recordkeeping</strong>
           </div>
         </div>
       </article>
 
       <aside class="portal-side">
         <div class="portal-side-section">
-          <div class="section-label">Workspace Notes</div>
-          <p class="panel-copy">Use this home screen as a stable launch point for planning tools rather than dropping directly into a single calculator-like experience.</p>
+          <div class="section-label">Planned Use</div>
+          <p class="panel-copy">Use this area later for recently viewed clients, search results, and cross-links into planning workflows.</p>
         </div>
         <div class="portal-side-section">
-          <div class="section-label">Search</div>
-          <p class="panel-copy">The search bar is prepared for future cases, saved plans, internal references, and additional modules.</p>
+          <div class="section-label">Current State</div>
+          <p class="panel-copy">Navigation is in place. Data-backed record management can be added when you are ready.</p>
         </div>
       </aside>
     </section>
   </main>
 
-  <script src="data.js"></script>
-  <script src="calculations.js"></script>
-  <script src="charts.js"></script>
-  <script src="app.js"></script>
+  <script src="../data.js"></script>
+  <script src="../calculations.js"></script>
+  <script src="../charts.js"></script>
+  <script src="../app.js"></script>
 </body>
 </html>
