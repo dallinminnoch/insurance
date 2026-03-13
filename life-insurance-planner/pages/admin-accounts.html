@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Accounts | Advisor Planning Suite</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@600&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../styles.css">
+</head>
+<body class="admin-page">
+  <main class="admin-shell" id="admin-accounts-page">
+    <header class="admin-header">
+      <div>
+        <div class="eyebrow">Restricted Access</div>
+        <h1>Account Administration</h1>
+        <p class="panel-copy">Manage registered website accounts from this hidden admin console.</p>
+      </div>
+      <div class="admin-header-actions">
+        <a class="btn btn-secondary" href="../index.html">Return Home</a>
+        <button class="btn btn-primary" type="button" id="admin-sign-out">Sign Out</button>
+      </div>
+    </header>
+
+    <section class="admin-summary-grid">
+      <article class="admin-summary-card">
+        <span class="section-label">Registered Accounts</span>
+        <strong id="admin-account-count">0</strong>
+      </article>
+      <article class="admin-summary-card">
+        <span class="section-label">Active Accounts</span>
+        <strong id="admin-active-count">0</strong>
+      </article>
+    </section>
+
+    <section class="admin-accounts-panel">
+      <div class="admin-panel-header">
+        <div class="section-label">User Directory</div>
+        <h2>Managed Accounts</h2>
+      </div>
+      <div id="admin-accounts-list" class="admin-accounts-list"></div>
+    </section>
+  </main>
+
+  <script src="../data.js"></script>
+  <script src="../calculations.js"></script>
+  <script src="../charts.js"></script>
+  <script src="../app.js"></script>
+</body>
+</html>

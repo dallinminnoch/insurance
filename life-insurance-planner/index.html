@@ -17,11 +17,9 @@
         <span class="site-brand-text">Advisor Planning Suite</span>
       </a>
       <div class="site-header-actions">
-        <form class="site-search" role="search">
-          <input type="search" placeholder="Search">
-        </form>
         <nav class="site-nav" aria-label="Main navigation">
           <a class="site-nav-link is-active" href="index.html">Home</a>
+          <div data-admin-nav-slot></div>
           <div class="site-dropdown">
             <button class="site-nav-link site-dropdown-toggle" type="button" aria-expanded="false">Financial Products</button>
             <div class="site-dropdown-menu">
@@ -29,6 +27,10 @@
             </div>
           </div>
         </nav>
+        <form class="site-search" role="search">
+          <input type="search" placeholder="Search">
+        </form>
+        <div class="account-slot" data-account-slot></div>
       </div>
     </div>
   </header>

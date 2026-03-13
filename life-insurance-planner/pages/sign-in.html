@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign In | Advisor Planning Suite</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@600&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../styles.css">
+</head>
+<body class="auth-page">
+  <main class="auth-shell">
+    <section class="auth-panel">
+      <div class="auth-intro">
+        <div class="eyebrow">Advisor Access</div>
+        <h1>Sign in to the Advisor Planning Suite.</h1>
+        <p class="hero-subtitle">Use your account to open the workspace, access LIPP, and keep your planning environment personalized.</p>
+      </div>
+
+      <div class="auth-card">
+        <div class="auth-toggle" role="tablist" aria-label="Authentication mode">
+          <button class="auth-toggle-button is-active" type="button" data-auth-mode="signin">Sign In</button>
+          <button class="auth-toggle-button" type="button" data-auth-mode="register">Register</button>
+        </div>
+
+        <form id="auth-form" class="auth-form">
+          <div id="auth-register-fields" class="auth-register-fields"></div>
+          <div class="field-group">
+            <label for="auth-email">Email</label>
+            <input id="auth-email" name="email" type="email" placeholder="name@firm.com" required>
+          </div>
+          <div class="field-group">
+            <label for="auth-password">Password</label>
+            <input id="auth-password" name="password" type="password" placeholder="Enter password" required>
+          </div>
+          <p class="auth-feedback" id="auth-feedback" aria-live="polite"></p>
+          <div class="actions-row">
+            <button class="btn btn-primary" type="submit" id="auth-submit-button">Sign In</button>
+          </div>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <script src="../data.js"></script>
+  <script src="../calculations.js"></script>
+  <script src="../charts.js"></script>
+  <script src="../app.js"></script>
+</body>
+</html>
