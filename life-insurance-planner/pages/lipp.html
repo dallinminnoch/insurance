@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LIPP | Life Insurance Protection Planner</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@600&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../styles.css">
+</head>
+<body class="home-page lipp-page">
+  <header class="site-header">
+    <div class="site-header-inner">
+      <a class="site-brand" href="../index.html">
+        <span class="site-brand-mark">LIPP</span>
+        <span class="site-brand-text">Advisor Planning Suite</span>
+      </a>
+      <div class="site-header-actions">
+        <form class="site-search" role="search">
+          <input type="search" placeholder="Search">
+        </form>
+        <nav class="site-nav" aria-label="Main navigation">
+          <a class="site-nav-link" href="../index.html">Home</a>
+          <div class="site-dropdown">
+            <button class="site-nav-link site-dropdown-toggle is-active" type="button" aria-expanded="true">Financial Products</button>
+            <div class="site-dropdown-menu">
+              <a class="site-dropdown-link is-active" href="lipp.html">LIPP</a>
+            </div>
+          </div>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <main class="home-shell">
+    <section class="hero-card">
+      <div class="eyebrow">Advisor Planning Workflow</div>
+      <h1>Life Insurance Protection Planner</h1>
+      <p class="hero-subtitle">A structured advisor tool for estimating life insurance needs and shaping durable protection strategies during client meetings.</p>
+      <p class="hero-copy">Use a guided workflow to capture client data, evaluate death benefit needs, compare planning approaches, and frame thoughtful coverage recommendations without dropping into carrier-specific quoting.</p>
+      <div class="hero-actions">
+        <a class="btn btn-primary" href="profile.html" id="start-planning">Start Planning</a>
+      </div>
+      <div class="hero-metrics">
+        <article>
+          <span class="metric-label">Workflow</span>
+          <strong>Profile to Summary</strong>
+        </article>
+        <article>
+          <span class="metric-label">Focus</span>
+          <strong>Needs-Based Planning</strong>
+        </article>
+        <article>
+          <span class="metric-label">Use Case</span>
+          <strong>Advisor-Led Meetings</strong>
+        </article>
+      </div>
+    </section>
+  </main>
+
+  <script src="../data.js"></script>
+  <script src="../calculations.js"></script>
+  <script src="../charts.js"></script>
+  <script src="../app.js"></script>
+</body>
+</html>

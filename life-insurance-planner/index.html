@@ -9,30 +9,74 @@
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@600&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
 </head>
-<body class="home-page">
-  <main class="home-shell">
-    <section class="hero-card">
-      <div class="eyebrow">Advisor Planning Workflow</div>
-      <h1>Life Insurance Protection Planner</h1>
-      <p class="hero-subtitle">A structured advisor tool for estimating life insurance needs and shaping durable protection strategies during client meetings.</p>
-      <p class="hero-copy">Use a guided workflow to capture client data, evaluate death benefit needs, compare planning approaches, and frame thoughtful coverage recommendations without dropping into carrier-specific quoting.</p>
-      <div class="hero-actions">
-        <a class="btn btn-primary" href="pages/profile.html" id="start-planning">Start Planning</a>
+<body class="home-page app-home">
+  <header class="site-header">
+    <div class="site-header-inner">
+      <a class="site-brand" href="index.html">
+        <span class="site-brand-mark">LIPP</span>
+        <span class="site-brand-text">Advisor Planning Suite</span>
+      </a>
+      <div class="site-header-actions">
+        <form class="site-search" role="search">
+          <input type="search" placeholder="Search">
+        </form>
+        <nav class="site-nav" aria-label="Main navigation">
+          <a class="site-nav-link is-active" href="index.html">Home</a>
+          <div class="site-dropdown">
+            <button class="site-nav-link site-dropdown-toggle" type="button" aria-expanded="false">Financial Products</button>
+            <div class="site-dropdown-menu">
+              <a class="site-dropdown-link" href="pages/lipp.html">LIPP</a>
+            </div>
+          </div>
+        </nav>
       </div>
-      <div class="hero-metrics">
-        <article>
-          <span class="metric-label">Workflow</span>
-          <strong>Profile to Summary</strong>
-        </article>
-        <article>
-          <span class="metric-label">Focus</span>
-          <strong>Needs-Based Planning</strong>
-        </article>
-        <article>
-          <span class="metric-label">Use Case</span>
-          <strong>Advisor-Led Meetings</strong>
-        </article>
+    </div>
+  </header>
+
+  <main class="home-shell app-home-shell">
+    <section class="portal-hero">
+      <div class="portal-copy">
+        <div class="eyebrow">Home</div>
+        <h1>Protection planning workspace for advisor-led client meetings.</h1>
+        <p class="hero-subtitle">A cleaner entry point for launching planning workflows, organizing meeting structure, and expanding into additional advisor tools over time.</p>
       </div>
+      <div class="portal-actions">
+        <a class="btn btn-primary" href="pages/lipp.html">Open LIPP</a>
+        <p class="helper-text">Life Insurance Protection Planner is the active planning module currently available in this workspace.</p>
+      </div>
+    </section>
+
+    <section class="portal-layout">
+      <article class="portal-main">
+        <div class="section-label">Active Module</div>
+        <h2>Life Insurance Protection Planner</h2>
+        <p class="panel-copy">Guide clients through profile intake, need estimation, analysis review, recommendation framing, policy strategy discussion, and a final planning summary.</p>
+        <div class="portal-metrics">
+          <div class="portal-metric">
+            <span class="metric-label">Workflow</span>
+            <strong>Profile to Summary</strong>
+          </div>
+          <div class="portal-metric">
+            <span class="metric-label">Purpose</span>
+            <strong>Needs-Based Planning</strong>
+          </div>
+          <div class="portal-metric">
+            <span class="metric-label">Format</span>
+            <strong>Advisor-Facing</strong>
+          </div>
+        </div>
+      </article>
+
+      <aside class="portal-side">
+        <div class="portal-side-section">
+          <div class="section-label">Workspace Notes</div>
+          <p class="panel-copy">Use this home screen as a stable launch point for planning tools rather than dropping directly into a single calculator-like experience.</p>
+        </div>
+        <div class="portal-side-section">
+          <div class="section-label">Search</div>
+          <p class="panel-copy">The search bar is prepared for future cases, saved plans, internal references, and additional modules.</p>
+        </div>
+      </aside>
     </section>
   </main>
 

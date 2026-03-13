@@ -59,13 +59,6 @@
     navHost.className = "workflow-nav";
     navHost.innerHTML = `
       <header class="workflow-header">
-        <div class="workflow-meta">
-          <div class="workflow-brand">
-            <span class="section-label">Life Insurance Protection Planner</span>
-            <strong>${steps[currentIndex] ? steps[currentIndex].label : "Planning Workflow"}</strong>
-          </div>
-          <div class="workflow-progress-label">Step ${currentNumber} of ${steps.length}</div>
-        </div>
         <div class="step-track" style="--step-count:${steps.length}">
           ${steps.map((step, index) => renderStep(step, index, currentIndex)).join("")}
         </div>
@@ -74,7 +67,7 @@
   }
 
   function initializeReturnHomeButton() {
-    const isHomePage = document.body.classList.contains("home-page");
+    const isHomePage = document.body.classList.contains("app-home");
 
     if (isHomePage) {
       return;
@@ -97,10 +90,10 @@
     }
 
     return `
-      <div class="step-item ${stateClass}">
+      <a class="step-item ${stateClass}" href="${step.path}">
         <span class="step-number">Step ${index + 1}</span>
         <span class="step-title">${step.label}</span>
-      </div>
+      </a>
     `;
   }
 
