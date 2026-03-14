@@ -5,9 +5,15 @@
     recommendation: "lipPlannerRecommendation",
     strategy: "lipPlannerStrategy",
     notes: "lipPlannerNotes",
+    clientStatus: "lensClientStatus",
+    clientView: "lensClientView",
+    clientItemsShown: "lensClientItemsShown",
+    clientItemsShownReset: "lensClientItemsShownReset",
+    routeLoading: "lensRouteLoading",
     authUsers: "lipPlannerAuthUsers",
     authSession: "lipPlannerAuthSession",
-    workflowNavExpanded: "lipPlannerWorkflowNavExpanded"
+    workflowNavExpanded: "lipPlannerWorkflowNavExpanded",
+    language: "lensLanguage"
   };
   const ADMIN_CREDENTIALS = {
     email: "admin@lens.com",
@@ -24,11 +30,195 @@
     { id: "planner", label: "Policy Planner", path: "planner.html" },
     { id: "summary", label: "Summary", path: "summary.html" }
   ];
+  const TRANSLATIONS = {
+    en: {
+      "pageTitle.home": "Life Evaluation & Needs Analysis",
+      "pageTitle.lens": "LENS | Life Evaluation & Needs Analysis",
+      "pageTitle.clients": "Clients | Advisor Planning Suite",
+      "nav.records": "Records",
+      "nav.clients": "Clients",
+      "nav.financialProducts": "Financial Products",
+      "search.placeholder": "Search",
+      "language.label": "Language",
+      "language.english": "English",
+      "language.spanish": "Spanish",
+      "language.french": "French",
+      "account.signIn": "Sign In",
+      "account.welcome": "Welcome, {name}",
+      "account.helpCenter": "Help Center",
+      "account.settings": "Settings",
+      "account.accountDetails": "Account Details",
+      "account.signOut": "Sign Out",
+      "account.adminView": "Admin View",
+      "home.banner": "Built by Agents, for Agents",
+      "home.eyebrow": "Home",
+      "home.openLens": "Open LENS",
+      "home.activeModuleText": "Life Evaluation & Needs Analysis is the active planning module currently available in this workspace.",
+      "home.activeModuleLabel": "Active Module",
+      "product.name": "Life Evaluation & Needs Analysis",
+      "home.moduleDescription": "Guide clients through profile intake, need estimation, analysis review, recommendation framing, policy strategy discussion, and a final planning summary.",
+      "home.metricWorkflow": "Workflow",
+      "home.metricWorkflowValue": "Profile to Summary",
+      "home.metricPurpose": "Purpose",
+      "home.metricPurposeValue": "Needs-Based Planning",
+      "home.metricFormat": "Format",
+      "home.metricFormatValue": "Advisor-Facing",
+      "home.notesLabel": "Workspace Notes",
+      "home.notesText": "Use this home screen as a stable launch point for planning tools rather than dropping directly into a single calculator-like experience.",
+      "home.searchLabel": "Search",
+      "home.searchText": "The search bar is prepared for future cases, saved plans, internal references, and additional modules.",
+      "lens.eyebrow": "Advisor Planning Workflow",
+      "lens.subtitle": "A structured advisor tool for estimating life insurance needs and shaping durable protection strategies during client meetings.",
+      "lens.copy": "Use a guided workflow to capture client data, evaluate death benefit needs, compare planning approaches, and frame thoughtful coverage recommendations without dropping into carrier-specific quoting.",
+      "lens.startPlanning": "Start Planning",
+      "lens.metricFocus": "Focus",
+      "lens.metricFocusValue": "Needs-Based Planning",
+      "lens.metricUseCase": "Use Case",
+      "lens.metricUseCaseValue": "Advisor-Led Meetings",
+      "clients.heading": "Client Directory",
+      "clients.subtitle": "A dedicated space for client records and future case management tools.",
+      "clients.helper": "This page is currently a placeholder for future client record workflows.",
+      "clients.recordsLabel": "Client Records",
+      "clients.mainHeading": "Client directory and saved case files",
+      "clients.mainCopy": "This section is ready for future client search, saved plans, case notes, and status tracking. For now it acts as the first records destination in the main navigation.",
+      "clients.metricStatus": "Status",
+      "clients.metricStatusValue": "Placeholder",
+      "clients.metricNextBuild": "Next Build",
+      "clients.metricNextBuildValue": "Client List",
+      "clients.metricPurposeValue": "Recordkeeping",
+      "clients.plannedUseLabel": "Planned Use",
+      "clients.plannedUseText": "Use this area later for recently viewed clients, search results, and cross-links into planning workflows.",
+      "clients.currentStateLabel": "Current State",
+      "clients.currentStateText": "Navigation is in place. Data-backed record management can be added when you are ready."
+    },
+    es: {
+      "pageTitle.home": "Evaluacion de Vida y Analisis de Necesidades",
+      "pageTitle.lens": "LENS | Evaluacion de Vida y Analisis de Necesidades",
+      "pageTitle.clients": "Clientes | Suite de Planificacion para Asesores",
+      "nav.records": "Registros",
+      "nav.clients": "Clientes",
+      "nav.financialProducts": "Productos Financieros",
+      "search.placeholder": "Buscar",
+      "language.label": "Idioma",
+      "language.english": "Ingles",
+      "language.spanish": "Espanol",
+      "language.french": "Frances",
+      "account.signIn": "Iniciar sesion",
+      "account.welcome": "Bienvenido, {name}",
+      "account.helpCenter": "Centro de ayuda",
+      "account.settings": "Configuracion",
+      "account.accountDetails": "Detalles de la cuenta",
+      "account.signOut": "Cerrar sesion",
+      "account.adminView": "Vista de administrador",
+      "home.banner": "Creado por agentes, para agentes",
+      "home.eyebrow": "Inicio",
+      "home.openLens": "Abrir LENS",
+      "home.activeModuleText": "Evaluacion de Vida y Analisis de Necesidades es el modulo activo disponible en este espacio de trabajo.",
+      "home.activeModuleLabel": "Modulo activo",
+      "product.name": "Evaluacion de Vida y Analisis de Necesidades",
+      "home.moduleDescription": "Guie a los clientes a traves del perfil, la estimacion de necesidad, la revision del analisis, la recomendacion de cobertura, la estrategia de poliza y el resumen final.",
+      "home.metricWorkflow": "Flujo",
+      "home.metricWorkflowValue": "Perfil a resumen",
+      "home.metricPurpose": "Objetivo",
+      "home.metricPurposeValue": "Planificacion basada en necesidades",
+      "home.metricFormat": "Formato",
+      "home.metricFormatValue": "Orientado al asesor",
+      "home.notesLabel": "Notas del espacio de trabajo",
+      "home.notesText": "Use esta pantalla principal como punto de partida estable para herramientas de planificacion en lugar de entrar directamente en una sola calculadora.",
+      "home.searchLabel": "Busqueda",
+      "home.searchText": "La barra de busqueda esta preparada para futuros casos, planes guardados, referencias internas y modulos adicionales.",
+      "lens.eyebrow": "Flujo de planificacion del asesor",
+      "lens.subtitle": "Una herramienta estructurada para estimar necesidades de seguro de vida y definir estrategias de proteccion durante reuniones con clientes.",
+      "lens.copy": "Use un flujo guiado para capturar datos del cliente, evaluar necesidades de beneficio por fallecimiento, comparar enfoques de planificacion y definir recomendaciones sin entrar en cotizaciones por aseguradora.",
+      "lens.startPlanning": "Comenzar planificacion",
+      "lens.metricFocus": "Enfoque",
+      "lens.metricFocusValue": "Planificacion basada en necesidades",
+      "lens.metricUseCase": "Caso de uso",
+      "lens.metricUseCaseValue": "Reuniones dirigidas por asesores",
+      "clients.heading": "Directorio de clientes",
+      "clients.subtitle": "Un espacio dedicado a los registros de clientes y futuras herramientas de gestion de casos.",
+      "clients.helper": "Esta pagina es actualmente un marcador para futuros flujos de trabajo de registros de clientes.",
+      "clients.recordsLabel": "Registros de clientes",
+      "clients.mainHeading": "Directorio de clientes y expedientes guardados",
+      "clients.mainCopy": "Esta seccion esta lista para futuras busquedas de clientes, planes guardados, notas de casos y seguimiento de estado. Por ahora funciona como el primer destino de registros en la navegacion principal.",
+      "clients.metricStatus": "Estado",
+      "clients.metricStatusValue": "Marcador",
+      "clients.metricNextBuild": "Siguiente desarrollo",
+      "clients.metricNextBuildValue": "Lista de clientes",
+      "clients.metricPurposeValue": "Mantenimiento de registros",
+      "clients.plannedUseLabel": "Uso previsto",
+      "clients.plannedUseText": "Use esta area mas adelante para clientes vistos recientemente, resultados de busqueda y enlaces a flujos de planificacion.",
+      "clients.currentStateLabel": "Estado actual",
+      "clients.currentStateText": "La navegacion ya esta lista. La gestion de registros con datos reales puede agregarse cuando este listo."
+    },
+    fr: {
+      "pageTitle.home": "Evaluation de Vie et Analyse des Besoins",
+      "pageTitle.lens": "LENS | Evaluation de Vie et Analyse des Besoins",
+      "pageTitle.clients": "Clients | Suite de planification pour conseillers",
+      "nav.records": "Dossiers",
+      "nav.clients": "Clients",
+      "nav.financialProducts": "Produits financiers",
+      "search.placeholder": "Recherche",
+      "language.label": "Langue",
+      "language.english": "Anglais",
+      "language.spanish": "Espagnol",
+      "language.french": "Francais",
+      "account.signIn": "Se connecter",
+      "account.welcome": "Bienvenue, {name}",
+      "account.helpCenter": "Centre d'aide",
+      "account.settings": "Parametres",
+      "account.accountDetails": "Details du compte",
+      "account.signOut": "Se deconnecter",
+      "account.adminView": "Vue administrateur",
+      "home.banner": "Cree par des agents, pour des agents",
+      "home.eyebrow": "Accueil",
+      "home.openLens": "Ouvrir LENS",
+      "home.activeModuleText": "Evaluation de Vie et Analyse des Besoins est le module actif actuellement disponible dans cet espace de travail.",
+      "home.activeModuleLabel": "Module actif",
+      "product.name": "Evaluation de Vie et Analyse des Besoins",
+      "home.moduleDescription": "Guidez les clients a travers le profil, l'estimation du besoin, l'analyse detaillee, la recommandation de couverture, la strategie de police et le resume final.",
+      "home.metricWorkflow": "Flux",
+      "home.metricWorkflowValue": "Du profil au resume",
+      "home.metricPurpose": "Objectif",
+      "home.metricPurposeValue": "Planification basee sur les besoins",
+      "home.metricFormat": "Format",
+      "home.metricFormatValue": "Destine aux conseillers",
+      "home.notesLabel": "Notes de l'espace de travail",
+      "home.notesText": "Utilisez cet ecran d'accueil comme point de depart stable pour les outils de planification plutot que d'entrer directement dans un seul calculateur.",
+      "home.searchLabel": "Recherche",
+      "home.searchText": "La barre de recherche est prete pour les futurs dossiers, plans enregistres, references internes et modules supplementaires.",
+      "lens.eyebrow": "Flux de planification conseiller",
+      "lens.subtitle": "Un outil structure pour estimer les besoins en assurance vie et definir des strategies de protection pendant les reunions clients.",
+      "lens.copy": "Utilisez un flux guide pour saisir les donnees client, evaluer les besoins, comparer les approches de planification et formuler des recommandations sans passer par des devis assureur.",
+      "lens.startPlanning": "Commencer",
+      "lens.metricFocus": "Orientation",
+      "lens.metricFocusValue": "Planification basee sur les besoins",
+      "lens.metricUseCase": "Cas d'usage",
+      "lens.metricUseCaseValue": "Reunions menees par le conseiller",
+      "clients.heading": "Repertoire clients",
+      "clients.subtitle": "Un espace dedie aux dossiers clients et aux futurs outils de gestion de cas.",
+      "clients.helper": "Cette page est actuellement un espace reserve pour les futurs flux de gestion des dossiers clients.",
+      "clients.recordsLabel": "Dossiers clients",
+      "clients.mainHeading": "Repertoire clients et dossiers enregistres",
+      "clients.mainCopy": "Cette section est prete pour la recherche client, les plans enregistres, les notes de dossier et le suivi du statut. Pour l'instant, elle sert de premier point d'entree des dossiers dans la navigation principale.",
+      "clients.metricStatus": "Statut",
+      "clients.metricStatusValue": "Espace reserve",
+      "clients.metricNextBuild": "Prochaine etape",
+      "clients.metricNextBuildValue": "Liste des clients",
+      "clients.metricPurposeValue": "Tenue de dossiers",
+      "clients.plannedUseLabel": "Usage prevu",
+      "clients.plannedUseText": "Utilisez cet espace plus tard pour les clients recents, les resultats de recherche et les liens vers les flux de planification.",
+      "clients.currentStateLabel": "Etat actuel",
+      "clients.currentStateText": "La navigation est en place. La gestion des dossiers avec donnees reelles pourra etre ajoutee plus tard."
+    }
+  };
 
   document.addEventListener("DOMContentLoaded", () => {
     initializeHomepage();
     initializeAuthPage();
     initializeAdminPortal();
+    initializeLanguageSelector();
+    applyTranslations();
     initializeAccountProfile();
     initializeReturnHomeButton();
     initializeWorkflowNav();
@@ -38,7 +228,56 @@
     initializeStrategySelection();
     initializeSummaryPage();
     initializeNotesSync();
+    initializeClientDirectory();
+    initializeClientDirectoryNavLinks();
+    initializeRouteLoading();
   });
+
+  function initializeLanguageSelector() {
+    const slots = document.querySelectorAll("[data-language-slot]");
+    if (!slots.length) {
+      return;
+    }
+
+    const currentLanguage = getCurrentLanguage();
+    const languageIconPath = window.location.pathname.includes("/pages/")
+      ? "../Images/Untitled design.png"
+      : "Images/Untitled design.png";
+
+    slots.forEach((slot) => {
+      slot.innerHTML = `
+        <div class="language-dropdown">
+          <button class="language-trigger" type="button" aria-label="${translate("language.label")}">
+            <img class="language-icon-image" src="${languageIconPath}" alt="" aria-hidden="true">
+          </button>
+          <div class="language-dropdown-menu">
+            <button class="language-menu-item ${currentLanguage === "en" ? "is-active" : ""}" type="button" data-language-option="en">${translate("language.english")}</button>
+            <button class="language-menu-item ${currentLanguage === "es" ? "is-active" : ""}" type="button" data-language-option="es">${translate("language.spanish")}</button>
+            <button class="language-menu-item ${currentLanguage === "fr" ? "is-active" : ""}" type="button" data-language-option="fr">${translate("language.french")}</button>
+          </div>
+        </div>
+      `;
+    });
+
+    document.querySelectorAll("[data-language-option]").forEach((button) => {
+      button.addEventListener("click", () => {
+        localStorage.setItem(STORAGE_KEYS.language, button.dataset.languageOption);
+        window.location.reload();
+      });
+    });
+  }
+
+  function applyTranslations() {
+    document.querySelectorAll("[data-i18n]").forEach((element) => {
+      const key = element.dataset.i18n;
+      element.textContent = translate(key);
+    });
+
+    document.querySelectorAll("[data-i18n-placeholder]").forEach((element) => {
+      const key = element.dataset.i18nPlaceholder;
+      element.setAttribute("placeholder", translate(key));
+    });
+  }
 
   function initializeHomepage() {
     const startPlanningButton = document.getElementById("start-planning");
@@ -318,23 +557,13 @@
   function initializeAccountProfile() {
     const accountSlots = document.querySelectorAll("[data-account-slot]");
     const session = loadJson(STORAGE_KEYS.authSession);
-    const adminNavSlots = document.querySelectorAll("[data-admin-nav-slot]");
-
-    adminNavSlots.forEach((slot) => {
-      if (session?.role === "admin") {
-        const prefix = getPathPrefix();
-        slot.innerHTML = `<a class="site-nav-link" href="${prefix}pages/admin-accounts.html">Admin View</a>`;
-      } else {
-        slot.innerHTML = "";
-      }
-    });
 
     accountSlots.forEach((slot) => {
       if (session?.name) {
         slot.innerHTML = renderAccountProfile(session, "account-profile");
       } else {
         const prefix = getPathPrefix();
-        slot.innerHTML = `<a class="site-nav-link account-signin-link" href="${prefix}pages/sign-in.html">Sign In</a>`;
+        slot.innerHTML = renderSignedOutAccount(prefix);
       }
     });
 
@@ -347,16 +576,61 @@
   }
 
   function renderAccountProfile(session, className) {
-    const initials = buildInitials(session.name);
+    const firstName = getFirstName(session.name);
+    const prefix = getPathPrefix();
+    const adminViewItem = session.role === "admin"
+      ? `<a class="account-menu-item account-menu-item-link" href="${prefix}pages/admin-accounts.html">${translate("account.adminView")}</a>`
+      : "";
 
     return `
-      <div class="${className}">
-        <div class="account-avatar">${initials}</div>
-        <div class="account-details">
-          <strong>${session.name}</strong>
-          <span>${session.email}</span>
+      <div class="account-dropdown">
+        <button class="${className} account-dropdown-toggle" type="button">
+          <span class="account-icon" aria-hidden="true">
+            <span class="account-icon-head"></span>
+            <span class="account-icon-body"></span>
+          </span>
+          <span class="sr-only">Open account menu for ${firstName}</span>
+        </button>
+        <div class="account-dropdown-menu">
+          <div class="account-menu-section">
+            <span class="account-menu-welcome">${translate("account.welcome", { name: firstName })}</span>
+          </div>
+          <div class="account-menu-divider"></div>
+          <div class="account-menu-section">
+            <button class="account-menu-item" type="button">${translate("account.helpCenter")}</button>
+            <button class="account-menu-item" type="button">${translate("account.settings")}</button>
+          </div>
+          <div class="account-menu-divider"></div>
+          <div class="account-menu-section">
+            ${adminViewItem}
+            <button class="account-menu-item" type="button">${translate("account.accountDetails")}</button>
+            <button class="account-menu-item account-menu-item-danger" type="button" data-sign-out>${translate("account.signOut")}</button>
+          </div>
         </div>
-        <button class="account-signout" type="button" data-sign-out>Sign Out</button>
+      </div>
+    `;
+  }
+
+  function renderSignedOutAccount(prefix) {
+    return `
+      <div class="account-dropdown">
+        <a class="account-profile account-dropdown-toggle account-profile-signed-out" href="${prefix}pages/sign-in.html">
+          <span class="account-icon" aria-hidden="true">
+            <span class="account-icon-head"></span>
+            <span class="account-icon-body"></span>
+          </span>
+          <span class="sr-only">Open sign in menu</span>
+        </a>
+        <div class="account-dropdown-menu">
+          <div class="account-menu-section">
+            <a class="account-menu-item account-menu-item-link" href="${prefix}pages/sign-in.html">${translate("account.signIn")}</a>
+          </div>
+          <div class="account-menu-divider"></div>
+          <div class="account-menu-section">
+            <button class="account-menu-item" type="button">${translate("account.helpCenter")}</button>
+            <button class="account-menu-item" type="button">${translate("account.settings")}</button>
+          </div>
+        </div>
       </div>
     `;
   }
@@ -604,6 +878,254 @@
     });
   }
 
+  function initializeClientDirectory() {
+    const letterButtons = document.querySelectorAll("[data-client-letter]");
+    const clientRows = document.querySelectorAll("[data-client-row]");
+    const searchField = document.querySelector(".client-table-search input");
+    const exportButton = document.querySelector("[data-export-button]");
+    const addClientButton = document.querySelector("[data-add-client-button]");
+    const rowCheckboxes = document.querySelectorAll("[data-client-row] .client-table-cell-check input");
+    const viewButtons = document.querySelectorAll("[data-client-view]");
+    const statusButtons = document.querySelectorAll("[data-client-status]");
+    const itemsDropdown = document.querySelector("[data-items-dropdown]");
+    const itemsTrigger = document.querySelector("[data-items-trigger]");
+    const itemsOptions = document.querySelectorAll("[data-items-option]");
+
+    if (!letterButtons.length || !clientRows.length) {
+      return;
+    }
+
+    let activeLetter = "all";
+    const navigationEntry = window.performance.getEntriesByType("navigation")[0];
+    const shouldRestoreClientStatus = navigationEntry?.type === "reload";
+    let activeStatus = shouldRestoreClientStatus ? (sessionStorage.getItem(STORAGE_KEYS.clientStatus) || "all") : "all";
+    const shouldRestoreClientView = navigationEntry?.type === "reload";
+    let activeView = shouldRestoreClientView ? (sessionStorage.getItem(STORAGE_KEYS.clientView) || "individuals") : "individuals";
+    const shouldResetItemsShown = sessionStorage.getItem(STORAGE_KEYS.clientItemsShownReset) === "true";
+    const shouldRestoreItemsShown = navigationEntry?.type === "reload" && !shouldResetItemsShown;
+    let itemsShown = Number(shouldRestoreItemsShown ? (sessionStorage.getItem(STORAGE_KEYS.clientItemsShown) || "15") : "15");
+
+    if (!shouldRestoreClientStatus) {
+      sessionStorage.setItem(STORAGE_KEYS.clientStatus, "all");
+    }
+
+    if (!shouldRestoreClientView) {
+      sessionStorage.setItem(STORAGE_KEYS.clientView, "individuals");
+    }
+
+    if (!shouldRestoreItemsShown) {
+      sessionStorage.setItem(STORAGE_KEYS.clientItemsShown, "15");
+    }
+
+    sessionStorage.removeItem(STORAGE_KEYS.clientItemsShownReset);
+
+    function syncItemsShownControls() {
+      if (itemsTrigger) {
+        itemsTrigger.textContent = `Items Shown (${itemsShown})`;
+      }
+
+      itemsOptions.forEach((option) => {
+        option.classList.toggle("is-active", Number(option.dataset.itemsOption) === itemsShown);
+      });
+    }
+
+    function syncStatusButtons() {
+      statusButtons.forEach((button) => {
+        button.classList.toggle("is-active", button.dataset.clientStatus === activeStatus);
+      });
+    }
+
+    function syncExportButtonState() {
+      if (!exportButton) {
+        return;
+      }
+
+      const hasSelection = Array.from(rowCheckboxes).some((checkbox) => checkbox.checked);
+      exportButton.classList.toggle("is-active", hasSelection);
+
+      if (addClientButton) {
+        addClientButton.classList.toggle("is-inactive", hasSelection);
+      }
+    }
+
+    function applyClientFilters() {
+      const query = (searchField?.value || "").trim().toLowerCase();
+      let visibleCount = 0;
+
+      clientRows.forEach((row) => {
+        const lastInitial = row.dataset.lastInitial || "";
+        const statusGroup = row.dataset.clientStatusGroup || "all";
+        const clientName = row.querySelector(".client-table-cell-client strong")?.textContent?.toLowerCase() || "";
+        const matchesLetter = activeLetter === "all" || lastInitial === activeLetter;
+        const matchesStatus = activeStatus === "all" || statusGroup === activeStatus;
+        const matchesSearch = !query || clientName.includes(query);
+        const shouldShow = matchesLetter && matchesStatus && matchesSearch && visibleCount < itemsShown;
+
+        row.hidden = !shouldShow;
+
+        if (matchesLetter && matchesStatus && matchesSearch && visibleCount < itemsShown) {
+          visibleCount += 1;
+        }
+      });
+    }
+
+    letterButtons.forEach((button) => {
+      button.addEventListener("click", () => {
+        activeLetter = button.dataset.clientLetter || "all";
+
+        letterButtons.forEach((item) => {
+          item.classList.toggle("is-active", item === button);
+        });
+
+        applyClientFilters();
+      });
+    });
+
+    if (searchField) {
+      searchField.addEventListener("input", applyClientFilters);
+    }
+
+    rowCheckboxes.forEach((checkbox) => {
+      checkbox.addEventListener("change", syncExportButtonState);
+    });
+
+    viewButtons.forEach((button) => {
+      button.classList.toggle("is-active", button.dataset.clientView === activeView);
+      button.addEventListener("click", () => {
+        activeView = button.dataset.clientView || "individuals";
+        sessionStorage.setItem(STORAGE_KEYS.clientView, activeView);
+        viewButtons.forEach((item) => {
+          item.classList.toggle("is-active", item === button);
+        });
+      });
+    });
+
+    statusButtons.forEach((button) => {
+      button.addEventListener("click", () => {
+        activeStatus = button.dataset.clientStatus || "all";
+        sessionStorage.setItem(STORAGE_KEYS.clientStatus, activeStatus);
+        syncStatusButtons();
+        applyClientFilters();
+      });
+    });
+
+    itemsOptions.forEach((option) => {
+      option.addEventListener("click", () => {
+        itemsShown = Number(option.dataset.itemsOption) || 15;
+        sessionStorage.setItem(STORAGE_KEYS.clientItemsShown, String(itemsShown));
+        syncItemsShownControls();
+        applyClientFilters();
+        if (itemsDropdown) {
+          itemsDropdown.classList.remove("is-open");
+          itemsTrigger?.setAttribute("aria-expanded", "false");
+        }
+        option.blur();
+        itemsTrigger?.blur();
+      });
+    });
+
+    if (itemsDropdown && itemsTrigger) {
+      itemsTrigger.addEventListener("click", () => {
+        const isOpen = itemsDropdown.classList.toggle("is-open");
+        itemsTrigger.setAttribute("aria-expanded", String(isOpen));
+      });
+
+      itemsDropdown.addEventListener("mouseleave", () => {
+        itemsDropdown.classList.remove("is-open");
+        itemsTrigger.setAttribute("aria-expanded", "false");
+      });
+    }
+
+    syncStatusButtons();
+    syncItemsShownControls();
+    syncExportButtonState();
+    applyClientFilters();
+  }
+
+  function initializeClientDirectoryNavLinks() {
+    const clientDirectoryNavLinks = document.querySelectorAll("[data-client-directory-nav]");
+
+    clientDirectoryNavLinks.forEach((link) => {
+      link.addEventListener("click", () => {
+        sessionStorage.setItem(STORAGE_KEYS.clientItemsShownReset, "true");
+      });
+    });
+  }
+
+  function initializeRouteLoading() {
+    const loadingLinks = document.querySelectorAll("[data-loading-link]");
+    const routeLoadingRaw = sessionStorage.getItem(STORAGE_KEYS.routeLoading);
+    let routeLoading = null;
+    if (routeLoadingRaw) {
+      try {
+        routeLoading = JSON.parse(routeLoadingRaw);
+      } catch (error) {
+        sessionStorage.removeItem(STORAGE_KEYS.routeLoading);
+      }
+    }
+    const isProspectPage = document.body.classList.contains("prospect-page");
+
+    loadingLinks.forEach((link) => {
+      link.addEventListener("click", (event) => {
+        const href = link.getAttribute("href");
+        if (!href) {
+          return;
+        }
+
+        event.preventDefault();
+        sessionStorage.setItem(STORAGE_KEYS.routeLoading, JSON.stringify({
+          target: href,
+          startedAt: Date.now()
+        }));
+        showRouteLoadingOverlay();
+        window.setTimeout(() => {
+          window.location.href = href;
+        }, 60);
+      });
+    });
+
+    if (!isProspectPage || !routeLoading?.startedAt) {
+      return;
+    }
+
+    showRouteLoadingOverlay();
+    const elapsed = Date.now() - routeLoading.startedAt;
+    const remaining = Math.max(0, 1000 - elapsed);
+
+    window.setTimeout(() => {
+      hideRouteLoadingOverlay();
+      sessionStorage.removeItem(STORAGE_KEYS.routeLoading);
+    }, remaining);
+  }
+
+  function showRouteLoadingOverlay() {
+    let overlay = document.querySelector("[data-route-loading-overlay]");
+
+    if (!overlay) {
+      overlay = document.createElement("div");
+      overlay.className = "route-loading-overlay";
+      overlay.setAttribute("data-route-loading-overlay", "");
+      overlay.innerHTML = `
+        <div class="route-loading-card">
+          <span class="route-loading-icon" aria-hidden="true">
+            <span class="account-icon-head route-loading-head"></span>
+            <span class="account-icon-body route-loading-body"></span>
+          </span>
+          <p class="route-loading-text">Opening new prospect...</p>
+        </div>
+      `;
+      document.body.appendChild(overlay);
+    }
+
+    document.body.classList.add("is-route-loading");
+    document.documentElement.classList.add("is-route-loading");
+  }
+
+  function hideRouteLoadingOverlay() {
+    document.body.classList.remove("is-route-loading");
+    document.documentElement.classList.remove("is-route-loading");
+  }
+
   function populateForm(form, values) {
     if (!values) {
       return;
@@ -630,13 +1152,26 @@
     }
   }
 
-  function buildInitials(name) {
-    return name
-      .split(" ")
-      .filter(Boolean)
-      .slice(0, 2)
-      .map((part) => part.charAt(0).toUpperCase())
-      .join("");
+  function getFirstName(name) {
+    return name.split(" ").filter(Boolean)[0] || name;
+  }
+
+  function getCurrentLanguage() {
+    const storedLanguage = localStorage.getItem(STORAGE_KEYS.language);
+    return TRANSLATIONS[storedLanguage] ? storedLanguage : "en";
+  }
+
+  function translate(key, replacements = {}) {
+    const language = getCurrentLanguage();
+    const dictionary = TRANSLATIONS[language] || TRANSLATIONS.en;
+    const fallback = TRANSLATIONS.en[key] || key;
+    let value = dictionary[key] || fallback;
+
+    Object.entries(replacements).forEach(([replacementKey, replacementValue]) => {
+      value = value.replace(`{${replacementKey}}`, replacementValue);
+    });
+
+    return value;
   }
 
   function setText(id, value) {

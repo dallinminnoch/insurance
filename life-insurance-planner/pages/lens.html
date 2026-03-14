@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>LENS | Life Evaluation &amp; Needs Analysis</title>
+  <title data-i18n="pageTitle.lens">LENS | Life Evaluation &amp; Needs Analysis</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@600&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -16,24 +16,24 @@
         <span class="site-brand-mark">LENS</span>
       </a>
       <div class="site-header-actions">
-        <form class="site-search" role="search">
-          <input type="search" placeholder="Search">
+        <form class="site-search has-icon" role="search">
+          <input type="search" placeholder="Search" data-i18n-placeholder="search.placeholder">
         </form>
         <nav class="site-nav" aria-label="Main navigation">
-          <div data-admin-nav-slot></div>
           <div class="site-dropdown">
-            <button class="site-nav-link site-dropdown-toggle" type="button" aria-expanded="false">Records</button>
+            <button class="site-nav-link site-dropdown-toggle" type="button" aria-expanded="false" data-i18n="nav.records">Records</button>
             <div class="site-dropdown-menu">
-              <a class="site-dropdown-link" href="clients.html">Clients</a>
+              <a class="site-dropdown-link" href="clients.html" data-i18n="nav.clients" data-client-directory-nav>Clients</a>
             </div>
           </div>
           <div class="site-dropdown">
-            <button class="site-nav-link site-dropdown-toggle is-active" type="button" aria-expanded="true">Financial Products</button>
+            <button class="site-nav-link site-dropdown-toggle is-active" type="button" aria-expanded="true" data-i18n="nav.financialProducts">Financial Products</button>
             <div class="site-dropdown-menu">
               <a class="site-dropdown-link is-active" href="lens.html">LENS</a>
             </div>
           </div>
         </nav>
+        <div class="language-slot" data-language-slot></div>
         <div class="account-slot" data-account-slot></div>
       </div>
     </div>
@@ -41,25 +41,25 @@
 
   <main class="home-shell">
     <section class="hero-card">
-      <div class="eyebrow">Advisor Planning Workflow</div>
-      <h1>Life Evaluation &amp; Needs Analysis</h1>
-      <p class="hero-subtitle">A structured advisor tool for estimating life insurance needs and shaping durable protection strategies during client meetings.</p>
-      <p class="hero-copy">Use a guided workflow to capture client data, evaluate death benefit needs, compare planning approaches, and frame thoughtful coverage recommendations without dropping into carrier-specific quoting.</p>
+      <div class="eyebrow" data-i18n="lens.eyebrow">Advisor Planning Workflow</div>
+      <h1 data-i18n="product.name">Life Evaluation &amp; Needs Analysis</h1>
+      <p class="hero-subtitle" data-i18n="lens.subtitle">A structured advisor tool for estimating life insurance needs and shaping durable protection strategies during client meetings.</p>
+      <p class="hero-copy" data-i18n="lens.copy">Use a guided workflow to capture client data, evaluate death benefit needs, compare planning approaches, and frame thoughtful coverage recommendations without dropping into carrier-specific quoting.</p>
       <div class="hero-actions">
-        <a class="btn btn-primary" href="profile.html" id="start-planning">Start Planning</a>
+        <a class="btn btn-primary" href="profile.html" id="start-planning" data-i18n="lens.startPlanning">Start Planning</a>
       </div>
       <div class="hero-metrics">
         <article>
-          <span class="metric-label">Workflow</span>
-          <strong>Profile to Summary</strong>
+          <span class="metric-label" data-i18n="home.metricWorkflow">Workflow</span>
+          <strong data-i18n="home.metricWorkflowValue">Profile to Summary</strong>
         </article>
         <article>
-          <span class="metric-label">Focus</span>
-          <strong>Needs-Based Planning</strong>
+          <span class="metric-label" data-i18n="lens.metricFocus">Focus</span>
+          <strong data-i18n="lens.metricFocusValue">Needs-Based Planning</strong>
         </article>
         <article>
-          <span class="metric-label">Use Case</span>
-          <strong>Advisor-Led Meetings</strong>
+          <span class="metric-label" data-i18n="lens.metricUseCase">Use Case</span>
+          <strong data-i18n="lens.metricUseCaseValue">Advisor-Led Meetings</strong>
         </article>
       </div>
     </section>

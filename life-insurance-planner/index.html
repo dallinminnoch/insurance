@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Life Evaluation &amp; Needs Analysis</title>
+  <title data-i18n="pageTitle.home">Life Evaluation &amp; Needs Analysis</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@600&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -16,24 +16,24 @@
         <span class="site-brand-mark">LENS</span>
       </a>
       <div class="site-header-actions">
-        <form class="site-search" role="search">
-          <input type="search" placeholder="Search">
+        <form class="site-search has-icon" role="search">
+          <input type="search" placeholder="Search" data-i18n-placeholder="search.placeholder">
         </form>
         <nav class="site-nav" aria-label="Main navigation">
-          <div data-admin-nav-slot></div>
           <div class="site-dropdown">
-            <button class="site-nav-link site-dropdown-toggle" type="button" aria-expanded="false">Records</button>
+            <button class="site-nav-link site-dropdown-toggle" type="button" aria-expanded="false" data-i18n="nav.records">Records</button>
             <div class="site-dropdown-menu">
-              <a class="site-dropdown-link" href="pages/clients.html">Clients</a>
+              <a class="site-dropdown-link" href="pages/clients.html" data-i18n="nav.clients" data-client-directory-nav>Clients</a>
             </div>
           </div>
           <div class="site-dropdown">
-            <button class="site-nav-link site-dropdown-toggle" type="button" aria-expanded="false">Financial Products</button>
+            <button class="site-nav-link site-dropdown-toggle" type="button" aria-expanded="false" data-i18n="nav.financialProducts">Financial Products</button>
             <div class="site-dropdown-menu">
               <a class="site-dropdown-link" href="pages/lens.html">LENS</a>
             </div>
           </div>
         </nav>
+        <div class="language-slot" data-language-slot></div>
         <div class="account-slot" data-account-slot></div>
       </div>
     </div>
@@ -41,48 +41,48 @@
 
   <main class="home-shell app-home-shell">
     <section class="home-banner">
-      <p>Built by Agents, for Agents</p>
+      <p data-i18n="home.banner">Built by Agents, for Agents</p>
     </section>
 
     <section class="portal-hero">
       <div class="portal-copy">
-        <div class="eyebrow">Home</div>
+        <div class="eyebrow" data-i18n="home.eyebrow">Home</div>
       </div>
       <div class="portal-actions">
-        <a class="btn btn-primary" href="pages/lens.html">Open LENS</a>
-        <p class="helper-text">Life Evaluation &amp; Needs Analysis is the active planning module currently available in this workspace.</p>
+        <a class="btn btn-primary" href="pages/lens.html" data-i18n="home.openLens">Open LENS</a>
+        <p class="helper-text" data-i18n="home.activeModuleText">Life Evaluation &amp; Needs Analysis is the active planning module currently available in this workspace.</p>
       </div>
     </section>
 
     <section class="portal-layout">
       <article class="portal-main">
-        <div class="section-label">Active Module</div>
-        <h2>Life Evaluation &amp; Needs Analysis</h2>
-        <p class="panel-copy">Guide clients through profile intake, need estimation, analysis review, recommendation framing, policy strategy discussion, and a final planning summary.</p>
+        <div class="section-label" data-i18n="home.activeModuleLabel">Active Module</div>
+        <h2 data-i18n="product.name">Life Evaluation &amp; Needs Analysis</h2>
+        <p class="panel-copy" data-i18n="home.moduleDescription">Guide clients through profile intake, need estimation, analysis review, recommendation framing, policy strategy discussion, and a final planning summary.</p>
         <div class="portal-metrics">
           <div class="portal-metric">
-            <span class="metric-label">Workflow</span>
-            <strong>Profile to Summary</strong>
+            <span class="metric-label" data-i18n="home.metricWorkflow">Workflow</span>
+            <strong data-i18n="home.metricWorkflowValue">Profile to Summary</strong>
           </div>
           <div class="portal-metric">
-            <span class="metric-label">Purpose</span>
-            <strong>Needs-Based Planning</strong>
+            <span class="metric-label" data-i18n="home.metricPurpose">Purpose</span>
+            <strong data-i18n="home.metricPurposeValue">Needs-Based Planning</strong>
           </div>
           <div class="portal-metric">
-            <span class="metric-label">Format</span>
-            <strong>Advisor-Facing</strong>
+            <span class="metric-label" data-i18n="home.metricFormat">Format</span>
+            <strong data-i18n="home.metricFormatValue">Advisor-Facing</strong>
           </div>
         </div>
       </article>
 
       <aside class="portal-side">
         <div class="portal-side-section">
-          <div class="section-label">Workspace Notes</div>
-          <p class="panel-copy">Use this home screen as a stable launch point for planning tools rather than dropping directly into a single calculator-like experience.</p>
+          <div class="section-label" data-i18n="home.notesLabel">Workspace Notes</div>
+          <p class="panel-copy" data-i18n="home.notesText">Use this home screen as a stable launch point for planning tools rather than dropping directly into a single calculator-like experience.</p>
         </div>
         <div class="portal-side-section">
-          <div class="section-label">Search</div>
-          <p class="panel-copy">The search bar is prepared for future cases, saved plans, internal references, and additional modules.</p>
+          <div class="section-label" data-i18n="home.searchLabel">Search</div>
+          <p class="panel-copy" data-i18n="home.searchText">The search bar is prepared for future cases, saved plans, internal references, and additional modules.</p>
         </div>
       </aside>
     </section>
