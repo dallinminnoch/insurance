@@ -7,6 +7,7 @@
     notes: "lipPlannerNotes",
     clientStatus: "lensClientStatus",
     clientView: "lensClientView",
+    clientViewIntent: "lensClientViewIntent",
     clientItemsShown: "lensClientItemsShown",
     clientItemsShownReset: "lensClientItemsShownReset",
     clientRecords: "lensClientRecords",
@@ -33,6 +34,7 @@
       source: "Referral",
       statusGroup: "in-review",
       statusLabels: ["Income", "Debt"],
+      priority: "high",
       coverageAmount: 1850000,
       coverageGap: 1450000
     },
@@ -48,6 +50,7 @@
       source: "CPA",
       statusGroup: "coverage-placed",
       statusLabels: ["Business", "Estate"],
+      priority: "medium",
       coverageAmount: 1200000,
       coverageGap: 780000
     },
@@ -63,6 +66,7 @@
       source: "Seminar",
       statusGroup: "prospects",
       statusLabels: ["Education", "Income"],
+      priority: "high",
       coverageAmount: 2600000,
       coverageGap: 2100000
     },
@@ -78,6 +82,7 @@
       source: "Website",
       statusGroup: "coverage-placed",
       statusLabels: ["Mortgage", "Needs"],
+      priority: "medium",
       coverageAmount: 1350000,
       coverageGap: 920000
     },
@@ -93,6 +98,7 @@
       source: "Client Referral",
       statusGroup: "closed",
       statusLabels: ["Review", "Retention"],
+      priority: "low",
       coverageAmount: 620000,
       coverageGap: 430000
     }
@@ -380,23 +386,34 @@
       return;
     }
 
+    // The auth screen should never inherit stale route-loading state from other pages.
+    hideRouteLoadingOverlay();
+    document.body.classList.remove("is-direct-create-loading");
+    sessionStorage.removeItem(STORAGE_KEYS.routeLoading);
+
+    if (form.dataset.localAuth === "true") {
+      return;
+    }
+
     const feedback = document.getElementById("auth-feedback");
     const submitButton = document.getElementById("auth-submit-button");
     const modeButtons = document.querySelectorAll("[data-auth-mode]");
     const registerFieldsHost = document.getElementById("auth-register-fields");
+    const modeField = form.querySelector("[name='authMode']");
     let currentMode = "signin";
 
-    updateAuthMode(currentMode, modeButtons, registerFieldsHost, submitButton, feedback);
+    updateAuthMode(currentMode, modeButtons, registerFieldsHost, submitButton, feedback, modeField);
 
     modeButtons.forEach((button) => {
       button.addEventListener("click", () => {
         currentMode = button.dataset.authMode;
-        updateAuthMode(currentMode, modeButtons, registerFieldsHost, submitButton, feedback);
+        updateAuthMode(currentMode, modeButtons, registerFieldsHost, submitButton, feedback, modeField);
       });
     });
 
     form.addEventListener("submit", (event) => {
       event.preventDefault();
+      currentMode = modeField?.value || currentMode;
       const formData = new FormData(form);
       const name = String(formData.get("name") || "").trim();
       const email = String(formData.get("email") || "").trim().toLowerCase();
@@ -439,7 +456,7 @@
           email: ADMIN_CREDENTIALS.email,
           role: "admin"
         }));
-        window.location.href = "admin-accounts.html";
+        window.location.href = "../index.html";
         return;
       }
 
@@ -606,10 +623,14 @@
       }));
   }
 
-  function updateAuthMode(mode, modeButtons, registerFieldsHost, submitButton, feedback) {
+  function updateAuthMode(mode, modeButtons, registerFieldsHost, submitButton, feedback, modeField) {
     modeButtons.forEach((button) => {
       button.classList.toggle("is-active", button.dataset.authMode === mode);
     });
+
+    if (modeField) {
+      modeField.value = mode;
+    }
 
     if (registerFieldsHost) {
       if (mode === "register") {
@@ -636,6 +657,15 @@
     element.textContent = message;
   }
 
+  function setFormFeedback(element, message) {
+    if (!element) {
+      return;
+    }
+
+    element.textContent = message;
+    element.hidden = !message;
+  }
+
   function initializeAccountProfile() {
     const accountSlots = document.querySelectorAll("[data-account-slot]");
     const session = loadJson(STORAGE_KEYS.authSession);
@@ -650,11 +680,13 @@
     });
 
     document.querySelectorAll("[data-sign-out]").forEach((button) => {
-      button.addEventListener("click", () => {
-        localStorage.removeItem(STORAGE_KEYS.authSession);
-        window.location.reload();
+      button.addEventListener("click", (event) => {
+        event.preventDefault();
+        performSignOut();
       });
     });
+
+    bindAccountDropdowns();
   }
 
   function renderAccountProfile(session, className) {
@@ -681,11 +713,10 @@
           <div class="account-menu-section">
             <button class="account-menu-item" type="button">${translate("account.helpCenter")}</button>
             <button class="account-menu-item" type="button">${translate("account.settings")}</button>
+            ${adminViewItem}
           </div>
           <div class="account-menu-divider"></div>
           <div class="account-menu-section">
-            ${adminViewItem}
-            <button class="account-menu-item" type="button">${translate("account.accountDetails")}</button>
             <button class="account-menu-item account-menu-item-danger" type="button" data-sign-out>${translate("account.signOut")}</button>
           </div>
         </div>
@@ -715,6 +746,43 @@
         </div>
       </div>
     `;
+  }
+
+  function bindAccountDropdowns() {
+    document.querySelectorAll(".account-dropdown").forEach((dropdown) => {
+      let closeTimer = null;
+
+      const openDropdown = () => {
+        if (closeTimer) {
+          window.clearTimeout(closeTimer);
+          closeTimer = null;
+        }
+
+        dropdown.classList.add("is-open");
+      };
+
+      const closeDropdown = () => {
+        if (closeTimer) {
+          window.clearTimeout(closeTimer);
+        }
+
+        closeTimer = window.setTimeout(() => {
+          dropdown.classList.remove("is-open");
+          closeTimer = null;
+        }, 180);
+      };
+
+      dropdown.addEventListener("mouseenter", openDropdown);
+      dropdown.addEventListener("mouseleave", closeDropdown);
+      dropdown.addEventListener("focusin", openDropdown);
+      dropdown.addEventListener("focusout", () => {
+        window.setTimeout(() => {
+          if (!dropdown.contains(document.activeElement)) {
+            dropdown.classList.remove("is-open");
+          }
+        }, 0);
+      });
+    });
   }
 
   function initializeWorkflowNav() {
@@ -962,58 +1030,513 @@
 
   function initializeClientCreationForm() {
     const form = document.getElementById("client-creation-form");
+    const feedback = document.getElementById("client-creation-feedback");
+    const dateOfBirthField = form?.querySelector("[data-date-of-birth]");
+    const ageField = form?.querySelector("[data-age-field]");
+    const advisorNameField = form?.querySelector("[data-advisor-name]");
+    const householdIdField = form?.querySelector("[data-household-id]");
+    const createdDateField = form?.querySelector("[data-created-date]");
+    const lastUpdatedDateField = form?.querySelector("[data-last-updated-date]");
+    const createdByField = form?.querySelector("[data-created-by]");
+    const phoneNumberField = form?.querySelector("#phone-number");
+    const assignmentModeField = form?.querySelector("[data-profile-assignment-mode]");
+    const assignmentNameField = form?.querySelector("[data-profile-assignment-name]");
+    const assignmentTargetIdField = form?.querySelector("[data-profile-assignment-target-id]");
+    const assignmentTargetTypeField = form?.querySelector("[data-profile-assignment-target-type]");
+    const dependentFields = form?.querySelector("[data-profile-dependent-fields]");
+    const searchHouseholdsButton = form?.querySelector("[data-search-households]");
+    const searchCompaniesButton = form?.querySelector("[data-search-companies]");
+    const searchModal = document.querySelector("[data-profile-search-modal]");
+    const searchModalTitle = document.querySelector("[data-profile-search-title]");
+    const searchModalInput = document.querySelector("[data-profile-search-input]");
+    const searchModalResults = document.querySelector("[data-profile-search-results]");
+    const searchModalCloseButtons = document.querySelectorAll("[data-profile-search-close]");
+    let activeSearchType = "";
 
     if (!form) {
       return;
     }
 
+    const currentSession = getCurrentSession();
+    const today = formatDateInputValue(new Date());
+
+    if (advisorNameField && !advisorNameField.value) {
+      advisorNameField.value = currentSession?.name || "";
+    }
+
+    if (createdByField && !createdByField.value) {
+      createdByField.value = currentSession?.name || "Advisor";
+    }
+
+    if (createdDateField && !createdDateField.value) {
+      createdDateField.value = today;
+    }
+
+    if (lastUpdatedDateField && !lastUpdatedDateField.value) {
+      lastUpdatedDateField.value = today;
+    }
+
+    if (householdIdField && !householdIdField.value) {
+      householdIdField.value = "Assigned on save";
+    }
+
+    function syncAgeField() {
+      if (!ageField) {
+        return;
+      }
+
+      const birthDateValue = String(dateOfBirthField?.value || "").trim();
+      ageField.value = birthDateValue ? String(calculateAgeFromDate(birthDateValue)) : "";
+    }
+
+    function syncPhoneNumberField() {
+      if (!phoneNumberField) {
+        return;
+      }
+
+      phoneNumberField.value = formatPhoneNumberInput(phoneNumberField.value);
+    }
+
+    function getAssignmentKind(mode) {
+      if (mode.endsWith("household")) {
+        return "household";
+      }
+      if (mode.endsWith("company")) {
+        return "company";
+      }
+      return "";
+    }
+
+    function getViewTypeForKind(kind) {
+      return kind === "company" ? "companies" : "households";
+    }
+
+    function getAssignmentRecords(kind) {
+      const viewType = getViewTypeForKind(kind);
+      return getClientRecords()
+        .filter((record) => record.viewType === viewType)
+        .sort((first, second) => first.displayName.localeCompare(second.displayName));
+    }
+
+    function syncAssignmentNameState() {
+      const mode = String(assignmentModeField?.value || "");
+      const isCreate = mode.startsWith("create-");
+      const isExisting = mode.startsWith("existing-");
+      const kind = getAssignmentKind(mode);
+
+      if (!assignmentNameField) {
+        return;
+      }
+
+      assignmentNameField.disabled = !mode;
+      assignmentNameField.readOnly = isExisting || !mode;
+
+      if (!mode) {
+        assignmentNameField.value = "";
+        assignmentNameField.placeholder = "Please select to continue";
+      } else if (isCreate && kind === "household") {
+        assignmentNameField.placeholder = "Enter new household name";
+      } else if (isCreate && kind === "company") {
+        assignmentNameField.placeholder = "Enter new company profile name";
+      } else if (isExisting && kind === "household") {
+        assignmentNameField.placeholder = "Select an existing household";
+      } else if (isExisting && kind === "company") {
+        assignmentNameField.placeholder = "Select an existing company profile";
+      }
+    }
+
+    function hasUnlockedAssignment() {
+      const mode = String(assignmentModeField?.value || "");
+      if (!mode) {
+        return false;
+      }
+
+      if (mode.startsWith("existing-")) {
+        return Boolean(String(assignmentTargetIdField?.value || "").trim());
+      }
+
+      return Boolean(String(assignmentNameField?.value || "").trim());
+    }
+
+    function syncDependentFieldset() {
+      if (dependentFields) {
+        dependentFields.disabled = !hasUnlockedAssignment();
+      }
+      syncHouseholdIdPreview();
+    }
+
+    function syncAssignmentControls() {
+      const mode = String(assignmentModeField?.value || "");
+      const previousKind = String(assignmentTargetTypeField?.value || "");
+      const kind = getAssignmentKind(mode);
+      const isExistingHousehold = mode === "existing-household";
+      const isExistingCompany = mode === "existing-company";
+
+      if (searchHouseholdsButton) {
+        searchHouseholdsButton.disabled = !isExistingHousehold;
+      }
+      if (searchCompaniesButton) {
+        searchCompaniesButton.disabled = !isExistingCompany;
+      }
+
+      if (!mode) {
+        if (assignmentTargetIdField) {
+          assignmentTargetIdField.value = "";
+        }
+        if (assignmentTargetTypeField) {
+          assignmentTargetTypeField.value = "";
+        }
+        if (assignmentNameField) {
+          assignmentNameField.value = "";
+        }
+      } else if (assignmentTargetTypeField) {
+        if (previousKind && previousKind !== kind && assignmentNameField) {
+          assignmentNameField.value = "";
+        }
+        if (previousKind && previousKind !== kind && assignmentTargetIdField) {
+          assignmentTargetIdField.value = "";
+        }
+        assignmentTargetTypeField.value = kind;
+      }
+
+      if (mode.startsWith("create-")) {
+        if (assignmentTargetIdField) {
+          assignmentTargetIdField.value = "";
+        }
+      } else if (mode.startsWith("existing-")) {
+        if (assignmentNameField && assignmentTargetIdField && !assignmentTargetIdField.value) {
+          assignmentNameField.value = "";
+        }
+      }
+
+      syncAssignmentNameState();
+      syncDependentFieldset();
+    }
+
+    function syncHouseholdIdPreview() {
+      if (!householdIdField) {
+        return;
+      }
+
+      const mode = String(assignmentModeField?.value || "");
+      if (mode.startsWith("existing-")) {
+        householdIdField.value = String(assignmentTargetIdField?.value || "").trim() || "Select an existing profile";
+        return;
+      }
+
+      if (mode.startsWith("create-")) {
+        householdIdField.value = "Generated on save";
+        return;
+      }
+
+      householdIdField.value = "Assigned on save";
+    }
+
+    function closeSearchModal() {
+      if (searchModal) {
+        searchModal.hidden = true;
+      }
+      activeSearchType = "";
+      if (searchModalInput) {
+        searchModalInput.value = "";
+      }
+    }
+
+    function renderSearchResults() {
+      if (!searchModalResults) {
+        return;
+      }
+
+      const records = activeSearchType ? getAssignmentRecords(activeSearchType) : [];
+      const query = String(searchModalInput?.value || "").trim().toLowerCase();
+      const filteredRecords = query
+        ? records.filter((record) => String(record.displayName || "").toLowerCase().includes(query))
+        : records;
+
+      searchModalResults.innerHTML = "";
+
+      if (!filteredRecords.length) {
+        const emptyState = document.createElement("div");
+        emptyState.className = "profile-search-results-empty";
+        emptyState.textContent = activeSearchType === "company"
+          ? "No company profiles found."
+          : "No households found.";
+        searchModalResults.appendChild(emptyState);
+        return;
+      }
+
+      filteredRecords.forEach((record) => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "profile-search-result-button";
+        button.textContent = record.displayName;
+        button.addEventListener("click", () => {
+          if (assignmentTargetIdField) {
+            assignmentTargetIdField.value = record.id;
+          }
+          if (assignmentTargetTypeField) {
+            assignmentTargetTypeField.value = activeSearchType;
+          }
+          if (assignmentNameField) {
+            assignmentNameField.value = record.displayName;
+          }
+          closeSearchModal();
+          syncDependentFieldset();
+          setFormFeedback(feedback, "");
+        });
+        searchModalResults.appendChild(button);
+      });
+    }
+
+    function openSearchModal(kind) {
+      activeSearchType = kind;
+      if (searchModalTitle) {
+        searchModalTitle.textContent = kind === "company" ? "Search Company Profiles" : "Search Existing Households";
+      }
+      if (searchModalInput) {
+        searchModalInput.value = "";
+      }
+      renderSearchResults();
+      if (searchModal) {
+        searchModal.hidden = false;
+      }
+      window.setTimeout(() => {
+        searchModalInput?.focus();
+      }, 20);
+    }
+
+    syncAssignmentControls();
+    syncAgeField();
+
+    assignmentModeField?.addEventListener("change", () => {
+      if (assignmentTargetIdField) {
+        assignmentTargetIdField.value = "";
+      }
+      if (assignmentTargetTypeField) {
+        assignmentTargetTypeField.value = "";
+      }
+      if (assignmentNameField) {
+        assignmentNameField.value = "";
+      }
+      syncAssignmentControls();
+      setFormFeedback(feedback, "");
+    });
+    assignmentNameField?.addEventListener("input", () => {
+      if (String(assignmentModeField?.value || "").startsWith("create-")) {
+        syncDependentFieldset();
+        setFormFeedback(feedback, "");
+      }
+    });
+    searchHouseholdsButton?.addEventListener("click", () => {
+      if (!searchHouseholdsButton.disabled) {
+        openSearchModal("household");
+      }
+    });
+    searchCompaniesButton?.addEventListener("click", () => {
+      if (!searchCompaniesButton.disabled) {
+        openSearchModal("company");
+      }
+    });
+    searchModalInput?.addEventListener("input", renderSearchResults);
+    searchModalCloseButtons.forEach((button) => {
+      button.addEventListener("click", closeSearchModal);
+    });
+    dateOfBirthField?.addEventListener("input", syncAgeField);
+    dateOfBirthField?.addEventListener("change", syncAgeField);
+    phoneNumberField?.addEventListener("input", syncPhoneNumberField);
+    phoneNumberField?.addEventListener("blur", syncPhoneNumberField);
+
+    form.addEventListener("invalid", (event) => {
+      const field = event.target;
+      if (!field || !field.id) {
+        return;
+      }
+
+      const label = form.querySelector(`label[for="${field.id}"]`);
+      setFormFeedback(feedback, `Complete ${label?.textContent || "all required fields"} before saving.`);
+    }, true);
+
+    form.addEventListener("input", () => {
+      setFormFeedback(feedback, "");
+    });
+
+    form.addEventListener("change", () => {
+      setFormFeedback(feedback, "");
+    });
+
     form.addEventListener("submit", (event) => {
       event.preventDefault();
+      setFormFeedback(feedback, "");
+
+      if (!form.reportValidity()) {
+        return;
+      }
+
       const formData = new FormData(form);
       const records = getClientRecords();
-      const clientType = form.dataset.clientType || "individual";
-      const statusGroup = String(formData.get("statusGroup") || "prospects");
-      const source = String(formData.get("source") || "Direct").trim() || "Direct";
-      const coverageAmount = Number(formData.get("coverageAmount") || 0);
-      const coverageGap = Number(formData.get("coverageGap") || 0);
-      const summary = String(formData.get("summary") || "").trim() || "New client profile";
+      const clientStage = String(formData.get("clientStage") || "Prospect");
+      const statusGroup = mapClientStageToStatusGroup(clientStage);
+      const source = String(formData.get("dataSource") || "Advisor Entered").trim() || "Advisor Entered";
+      const coverageAmount = 0;
+      const coverageGap = 0;
+      const priority = "";
+      const firstName = String(formData.get("firstName") || "").trim();
+      const preferredName = String(formData.get("preferredName") || "").trim();
+      const summary = String(formData.get("clientNotes") || "").trim() || "New client profile";
+      const lastName = String(formData.get("lastName") || "").trim();
+      const assignmentMode = String(formData.get("profileAssignmentMode") || "").trim();
+      const assignmentTargetId = String(formData.get("profileAssignmentTargetId") || "").trim();
+      const assignmentTargetType = String(formData.get("profileAssignmentTargetType") || "").trim();
+      const requestedAssignmentName = String(formData.get("profileAssignmentName") || "").trim();
+      const advisorName = String(formData.get("advisorName") || "").trim() || currentSession?.name || "";
+      const createdBy = String(formData.get("createdBy") || "").trim() || currentSession?.name || "Advisor";
+      const dateProfileCreated = String(formData.get("dateProfileCreated") || today);
+      const lastUpdatedDate = String(formData.get("lastUpdatedDate") || today);
+      let householdId = "";
+      let householdName = "";
+      let profileGroupType = "";
+      let nextRecords = [...records];
 
-      const record = clientType === "household"
-        ? {
-            id: `cl-${Date.now()}`,
-            viewType: "households",
-            displayName: String(formData.get("householdName") || "").trim(),
-            lastName: String(formData.get("primaryLastName") || "").trim(),
-            summary,
-            caseRef: buildNextCaseRef(records),
-            lastReview: String(formData.get("lastReview") || ""),
-            insured: String(formData.get("insuredCount") || "1").trim(),
-            source,
-            statusGroup,
-            statusLabels: deriveStatusLabels(statusGroup, clientType),
-            coverageAmount,
-            coverageGap
+      if (!assignmentMode) {
+        setFormFeedback(feedback, "Select how this client should be assigned before continuing.");
+        return;
+      }
+
+      if (assignmentMode === "existing-household" || assignmentMode === "existing-company") {
+        const expectedType = assignmentMode === "existing-company" ? "companies" : "households";
+        const existingProfile = nextRecords.find((record) => record.id === assignmentTargetId && record.viewType === expectedType);
+        if (!existingProfile) {
+          setFormFeedback(feedback, expectedType === "companies" ? "Select a valid company profile before saving." : "Select a valid household before saving.");
+          return;
+        }
+
+        householdId = existingProfile.id;
+        householdName = existingProfile.displayName;
+        profileGroupType = expectedType === "companies" ? "company" : "household";
+        nextRecords = nextRecords.map((record) => {
+          if (record.id !== existingProfile.id) {
+            return record;
           }
-        : {
-            id: `cl-${Date.now()}`,
-            viewType: "individuals",
-            displayName: `${String(formData.get("firstName") || "").trim()} ${String(formData.get("lastName") || "").trim()}`.trim(),
-            lastName: String(formData.get("lastName") || "").trim(),
-            summary,
-            caseRef: buildNextCaseRef(records),
-            lastReview: String(formData.get("lastReview") || ""),
-            insured: String(formData.get("insured") || "Yes").trim(),
-            source,
-            statusGroup,
-            statusLabels: deriveStatusLabels(statusGroup, clientType),
-            coverageAmount,
-            coverageGap
-          };
 
-      records.unshift(record);
-      localStorage.setItem(STORAGE_KEYS.clientRecords, JSON.stringify(records));
+          const currentCount = Number(record.insured || 0);
+          const nextCount = Number.isFinite(currentCount) ? currentCount + 1 : 1;
+          return {
+            ...record,
+            insured: String(nextCount),
+            lastReview: lastUpdatedDate,
+            statusGroup,
+            priority,
+            source,
+            lastUpdatedDate
+          };
+        });
+      } else if (assignmentMode === "create-household" || assignmentMode === "create-company") {
+        if (!requestedAssignmentName) {
+          setFormFeedback(feedback, assignmentMode === "create-company"
+            ? "Enter a company profile name before saving."
+            : "Enter a household name before saving.");
+          return;
+        }
+
+        const isCompany = assignmentMode === "create-company";
+        householdName = isCompany ? formatCompanyDisplayName(requestedAssignmentName) : formatHouseholdDisplayName(requestedAssignmentName || lastName || firstName);
+        householdId = `${isCompany ? "co" : "hh"}-${Date.now()}`;
+        profileGroupType = isCompany ? "company" : "household";
+        const groupRecord = {
+          id: householdId,
+          viewType: isCompany ? "companies" : "households",
+          displayName: householdName,
+          lastName,
+          summary: isCompany ? "Company profile" : "Household profile",
+          caseRef: buildNextCaseRef(nextRecords),
+          lastReview: lastUpdatedDate,
+          insured: "1",
+          source,
+          statusGroup,
+          statusLabels: deriveStatusLabels(statusGroup, isCompany ? "company" : "household"),
+          priority,
+          coverageAmount,
+          coverageGap,
+          advisorName,
+          createdBy,
+          dateProfileCreated,
+          lastUpdatedDate,
+          householdId,
+          dataSource: source
+        };
+        nextRecords.unshift(groupRecord);
+      } else {
+        setFormFeedback(feedback, "Choose how this client should be assigned before saving.");
+        return;
+      }
+
+      const record = {
+        id: `cl-${Date.now()}`,
+        viewType: "individuals",
+        displayName: `${preferredName || firstName} ${lastName}`.trim(),
+        firstName,
+        middleName: String(formData.get("middleName") || "").trim(),
+        lastName,
+        preferredName,
+        summary,
+        caseRef: buildNextCaseRef(nextRecords),
+        lastReview: lastUpdatedDate,
+        insured: "Yes",
+        source,
+        statusGroup,
+        statusLabels: deriveStatusLabels(statusGroup, "individual"),
+        priority,
+        coverageAmount,
+        coverageGap,
+        householdId,
+        householdName,
+        profileGroupType,
+        dateOfBirth: String(formData.get("dateOfBirth") || ""),
+        age: Number(formData.get("age") || 0),
+        targetRetirementAge: String(formData.get("targetRetirementAge") || "").trim(),
+        insuranceRatingSex: String(formData.get("insuranceRatingSex") || ""),
+        maritalStatus: String(formData.get("maritalStatus") || ""),
+        householdRole: String(formData.get("householdRole") || ""),
+        hasDependents: String(formData.get("hasDependents") || "No"),
+        dependentsCount: Number(formData.get("dependentsCount") || 0),
+        youngestDependentAge: Number(formData.get("youngestDependentAge") || 0),
+        educationFundingPerDependent: Number(formData.get("educationFundingPerDependent") || 0),
+        emailAddress: String(formData.get("emailAddress") || "").trim(),
+        phoneNumber: String(formData.get("phoneNumber") || "").trim(),
+        preferredContactMethod: String(formData.get("preferredContactMethod") || ""),
+        streetAddress: String(formData.get("streetAddress") || "").trim(),
+        city: String(formData.get("city") || "").trim(),
+        state: String(formData.get("state") || "").trim(),
+        zipCode: String(formData.get("zipCode") || "").trim(),
+        country: String(formData.get("country") || "").trim(),
+        occupation: String(formData.get("occupation") || "").trim(),
+        employerName: String(formData.get("employerName") || "").trim(),
+        employmentStatus: String(formData.get("employmentStatus") || ""),
+        advisorName,
+        firmName: String(formData.get("firmName") || "").trim(),
+        dateProfileCreated,
+        lastUpdatedDate,
+        createdBy,
+        dataSource: source,
+        planningPriority: String(formData.get("planningPriority") || ""),
+        clientStage,
+        clientNotes: String(formData.get("clientNotes") || "").trim()
+      };
+
+      nextRecords.unshift(record);
+      writeClientRecords(nextRecords);
+      sessionStorage.setItem(STORAGE_KEYS.clientViewIntent, "individuals");
+      sessionStorage.setItem(STORAGE_KEYS.clientView, "individuals");
+      sessionStorage.setItem(STORAGE_KEYS.clientStatus, "all");
       sessionStorage.setItem(STORAGE_KEYS.clientItemsShownReset, "true");
-      window.location.href = "clients.html";
+      sessionStorage.setItem(STORAGE_KEYS.routeLoading, JSON.stringify({
+        target: "clients.html",
+        startedAt: Date.now()
+      }));
+      showRouteLoadingOverlay();
+      window.setTimeout(() => {
+        window.location.href = "clients.html";
+      }, 60);
     });
   }
 
@@ -1022,7 +1545,9 @@
     const rowsHost = document.getElementById("client-table-rows");
     const emptyState = document.getElementById("client-empty-state");
     const searchField = document.querySelector(".client-table-search input");
+    const exportDropdown = document.querySelector("[data-export-dropdown]");
     const exportButton = document.querySelector("[data-export-button]");
+    const exportOptions = document.querySelectorAll("[data-export-action]");
     const addClientButton = document.querySelector("[data-add-client-button]");
     const viewButtons = document.querySelectorAll("[data-client-view]");
     const statusButtons = document.querySelectorAll("[data-client-status]");
@@ -1045,7 +1570,8 @@
     const shouldRestoreClientStatus = navigationEntry?.type === "reload";
     let activeStatus = shouldRestoreClientStatus ? (sessionStorage.getItem(STORAGE_KEYS.clientStatus) || "all") : "all";
     const shouldRestoreClientView = navigationEntry?.type === "reload";
-    let activeView = shouldRestoreClientView ? (sessionStorage.getItem(STORAGE_KEYS.clientView) || "individuals") : "individuals";
+    const forcedClientView = sessionStorage.getItem(STORAGE_KEYS.clientViewIntent);
+    let activeView = forcedClientView || (shouldRestoreClientView ? (sessionStorage.getItem(STORAGE_KEYS.clientView) || "individuals") : "individuals");
     const shouldResetItemsShown = sessionStorage.getItem(STORAGE_KEYS.clientItemsShownReset) === "true";
     const shouldRestoreItemsShown = navigationEntry?.type === "reload" && !shouldResetItemsShown;
     let itemsShown = Number(shouldRestoreItemsShown ? (sessionStorage.getItem(STORAGE_KEYS.clientItemsShown) || "15") : "15");
@@ -1056,13 +1582,14 @@
     }
 
     if (!shouldRestoreClientView) {
-      sessionStorage.setItem(STORAGE_KEYS.clientView, "individuals");
+      sessionStorage.setItem(STORAGE_KEYS.clientView, activeView);
     }
 
     if (!shouldRestoreItemsShown) {
       sessionStorage.setItem(STORAGE_KEYS.clientItemsShown, "15");
     }
 
+    sessionStorage.removeItem(STORAGE_KEYS.clientViewIntent);
     sessionStorage.removeItem(STORAGE_KEYS.clientItemsShownReset);
 
     function syncItemsShownControls() {
@@ -1094,10 +1621,21 @@
 
       const hasSelection = selectedRecordIds.size > 0;
       exportButton.classList.toggle("is-active", hasSelection);
+      exportButton.disabled = !hasSelection;
+      exportButton.setAttribute("aria-disabled", String(!hasSelection));
+
+      if (!hasSelection && exportDropdown) {
+        exportDropdown.classList.remove("is-open");
+        exportButton.setAttribute("aria-expanded", "false");
+      }
 
       if (addClientButton) {
         addClientButton.classList.toggle("is-inactive", hasSelection);
       }
+    }
+
+    function getSelectedRecords() {
+      return allRecords.filter((record) => selectedRecordIds.has(record.id));
     }
 
     function getFilteredRecords() {
@@ -1163,6 +1701,43 @@
             selectedRecordIds.delete(recordId);
           }
           syncExportButtonState();
+        });
+      });
+
+      rowsHost.querySelectorAll("[data-priority-trigger]").forEach((button) => {
+        button.addEventListener("click", (event) => {
+          event.stopPropagation();
+          const dropdown = button.closest("[data-priority-dropdown]");
+          const row = button.closest(".client-table");
+          if (!dropdown) {
+            return;
+          }
+
+          rowsHost.querySelectorAll("[data-priority-dropdown].is-open").forEach((item) => {
+            if (item !== dropdown) {
+              item.classList.remove("is-open");
+              item.querySelector("[data-priority-trigger]")?.setAttribute("aria-expanded", "false");
+              item.closest(".client-table")?.classList.remove("is-priority-open");
+            }
+          });
+
+          const isOpen = dropdown.classList.toggle("is-open");
+          button.setAttribute("aria-expanded", String(isOpen));
+          row?.classList.toggle("is-priority-open", isOpen);
+        });
+      });
+
+      rowsHost.querySelectorAll("[data-priority-option]").forEach((option) => {
+        option.addEventListener("click", (event) => {
+          event.stopPropagation();
+          const recordId = option.dataset.priorityRecord;
+          const priority = normalizePriority(option.dataset.priorityOption);
+          if (!recordId) {
+            return;
+          }
+
+          updateClientPriority(recordId, priority);
+          renderDirectory();
         });
       });
 
@@ -1260,16 +1835,79 @@
       });
     }
 
-    if (exportButton) {
-      exportButton.addEventListener("click", () => {
-        const selectedRecords = allRecords.filter((record) => selectedRecordIds.has(record.id));
+    if (addClientButton) {
+      addClientButton.addEventListener("click", (event) => {
+        const href = addClientButton.getAttribute("href");
+        if (!href) {
+          return;
+        }
+
+        event.preventDefault();
+        document.body.classList.add("is-direct-create-loading");
+        sessionStorage.setItem(STORAGE_KEYS.routeLoading, JSON.stringify({
+          target: href,
+          startedAt: Date.now()
+        }));
+        showRouteLoadingOverlay("Opening client profile...");
+        window.setTimeout(() => {
+          window.location.href = href;
+        }, 60);
+      });
+    }
+
+    if (exportButton && exportDropdown) {
+      exportButton.addEventListener("click", (event) => {
+        event.stopPropagation();
+        if (!selectedRecordIds.size) {
+          return;
+        }
+
+        const isOpen = exportDropdown.classList.toggle("is-open");
+        exportButton.setAttribute("aria-expanded", String(isOpen));
+      });
+    }
+
+    exportOptions.forEach((option) => {
+      option.addEventListener("click", async (event) => {
+        event.stopPropagation();
+        const selectedRecords = getSelectedRecords();
         if (!selectedRecords.length) {
           return;
         }
 
-        exportClientRecords(selectedRecords);
+        const action = option.dataset.exportAction;
+        if (action === "print") {
+          printClientRecords(selectedRecords);
+        } else if (action === "share") {
+          await shareClientRecords(selectedRecords);
+        } else {
+          exportClientRecords(selectedRecords);
+        }
+
+        exportDropdown?.classList.remove("is-open");
+        exportButton?.setAttribute("aria-expanded", "false");
       });
     }
+
+    document.addEventListener("click", (event) => {
+      const target = event.target;
+      if (target.closest("[data-export-dropdown]")) {
+        return;
+      }
+
+      exportDropdown?.classList.remove("is-open");
+      exportButton?.setAttribute("aria-expanded", "false");
+
+      if (target.closest("[data-priority-dropdown]")) {
+        return;
+      }
+
+      rowsHost.querySelectorAll("[data-priority-dropdown].is-open").forEach((dropdown) => {
+        dropdown.classList.remove("is-open");
+        dropdown.querySelector("[data-priority-trigger]")?.setAttribute("aria-expanded", "false");
+        dropdown.closest(".client-table")?.classList.remove("is-priority-open");
+      });
+    });
 
     syncItemsShownControls();
     renderDirectory();
@@ -1296,8 +1934,6 @@
         sessionStorage.removeItem(STORAGE_KEYS.routeLoading);
       }
     }
-    const isProspectPage = document.body.classList.contains("prospect-page");
-
     loadingLinks.forEach((link) => {
       link.addEventListener("click", (event) => {
         const href = link.getAttribute("href");
@@ -1317,7 +1953,15 @@
       });
     });
 
-    if (!isProspectPage || !routeLoading?.startedAt) {
+    if (!routeLoading?.startedAt) {
+      return;
+    }
+
+    const currentPath = window.location.pathname.split("/").pop() || "";
+    const targetPath = String(routeLoading.target || "").split("/").pop();
+    if (targetPath && currentPath && targetPath !== currentPath) {
+      hideRouteLoadingOverlay();
+      sessionStorage.removeItem(STORAGE_KEYS.routeLoading);
       return;
     }
 
@@ -1331,8 +1975,9 @@
     }, remaining);
   }
 
-  function showRouteLoadingOverlay() {
+  function showRouteLoadingOverlay(message = "Opening client profile...", options = {}) {
     let overlay = document.querySelector("[data-route-loading-overlay]");
+    const variant = options.variant || "default";
 
     if (!overlay) {
       overlay = document.createElement("div");
@@ -1344,11 +1989,21 @@
             <span class="account-icon-head route-loading-head"></span>
             <span class="account-icon-body route-loading-body"></span>
           </span>
-          <p class="route-loading-text">Opening new prospect...</p>
+          <p class="route-loading-text">${message}</p>
+          <div class="route-loading-progress" aria-hidden="true">
+            <span class="route-loading-progress-bar"></span>
+          </div>
         </div>
       `;
       document.body.appendChild(overlay);
     }
+
+    const textHost = overlay.querySelector(".route-loading-text");
+    if (textHost) {
+      textHost.textContent = message;
+    }
+
+    overlay.classList.toggle("is-sign-out", variant === "signout");
 
     document.body.classList.add("is-route-loading");
     document.documentElement.classList.add("is-route-loading");
@@ -1357,17 +2012,77 @@
   function hideRouteLoadingOverlay() {
     document.body.classList.remove("is-route-loading");
     document.documentElement.classList.remove("is-route-loading");
+    const overlay = document.querySelector("[data-route-loading-overlay]");
+    if (overlay) {
+      overlay.classList.remove("is-sign-out");
+    }
+  }
+
+  function performSignOut() {
+    showRouteLoadingOverlay("Signing out...", { variant: "signout" });
+
+    window.setTimeout(() => {
+      localStorage.removeItem(STORAGE_KEYS.authSession);
+      const prefix = getPathPrefix();
+      window.location.href = `${prefix}index.html`;
+    }, 1000);
   }
 
   function ensureClientRecords() {
-    if (!localStorage.getItem(STORAGE_KEYS.clientRecords)) {
-      localStorage.setItem(STORAGE_KEYS.clientRecords, JSON.stringify(DEFAULT_CLIENT_RECORDS));
+    const storageKey = getClientRecordsStorageKey();
+    if (!localStorage.getItem(storageKey)) {
+      const legacyRecords = loadJson(STORAGE_KEYS.clientRecords);
+      const initialRecords = Array.isArray(legacyRecords)
+        ? legacyRecords
+        : (getStorageIdentity() === "guest" ? DEFAULT_CLIENT_RECORDS : []);
+      writeClientRecords(initialRecords);
+
+      if (Array.isArray(legacyRecords)) {
+        localStorage.removeItem(STORAGE_KEYS.clientRecords);
+      }
+      return;
+    }
+
+    const records = loadJson(storageKey);
+    if (!Array.isArray(records)) {
+      writeClientRecords(getStorageIdentity() === "guest" ? DEFAULT_CLIENT_RECORDS : []);
+      return;
+    }
+
+    const normalizedRecords = normalizeClientRecords(records);
+
+    if (JSON.stringify(records) !== JSON.stringify(normalizedRecords)) {
+      writeClientRecords(normalizedRecords);
     }
   }
 
   function getClientRecords() {
     ensureClientRecords();
-    return loadJson(STORAGE_KEYS.clientRecords) || [];
+    return loadJson(getClientRecordsStorageKey()) || [];
+  }
+
+  function writeClientRecords(records) {
+    localStorage.setItem(getClientRecordsStorageKey(), JSON.stringify(normalizeClientRecords(records)));
+  }
+
+  function normalizeClientRecords(records) {
+    return records.map((record) => ({
+      ...record,
+      priority: normalizePriority(record.priority)
+    }));
+  }
+
+  function getClientRecordsStorageKey() {
+    return `${STORAGE_KEYS.clientRecords}:${getStorageIdentity()}`;
+  }
+
+  function getStorageIdentity() {
+    const session = getCurrentSession();
+    return session?.email ? String(session.email).trim().toLowerCase() : "guest";
+  }
+
+  function getCurrentSession() {
+    return loadJson(STORAGE_KEYS.authSession);
   }
 
   function buildNextCaseRef(records) {
@@ -1379,6 +2094,93 @@
     return `CL/${highestNumber + 1}`;
   }
 
+  function formatDateInputValue(value) {
+    const date = value instanceof Date ? value : new Date(value);
+    if (Number.isNaN(date.getTime())) {
+      return "";
+    }
+
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  }
+
+  function calculateAgeFromDate(value) {
+    if (!value) {
+      return 0;
+    }
+
+    const match = String(value).match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (!match) {
+      return 0;
+    }
+
+    const birthYear = Number(match[1]);
+    const birthMonthIndex = Number(match[2]) - 1;
+    const birthDay = Number(match[3]);
+    if (!Number.isFinite(birthYear) || !Number.isFinite(birthMonthIndex) || !Number.isFinite(birthDay)) {
+      return 0;
+    }
+
+    const today = new Date();
+    let age = today.getFullYear() - birthYear;
+    const monthDelta = today.getMonth() - birthMonthIndex;
+    if (monthDelta < 0 || (monthDelta === 0 && today.getDate() < birthDay)) {
+      age -= 1;
+    }
+
+    return Math.max(age, 0);
+  }
+
+  function mapClientStageToStatusGroup(value) {
+    const normalized = String(value || "").trim().toLowerCase();
+    if (normalized === "active client") {
+      return "coverage-placed";
+    }
+
+    if (normalized === "review client") {
+      return "in-review";
+    }
+
+    return "prospects";
+  }
+
+  function formatPhoneNumberInput(value) {
+    const digits = String(value || "").replace(/\D/g, "").slice(0, 10);
+    if (!digits) {
+      return "";
+    }
+
+    if (digits.length < 4) {
+      return `(${digits}`;
+    }
+
+    if (digits.length < 7) {
+      return `(${digits.slice(0, 3)}) ${digits.slice(3)}`;
+    }
+
+    return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`;
+  }
+
+  function formatHouseholdDisplayName(value) {
+    const trimmed = String(value || "").trim();
+    if (!trimmed) {
+      return "New Household";
+    }
+
+    return /household$/i.test(trimmed) ? trimmed : `${trimmed} Household`;
+  }
+
+  function formatCompanyDisplayName(value) {
+    const trimmed = String(value || "").trim();
+    if (!trimmed) {
+      return "New Company Profile";
+    }
+
+    return trimmed;
+  }
+
   function deriveStatusLabels(statusGroup, clientType) {
     const statusMap = {
       prospects: clientType === "household" ? ["Discovery", "Household"] : ["Discovery", "Individual"],
@@ -1387,7 +2189,38 @@
       closed: clientType === "household" ? ["Closed", "Archive"] : ["Closed", "Archive"]
     };
 
+    if (clientType === "company") {
+      const companyStatusMap = {
+        prospects: ["Discovery", "Company"],
+        "in-review": ["Review", "Business"],
+        "coverage-placed": ["Placed", "Business"],
+        closed: ["Closed", "Archive"]
+      };
+
+      return companyStatusMap[statusGroup] || ["Review"];
+    }
+
     return statusMap[statusGroup] || ["Review"];
+  }
+
+  function normalizePriority(value) {
+    const normalized = String(value || "").trim().toLowerCase();
+    if (normalized === "low" || normalized === "medium" || normalized === "high") {
+      return normalized;
+    }
+
+    return "";
+  }
+
+  function getPriorityDisplay(priority) {
+    const normalized = normalizePriority(priority);
+    const displayMap = {
+      low: "Low",
+      medium: "Medium",
+      high: "High"
+    };
+
+    return displayMap[normalized] || "Set Priority";
   }
 
   function getClientStatusDisplay(statusGroup) {
@@ -1419,6 +2252,7 @@
   function renderClientRow(record, isSelected) {
     const avatarClass = getAvatarClass(record.lastName);
     const clientStatus = getClientStatusDisplay(record.statusGroup);
+    const priority = normalizePriority(record.priority);
 
     return `
       <div class="client-table" role="row">
@@ -1436,13 +2270,24 @@
         <div class="client-table-cell client-table-cell-source-value">${record.source}</div>
         <div class="client-table-cell client-table-cell-status-value">${clientStatus}</div>
         <div class="client-table-cell client-table-cell-coverage-amount-value">${formatCurrencyCompact(record.coverageAmount)}</div>
-        <div class="client-table-cell client-table-cell-value">${formatCurrencyCompact(record.coverageGap)}</div>
+        <div class="client-table-cell client-table-cell-value client-table-cell-priority-value">
+          <div class="client-priority-dropdown" data-priority-dropdown="${record.id}">
+            <button class="client-priority-button ${priority ? `client-priority-button-${priority}` : "client-priority-button-unset"}" type="button" data-priority-trigger aria-expanded="false">
+              ${getPriorityDisplay(priority)}
+            </button>
+            <div class="client-priority-menu">
+              <button class="client-priority-option client-priority-option-low ${priority === "low" ? "is-active" : ""}" type="button" data-priority-record="${record.id}" data-priority-option="low">Low</button>
+              <button class="client-priority-option client-priority-option-medium ${priority === "medium" ? "is-active" : ""}" type="button" data-priority-record="${record.id}" data-priority-option="medium">Medium</button>
+              <button class="client-priority-option client-priority-option-high ${priority === "high" ? "is-active" : ""}" type="button" data-priority-record="${record.id}" data-priority-option="high">High</button>
+            </div>
+          </div>
+        </div>
       </div>
     `;
   }
 
   function exportClientRecords(records) {
-    const header = ["Client", "Case Ref", "Last Review", "Insured", "Source", "Client Status", "Coverage Amount", "Coverage Gap"];
+    const header = ["Client", "Case Ref", "Last Review", "Insured", "Source", "Client Status", "Coverage Amount", "Priority"];
     const rows = records.map((record) => [
       record.displayName,
       record.caseRef,
@@ -1451,7 +2296,7 @@
       record.source,
       getClientStatusDisplay(record.statusGroup),
       formatCurrencyCompact(record.coverageAmount),
-      formatCurrencyCompact(record.coverageGap)
+      getPriorityDisplay(record.priority)
     ]);
     const csv = [header, ...rows]
       .map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(","))
@@ -1466,6 +2311,170 @@
     link.click();
     link.remove();
     URL.revokeObjectURL(url);
+  }
+
+  function printClientRecords(records) {
+    const printWindow = window.open("", "_blank", "noopener,noreferrer,width=1120,height=860");
+    if (!printWindow) {
+      return;
+    }
+
+    const rowsMarkup = records.map((record) => `
+      <tr>
+        <td>${escapeHtml(record.displayName)}</td>
+        <td>${escapeHtml(record.caseRef)}</td>
+        <td>${escapeHtml(formatDateForDirectory(record.lastReview))}</td>
+        <td>${escapeHtml(record.insured)}</td>
+        <td>${escapeHtml(record.source)}</td>
+        <td>${escapeHtml(getClientStatusDisplay(record.statusGroup))}</td>
+        <td>${escapeHtml(formatCurrencyCompact(record.coverageAmount))}</td>
+        <td>${escapeHtml(getPriorityDisplay(record.priority))}</td>
+      </tr>
+    `).join("");
+
+    printWindow.document.write(`
+      <!doctype html>
+      <html lang="en">
+        <head>
+          <meta charset="utf-8">
+          <title>Client Directory Export</title>
+          <style>
+            body {
+              margin: 0;
+              padding: 2rem;
+              font-family: "Segoe UI", Arial, sans-serif;
+              color: #102134;
+              background: #ffffff;
+            }
+            h1 {
+              margin: 0 0 0.5rem;
+              font-size: 1.5rem;
+            }
+            p {
+              margin: 0 0 1.5rem;
+              color: #475467;
+            }
+            table {
+              width: 100%;
+              border-collapse: collapse;
+              font-size: 0.95rem;
+            }
+            th,
+            td {
+              padding: 0.8rem 0.75rem;
+              border: 1px solid #d6dde7;
+              text-align: left;
+            }
+            th {
+              background: #f5f7fb;
+              color: #000000;
+              font-weight: 700;
+            }
+          </style>
+        </head>
+        <body>
+          <h1>Client Directory Export</h1>
+          <p>${records.length} selected ${records.length === 1 ? "profile" : "profiles"}</p>
+          <table>
+            <thead>
+              <tr>
+                <th>Client</th>
+                <th>Case Ref</th>
+                <th>Last Review</th>
+                <th>Insured</th>
+                <th>Source</th>
+                <th>Client Status</th>
+                <th>Coverage Amount</th>
+                <th>Priority</th>
+              </tr>
+            </thead>
+            <tbody>${rowsMarkup}</tbody>
+          </table>
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
+    printWindow.focus();
+    window.setTimeout(() => {
+      printWindow.print();
+      printWindow.close();
+    }, 150);
+  }
+
+  async function shareClientRecords(records) {
+    const summary = buildClientShareSummary(records);
+
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: "Client Directory Selection",
+          text: summary
+        });
+        return;
+      } catch (error) {
+        if (error && error.name === "AbortError") {
+          return;
+        }
+      }
+    }
+
+    const copied = await copyTextToClipboard(summary);
+    if (copied) {
+      window.alert("Selected client details copied to the clipboard.");
+      return;
+    }
+
+    window.alert("Sharing is not available in this browser.");
+  }
+
+  function buildClientShareSummary(records) {
+    const lines = records.map((record) => (
+      `${record.displayName} | ${record.caseRef} | ${getClientStatusDisplay(record.statusGroup)} | ${formatCurrencyCompact(record.coverageAmount)} | ${getPriorityDisplay(record.priority)}`
+    ));
+
+    return [
+      "Client Directory Selection",
+      "",
+      ...lines
+    ].join("\n");
+  }
+
+  async function copyTextToClipboard(text) {
+    if (navigator.clipboard && window.isSecureContext) {
+      try {
+        await navigator.clipboard.writeText(text);
+        return true;
+      } catch (error) {
+        return false;
+      }
+    }
+
+    const textarea = document.createElement("textarea");
+    textarea.value = text;
+    textarea.setAttribute("readonly", "");
+    textarea.style.position = "fixed";
+    textarea.style.top = "-9999px";
+    document.body.appendChild(textarea);
+    textarea.select();
+
+    let copied = false;
+    try {
+      copied = document.execCommand("copy");
+    } catch (error) {
+      copied = false;
+    }
+
+    document.body.removeChild(textarea);
+    return copied;
+  }
+
+  function escapeHtml(value) {
+    return String(value)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
   }
 
   function formatDateForDirectory(value) {
@@ -1489,6 +2498,16 @@
       notation: amount >= 1000000 ? "compact" : "standard",
       maximumFractionDigits: amount >= 1000000 ? 2 : 0
     }).format(amount);
+  }
+
+  function updateClientPriority(recordId, priority) {
+    const records = getClientRecords().map((record) => (
+      record.id === recordId
+        ? { ...record, priority: normalizePriority(priority) }
+        : record
+    ));
+
+    writeClientRecords(records);
   }
 
   function getInitials(name) {
@@ -1566,6 +2585,8 @@
       element.textContent = value;
     }
   }
+
+  window.performLensSignOut = performSignOut;
 
   function buildInlineValue(first, second) {
     const parts = [first, second].filter(Boolean);

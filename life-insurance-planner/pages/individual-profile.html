@@ -14,6 +14,7 @@
         document.documentElement.classList.add("is-route-loading");
       }
     } catch (error) {}
+    window.location.replace("new-prospect.html");
   </script>
 </head>
 <body class="home-page prospect-page profile-creation-page">
@@ -51,9 +52,9 @@
               <a class="site-dropdown-link" href="policy-web.html">Policy Web</a>
             </div>
           </div>
+          <div class="language-slot" data-language-slot></div>
+          <div class="account-slot" data-account-slot></div>
         </nav>
-        <div class="language-slot" data-language-slot></div>
-        <div class="account-slot" data-account-slot></div>
       </div>
     </div>
   </header>
@@ -100,6 +101,15 @@
               <input id="last-review" name="lastReview" type="date" required>
             </div>
             <div class="field-group">
+              <label for="priority">Priority</label>
+              <select id="priority" name="priority" required>
+                <option value="" selected disabled>Select Priority</option>
+                <option value="low">Low</option>
+                <option value="medium">Medium</option>
+                <option value="high">High</option>
+              </select>
+            </div>
+            <div class="field-group">
               <label for="coverage-amount">Coverage Amount</label>
               <input id="coverage-amount" name="coverageAmount" type="number" min="0" step="1000" required>
             </div>
@@ -112,6 +122,7 @@
               <input id="profile-summary" name="summary" type="text" placeholder="Short description for the client directory">
             </div>
           </div>
+          <p class="profile-creation-feedback" id="client-creation-feedback" hidden></p>
           <div class="actions-row">
             <button class="btn btn-primary" type="submit">Save Individual Profile</button>
           </div>

@@ -10,6 +10,15 @@
   <link rel="stylesheet" href="../styles.css">
 </head>
 <body class="home-page clients-page">
+  <div class="route-loading-overlay" data-route-loading-overlay>
+    <div class="route-loading-card">
+      <span class="route-loading-icon" aria-hidden="true">
+        <span class="account-icon-head route-loading-head"></span>
+        <span class="account-icon-body route-loading-body"></span>
+      </span>
+      <p class="route-loading-text">Opening client profile...</p>
+    </div>
+  </div>
   <header class="site-header">
     <div class="site-header-inner">
       <a class="site-brand" href="../index.html">
@@ -35,9 +44,25 @@
               <a class="site-dropdown-link" href="policy-web.html">Policy Web</a>
             </div>
           </div>
+          <div class="language-slot" data-language-slot>
+            <div class="language-dropdown">
+              <button class="language-trigger" type="button" aria-label="Language">
+                <img class="language-icon-image" src="../Images/Untitled design.png" alt="" aria-hidden="true">
+              </button>
+            </div>
+          </div>
+          <div class="account-slot" data-account-slot>
+            <div class="account-dropdown">
+              <a class="account-profile account-dropdown-toggle account-profile-signed-out" href="sign-in.html">
+                <span class="account-icon" aria-hidden="true">
+                  <span class="account-icon-head"></span>
+                  <span class="account-icon-body"></span>
+                </span>
+                <span class="sr-only">Open sign in menu</span>
+              </a>
+            </div>
+          </div>
         </nav>
-        <div class="language-slot" data-language-slot></div>
-        <div class="account-slot" data-account-slot></div>
       </div>
     </div>
   </header>
@@ -78,12 +103,19 @@
         <header class="client-directory-header">
           <div class="client-directory-title-block">
             <h1>Client Directory</h1>
-            <p>The Client Directory is the <strong>central hub</strong> for creating and managing household and individual profiles.<br><span class="client-directory-description-line">Each client account securely stores profile information and connects to the platform's planning and analysis tools.</span></p>
+            <p>The Client Directory is the <strong>central hub</strong> for creating and managing household and individual profiles.<br><span class="client-directory-description-line">Each client account securely stores profile information and <strong>connects to the platform's planning and analysis tools.</strong></span></p>
           </div>
           <div class="client-directory-header-actions">
-            <button class="client-header-action client-header-action-secondary" type="button" data-export-button>Export</button>
+            <div class="client-export-dropdown" data-export-dropdown>
+              <button class="client-header-action client-header-action-secondary" type="button" data-export-button aria-expanded="false">Export</button>
+              <div class="client-export-menu">
+                <button class="client-export-option" type="button" data-export-action="print">Print</button>
+                <button class="client-export-option" type="button" data-export-action="save">Save</button>
+                <button class="client-export-option" type="button" data-export-action="share">Share</button>
+              </div>
+            </div>
             <a class="client-header-action client-header-action-primary" href="new-prospect.html" data-add-client-button data-loading-link>
-              <span aria-hidden="true">+</span>
+              <span class="client-add-icon" aria-hidden="true">+</span>
               <span>Add New</span>
             </a>
           </div>
@@ -128,11 +160,11 @@
             <div class="client-table-cell client-table-cell-client">Client</div>
             <div class="client-table-cell">Case Ref</div>
             <div class="client-table-cell client-table-cell-last-review">Last Review</div>
-            <div class="client-table-cell">Insured</div>
+            <div class="client-table-cell client-table-cell-insured-title">Insured</div>
             <div class="client-table-cell client-table-cell-source-title">Source</div>
             <div class="client-table-cell client-table-cell-status-title">Client Status</div>
             <div class="client-table-cell client-table-cell-nowrap client-table-cell-coverage-amount-title">Coverage Amount</div>
-            <div class="client-table-cell client-table-cell-value">Coverage Gap</div>
+            <div class="client-table-cell client-table-cell-value client-table-cell-priority-title">Priority</div>
           </div>
           <div id="client-table-rows"></div>
           <div class="client-empty-state" id="client-empty-state" hidden>No client records match the current filters.</div>
