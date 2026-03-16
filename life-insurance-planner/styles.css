@@ -1189,6 +1189,18 @@ select option:disabled {
   max-width: 8.5rem;
 }
 
+.profile-currency-field {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.profile-currency-suffix {
+  color: #6f7685;
+  font-size: 0.86rem;
+  font-weight: 700;
+}
+
 .profile-dependent-row {
   display: inline-grid;
   grid-template-columns: repeat(4, max-content);
@@ -1217,6 +1229,34 @@ select option:disabled {
   width: 1px;
   height: calc(100% - 1.55rem);
   background: #d8deea;
+}
+
+.profile-dependent-secondary-row {
+  display: flex;
+  align-items: flex-start;
+  margin-top: 0.2rem;
+  width: 100%;
+  grid-column: 1 / -1;
+}
+
+.profile-dependent-secondary-row > .field-group + .field-group {
+  position: relative;
+  padding-left: 0.95rem;
+  margin-left: 0.45rem;
+}
+
+.profile-dependent-secondary-row > .field-group + .field-group::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 1.55rem;
+  width: 1px;
+  height: calc(100% - 1.55rem);
+  background: #d8deea;
+}
+
+.profile-dependent-secondary-row .field-group label {
+  white-space: nowrap;
 }
 
 .profile-placeholder-select.is-placeholder {

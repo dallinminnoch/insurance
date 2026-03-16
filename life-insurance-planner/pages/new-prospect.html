@@ -218,11 +218,17 @@
                     </div>
                     <div class="field-group">
                       <label for="youngest-dependent-age">Age of Youngest Dependent / Child</label>
-                      <input id="youngest-dependent-age" class="profile-yes-no-field" name="youngestDependentAge" type="number" min="0" step="1">
+                      <div class="profile-currency-field">
+                        <input id="youngest-dependent-age" class="profile-yes-no-field" name="youngestDependentAge" type="number" min="0" step="1">
+                        <span class="profile-currency-suffix">Years</span>
+                      </div>
                     </div>
                     <div class="field-group">
                       <label for="education-funding-per-dependent">Desired Education Funding (Per Dependent)</label>
-                      <input id="education-funding-per-dependent" class="profile-education-funding-field" name="educationFundingPerDependent" type="number" min="0" step="5000" list="education-funding-options">
+                      <div class="profile-currency-field">
+                        <input id="education-funding-per-dependent" class="profile-education-funding-field" name="educationFundingPerDependent" type="number" min="0" step="5000" list="education-funding-options">
+                        <span class="profile-currency-suffix">USD</span>
+                      </div>
                       <datalist id="education-funding-options">
                         <option value="5000"></option>
                         <option value="10000"></option>
@@ -240,6 +246,33 @@
                         <option value="70000"></option>
                         <option value="75000"></option>
                       </datalist>
+                    </div>
+                  </div>
+                  <div class="profile-dependent-secondary-row full-width">
+                    <div class="field-group">
+                      <label for="projected-dependents">Projected Dependents / Children</label>
+                      <select id="projected-dependents" class="profile-yes-no-field" name="projectedDependents">
+                        <option value="No">No</option>
+                        <option value="Yes">Yes</option>
+                      </select>
+                    </div>
+                    <div class="field-group">
+                      <label for="projected-dependents-count">Amount of Desired Dependents / Children</label>
+                      <input id="projected-dependents-count" class="profile-yes-no-field" name="projectedDependentsCount" type="number" min="0" step="1">
+                    </div>
+                    <div class="field-group">
+                      <label for="same-education-funding">Same Education Funding?</label>
+                      <select id="same-education-funding" class="profile-yes-no-field" name="sameEducationFunding">
+                        <option value="Yes">Yes</option>
+                        <option value="No">No</option>
+                      </select>
+                    </div>
+                    <div class="field-group">
+                      <label for="projected-education-funding-per-dependent">Desired Education Funding (Per Dependent)</label>
+                      <div class="profile-currency-field">
+                        <input id="projected-education-funding-per-dependent" class="profile-education-funding-field" name="projectedEducationFundingPerDependent" type="number" min="0" step="5000" list="education-funding-options">
+                        <span class="profile-currency-suffix">USD</span>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -414,6 +447,10 @@
       const dependentsCountField = document.getElementById("dependents-count");
       const youngestDependentAgeField = document.getElementById("youngest-dependent-age");
       const educationFundingPerDependentField = document.getElementById("education-funding-per-dependent");
+      const projectedDependentsField = document.getElementById("projected-dependents");
+      const projectedDependentsCountField = document.getElementById("projected-dependents-count");
+      const sameEducationFundingField = document.getElementById("same-education-funding");
+      const projectedEducationFundingPerDependentField = document.getElementById("projected-education-funding-per-dependent");
       const familyAssignmentOptions = document.querySelectorAll("[data-family-assignment]");
       const businessAssignmentOptions = document.querySelectorAll("[data-business-assignment]");
       const searchHouseholdsButton = document.querySelector("[data-search-households]");
@@ -632,6 +669,57 @@
         });
       }
 
+      function setProjectedFieldDisabled(field, disabled, preserveValue) {
+        if (!field) {
+          return;
+        }
+
+        field.disabled = disabled;
+        field.closest(".field-group")?.classList.toggle("is-disabled", disabled);
+        if (disabled && !preserveValue) {
+          if (field.tagName === "SELECT") {
+            field.selectedIndex = 0;
+          } else {
+            field.value = "";
+          }
+        }
+      }
+
+      function syncProjectedDependentsFields() {
+        const hasCurrentDependents = String(hasDependentsField?.value || "No") === "Yes";
+        const hasProjectedDependents = String(projectedDependentsField?.value || "No") === "Yes";
+        const projectedCount = Number(projectedDependentsCountField?.value || 0);
+        const hasProjectedCount = projectedCount > 0;
+        const sameEducationFunding = String(sameEducationFundingField?.value || "Yes") === "Yes";
+
+        if (!hasProjectedDependents) {
+          setProjectedFieldDisabled(projectedDependentsCountField, true);
+          setProjectedFieldDisabled(sameEducationFundingField, true);
+          setProjectedFieldDisabled(projectedEducationFundingPerDependentField, true);
+          return;
+        }
+
+        setProjectedFieldDisabled(projectedDependentsCountField, false);
+
+        if (!hasProjectedCount) {
+          setProjectedFieldDisabled(sameEducationFundingField, true);
+          setProjectedFieldDisabled(projectedEducationFundingPerDependentField, true);
+          return;
+        }
+
+        if (!hasCurrentDependents) {
+          setProjectedFieldDisabled(sameEducationFundingField, true);
+          setProjectedFieldDisabled(projectedEducationFundingPerDependentField, false);
+          return;
+        }
+
+        setProjectedFieldDisabled(sameEducationFundingField, false);
+        if (sameEducationFunding && projectedEducationFundingPerDependentField && educationFundingPerDependentField) {
+          projectedEducationFundingPerDependentField.value = educationFundingPerDependentField.value;
+        }
+        setProjectedFieldDisabled(projectedEducationFundingPerDependentField, sameEducationFunding, sameEducationFunding);
+      }
+
       function showAgeHint() {
         if (!ageHint || dobField.value) {
           return;
@@ -676,7 +764,16 @@
       assignmentNameField?.addEventListener("input", syncDependentFieldsetState);
       assignmentNameField?.addEventListener("change", syncDependentFieldsetState);
       employmentStatusField?.addEventListener("change", syncEmploymentDetailFields);
-      hasDependentsField?.addEventListener("change", syncDependentsCountField);
+      hasDependentsField?.addEventListener("change", () => {
+        syncDependentsCountField();
+        syncProjectedDependentsFields();
+      });
+      projectedDependentsField?.addEventListener("change", syncProjectedDependentsFields);
+      projectedDependentsCountField?.addEventListener("input", syncProjectedDependentsFields);
+      projectedDependentsCountField?.addEventListener("change", syncProjectedDependentsFields);
+      sameEducationFundingField?.addEventListener("change", syncProjectedDependentsFields);
+      educationFundingPerDependentField?.addEventListener("input", syncProjectedDependentsFields);
+      educationFundingPerDependentField?.addEventListener("change", syncProjectedDependentsFields);
       interestButtons.forEach(function (button) {
         button.addEventListener("click", function () {
           syncInterestButtons(button.dataset.interestButton || "family");
@@ -689,6 +786,7 @@
       syncDependentFieldsetState();
       syncEmploymentDetailFields();
       syncDependentsCountField();
+      syncProjectedDependentsFields();
       syncInterestButtons(interestTypeField?.value || "family");
     })();
   </script>
