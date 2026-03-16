@@ -3,29 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>New Prospect | Advisor Planning Suite</title>
+  <title>Policy Web | Advisor Planning Suite</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@600&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../styles.css">
-  <script>
-    try {
-      if (sessionStorage.getItem("lensRouteLoading")) {
-        document.documentElement.classList.add("is-route-loading");
-      }
-    } catch (error) {}
-  </script>
 </head>
-<body class="home-page prospect-page">
-  <div class="route-loading-overlay" data-route-loading-overlay>
-    <div class="route-loading-card">
-      <span class="route-loading-icon" aria-hidden="true">
-        <span class="account-icon-head route-loading-head"></span>
-        <span class="account-icon-body route-loading-body"></span>
-      </span>
-      <p class="route-loading-text">Opening new prospect...</p>
-    </div>
-  </div>
+<body class="home-page policy-web-page">
   <header class="site-header">
     <div class="site-header-inner">
       <a class="site-brand" href="../index.html">
@@ -37,18 +21,18 @@
         </form>
         <nav class="site-nav" aria-label="Main navigation">
           <div class="site-dropdown">
-            <button class="site-nav-link site-dropdown-toggle is-active" type="button" aria-expanded="true" data-i18n="nav.records">Records</button>
+            <button class="site-nav-link site-dropdown-toggle" type="button" aria-expanded="false" data-i18n="nav.records">Records</button>
             <div class="site-dropdown-menu">
-              <a class="site-dropdown-link is-active" href="clients.html" data-i18n="nav.clients" data-client-directory-nav>Clients</a>
+              <a class="site-dropdown-link" href="clients.html" data-i18n="nav.clients" data-client-directory-nav>Clients</a>
             </div>
           </div>
           <a class="site-nav-link" href="resources.html" data-i18n="nav.resources">Resources</a>
           <div class="site-dropdown">
-            <button class="site-nav-link site-dropdown-toggle" type="button" aria-expanded="false" data-i18n="nav.financialProducts">Financial Products</button>
+            <button class="site-nav-link site-dropdown-toggle is-active" type="button" aria-expanded="true" data-i18n="nav.financialProducts">Products</button>
             <div class="site-dropdown-menu">
               <a class="site-dropdown-link" href="lens.html">LENS Analysis</a>
               <a class="site-dropdown-link" href="strategy-builder.html">Strategy Builder</a>
-              <a class="site-dropdown-link" href="policy-web.html">Policy Web</a>
+              <a class="site-dropdown-link is-active" href="policy-web.html">Policy Web</a>
             </div>
           </div>
         </nav>
@@ -62,17 +46,8 @@
     <section class="prospect-stage">
       <section class="prospect-empty-panel">
         <div class="prospect-panel-header">
-          <a class="prospect-return-button" href="clients.html">Return to Client Directory</a>
-          <h1>Create Client Profile</h1>
+          <h1>Policy Web</h1>
         </div>
-        <section class="prospect-profile-options">
-          <article class="prospect-option-panel">
-            <a class="prospect-option-button prospect-option-button-household" href="household-profile.html" data-loading-link>Create Household Profile</a>
-          </article>
-          <article class="prospect-option-panel">
-            <a class="prospect-option-button prospect-option-button-individual" href="individual-profile.html" data-loading-link>Create Individual Profile</a>
-          </article>
-        </section>
       </section>
     </section>
   </main>

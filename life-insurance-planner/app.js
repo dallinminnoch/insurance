@@ -9,6 +9,7 @@
     clientView: "lensClientView",
     clientItemsShown: "lensClientItemsShown",
     clientItemsShownReset: "lensClientItemsShownReset",
+    clientRecords: "lensClientRecords",
     routeLoading: "lensRouteLoading",
     authUsers: "lipPlannerAuthUsers",
     authSession: "lipPlannerAuthSession",
@@ -19,6 +20,83 @@
     email: "admin@lens.com",
     password: "admin1001"
   };
+  const DEFAULT_CLIENT_RECORDS = [
+    {
+      id: "cl-80421",
+      viewType: "households",
+      displayName: "Carter Household",
+      lastName: "Carter",
+      summary: "Household protection review",
+      caseRef: "CL/80421",
+      lastReview: "2026-03-10",
+      insured: "2",
+      source: "Referral",
+      statusGroup: "in-review",
+      statusLabels: ["Income", "Debt"],
+      coverageAmount: 1850000,
+      coverageGap: 1450000
+    },
+    {
+      id: "cl-80437",
+      viewType: "individuals",
+      displayName: "Daniel Brooks",
+      lastName: "Brooks",
+      summary: "Key person coverage update",
+      caseRef: "CL/80437",
+      lastReview: "2026-03-08",
+      insured: "Yes",
+      source: "CPA",
+      statusGroup: "coverage-placed",
+      statusLabels: ["Business", "Estate"],
+      coverageAmount: 1200000,
+      coverageGap: 780000
+    },
+    {
+      id: "cl-80462",
+      viewType: "individuals",
+      displayName: "Sophia Nguyen",
+      lastName: "Nguyen",
+      summary: "Family education funding plan",
+      caseRef: "CL/80462",
+      lastReview: "2026-03-07",
+      insured: "Yes",
+      source: "Seminar",
+      statusGroup: "prospects",
+      statusLabels: ["Education", "Income"],
+      coverageAmount: 2600000,
+      coverageGap: 2100000
+    },
+    {
+      id: "cl-80488",
+      viewType: "individuals",
+      displayName: "Michael Torres",
+      lastName: "Torres",
+      summary: "Mortgage and survivor income analysis",
+      caseRef: "CL/80488",
+      lastReview: "2026-03-05",
+      insured: "Yes",
+      source: "Website",
+      statusGroup: "coverage-placed",
+      statusLabels: ["Mortgage", "Needs"],
+      coverageAmount: 1350000,
+      coverageGap: 920000
+    },
+    {
+      id: "cl-80501",
+      viewType: "households",
+      displayName: "Mitchell Household",
+      lastName: "Mitchell",
+      summary: "Coverage review before renewal",
+      caseRef: "CL/80501",
+      lastReview: "2026-03-02",
+      insured: "2",
+      source: "Client Referral",
+      statusGroup: "closed",
+      statusLabels: ["Review", "Retention"],
+      coverageAmount: 620000,
+      coverageGap: 430000
+    }
+  ];
 
   const allSteps = [
     { id: "profile-1", label: "Client Profile 1", path: "profile.html" },
@@ -37,7 +115,8 @@
       "pageTitle.clients": "Clients | Advisor Planning Suite",
       "nav.records": "Records",
       "nav.clients": "Clients",
-      "nav.financialProducts": "Financial Products",
+      "nav.financialProducts": "Products",
+      "nav.resources": "Resources",
       "search.placeholder": "Search",
       "language.label": "Language",
       "language.english": "English",
@@ -95,9 +174,10 @@
       "pageTitle.home": "Evaluacion de Vida y Analisis de Necesidades",
       "pageTitle.lens": "LENS | Evaluacion de Vida y Analisis de Necesidades",
       "pageTitle.clients": "Clientes | Suite de Planificacion para Asesores",
-      "nav.records": "Registros",
+      "nav.records": "Records",
       "nav.clients": "Clientes",
-      "nav.financialProducts": "Productos Financieros",
+      "nav.financialProducts": "Products",
+      "nav.resources": "Resources",
       "search.placeholder": "Buscar",
       "language.label": "Idioma",
       "language.english": "Ingles",
@@ -155,9 +235,10 @@
       "pageTitle.home": "Evaluation de Vie et Analyse des Besoins",
       "pageTitle.lens": "LENS | Evaluation de Vie et Analyse des Besoins",
       "pageTitle.clients": "Clients | Suite de planification pour conseillers",
-      "nav.records": "Dossiers",
+      "nav.records": "Records",
       "nav.clients": "Clients",
-      "nav.financialProducts": "Produits financiers",
+      "nav.financialProducts": "Products",
+      "nav.resources": "Resources",
       "search.placeholder": "Recherche",
       "language.label": "Langue",
       "language.english": "Anglais",
@@ -228,6 +309,7 @@
     initializeStrategySelection();
     initializeSummaryPage();
     initializeNotesSync();
+    initializeClientCreationForm();
     initializeClientDirectory();
     initializeClientDirectoryNavLinks();
     initializeRouteLoading();
@@ -878,23 +960,86 @@
     });
   }
 
+  function initializeClientCreationForm() {
+    const form = document.getElementById("client-creation-form");
+
+    if (!form) {
+      return;
+    }
+
+    form.addEventListener("submit", (event) => {
+      event.preventDefault();
+      const formData = new FormData(form);
+      const records = getClientRecords();
+      const clientType = form.dataset.clientType || "individual";
+      const statusGroup = String(formData.get("statusGroup") || "prospects");
+      const source = String(formData.get("source") || "Direct").trim() || "Direct";
+      const coverageAmount = Number(formData.get("coverageAmount") || 0);
+      const coverageGap = Number(formData.get("coverageGap") || 0);
+      const summary = String(formData.get("summary") || "").trim() || "New client profile";
+
+      const record = clientType === "household"
+        ? {
+            id: `cl-${Date.now()}`,
+            viewType: "households",
+            displayName: String(formData.get("householdName") || "").trim(),
+            lastName: String(formData.get("primaryLastName") || "").trim(),
+            summary,
+            caseRef: buildNextCaseRef(records),
+            lastReview: String(formData.get("lastReview") || ""),
+            insured: String(formData.get("insuredCount") || "1").trim(),
+            source,
+            statusGroup,
+            statusLabels: deriveStatusLabels(statusGroup, clientType),
+            coverageAmount,
+            coverageGap
+          }
+        : {
+            id: `cl-${Date.now()}`,
+            viewType: "individuals",
+            displayName: `${String(formData.get("firstName") || "").trim()} ${String(formData.get("lastName") || "").trim()}`.trim(),
+            lastName: String(formData.get("lastName") || "").trim(),
+            summary,
+            caseRef: buildNextCaseRef(records),
+            lastReview: String(formData.get("lastReview") || ""),
+            insured: String(formData.get("insured") || "Yes").trim(),
+            source,
+            statusGroup,
+            statusLabels: deriveStatusLabels(statusGroup, clientType),
+            coverageAmount,
+            coverageGap
+          };
+
+      records.unshift(record);
+      localStorage.setItem(STORAGE_KEYS.clientRecords, JSON.stringify(records));
+      sessionStorage.setItem(STORAGE_KEYS.clientItemsShownReset, "true");
+      window.location.href = "clients.html";
+    });
+  }
+
   function initializeClientDirectory() {
     const letterButtons = document.querySelectorAll("[data-client-letter]");
-    const clientRows = document.querySelectorAll("[data-client-row]");
+    const rowsHost = document.getElementById("client-table-rows");
+    const emptyState = document.getElementById("client-empty-state");
     const searchField = document.querySelector(".client-table-search input");
     const exportButton = document.querySelector("[data-export-button]");
     const addClientButton = document.querySelector("[data-add-client-button]");
-    const rowCheckboxes = document.querySelectorAll("[data-client-row] .client-table-cell-check input");
     const viewButtons = document.querySelectorAll("[data-client-view]");
     const statusButtons = document.querySelectorAll("[data-client-status]");
     const itemsDropdown = document.querySelector("[data-items-dropdown]");
     const itemsTrigger = document.querySelector("[data-items-trigger]");
     const itemsOptions = document.querySelectorAll("[data-items-option]");
+    const paginationHost = document.getElementById("client-pagination-numbers");
+    const prevPageButton = document.getElementById("client-prev-page");
+    const nextPageButton = document.getElementById("client-next-page");
 
-    if (!letterButtons.length || !clientRows.length) {
+    if (!letterButtons.length || !rowsHost) {
       return;
     }
 
+    ensureClientRecords();
+    let allRecords = getClientRecords();
+    const selectedRecordIds = new Set();
     let activeLetter = "all";
     const navigationEntry = window.performance.getEntriesByType("navigation")[0];
     const shouldRestoreClientStatus = navigationEntry?.type === "reload";
@@ -904,6 +1049,7 @@
     const shouldResetItemsShown = sessionStorage.getItem(STORAGE_KEYS.clientItemsShownReset) === "true";
     const shouldRestoreItemsShown = navigationEntry?.type === "reload" && !shouldResetItemsShown;
     let itemsShown = Number(shouldRestoreItemsShown ? (sessionStorage.getItem(STORAGE_KEYS.clientItemsShown) || "15") : "15");
+    let currentPage = 1;
 
     if (!shouldRestoreClientStatus) {
       sessionStorage.setItem(STORAGE_KEYS.clientStatus, "all");
@@ -930,8 +1076,14 @@
     }
 
     function syncStatusButtons() {
+      const counts = buildStatusCounts(allRecords, activeView);
+
       statusButtons.forEach((button) => {
         button.classList.toggle("is-active", button.dataset.clientStatus === activeStatus);
+        const counter = button.querySelector("[data-status-count]");
+        if (counter) {
+          counter.textContent = String(counts[button.dataset.clientStatus] || 0);
+        }
       });
     }
 
@@ -940,7 +1092,7 @@
         return;
       }
 
-      const hasSelection = Array.from(rowCheckboxes).some((checkbox) => checkbox.checked);
+      const hasSelection = selectedRecordIds.size > 0;
       exportButton.classList.toggle("is-active", hasSelection);
 
       if (addClientButton) {
@@ -948,55 +1100,107 @@
       }
     }
 
-    function applyClientFilters() {
+    function getFilteredRecords() {
       const query = (searchField?.value || "").trim().toLowerCase();
-      let visibleCount = 0;
 
-      clientRows.forEach((row) => {
-        const lastInitial = row.dataset.lastInitial || "";
-        const statusGroup = row.dataset.clientStatusGroup || "all";
-        const clientName = row.querySelector(".client-table-cell-client strong")?.textContent?.toLowerCase() || "";
-        const matchesLetter = activeLetter === "all" || lastInitial === activeLetter;
-        const matchesStatus = activeStatus === "all" || statusGroup === activeStatus;
-        const matchesSearch = !query || clientName.includes(query);
-        const shouldShow = matchesLetter && matchesStatus && matchesSearch && visibleCount < itemsShown;
+      return allRecords.filter((record) => {
+        const matchesView = record.viewType === activeView;
+        const matchesLetter = activeLetter === "all" || getLastInitial(record.lastName) === activeLetter;
+        const matchesStatus = activeStatus === "all" || record.statusGroup === activeStatus;
+        const matchesSearch = !query
+          || record.displayName.toLowerCase().includes(query)
+          || record.summary.toLowerCase().includes(query)
+          || record.caseRef.toLowerCase().includes(query);
 
-        row.hidden = !shouldShow;
-
-        if (matchesLetter && matchesStatus && matchesSearch && visibleCount < itemsShown) {
-          visibleCount += 1;
-        }
+        return matchesView && matchesLetter && matchesStatus && matchesSearch;
       });
+    }
+
+    function renderPagination(totalPages) {
+      if (!paginationHost || !prevPageButton || !nextPageButton) {
+        return;
+      }
+
+      prevPageButton.disabled = currentPage <= 1;
+      nextPageButton.disabled = currentPage >= totalPages;
+      paginationHost.innerHTML = "";
+
+      for (let page = 1; page <= totalPages; page += 1) {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "client-page-number";
+        if (page === currentPage) {
+          button.classList.add("is-active");
+        }
+        button.textContent = String(page);
+        button.addEventListener("click", () => {
+          currentPage = page;
+          renderDirectory();
+        });
+        paginationHost.appendChild(button);
+      }
+    }
+
+    function renderDirectory() {
+      allRecords = getClientRecords();
+      const filteredRecords = getFilteredRecords();
+      const totalPages = Math.max(1, Math.ceil(filteredRecords.length / itemsShown));
+      currentPage = Math.min(currentPage, totalPages);
+      const startIndex = (currentPage - 1) * itemsShown;
+      const visibleRecords = filteredRecords.slice(startIndex, startIndex + itemsShown);
+
+      rowsHost.innerHTML = visibleRecords.map((record) => renderClientRow(record, selectedRecordIds.has(record.id))).join("");
+      if (emptyState) {
+        emptyState.hidden = visibleRecords.length > 0;
+      }
+
+      rowsHost.querySelectorAll("[data-client-checkbox]").forEach((checkbox) => {
+        checkbox.addEventListener("change", () => {
+          const recordId = checkbox.dataset.clientCheckbox;
+          if (checkbox.checked) {
+            selectedRecordIds.add(recordId);
+          } else {
+            selectedRecordIds.delete(recordId);
+          }
+          syncExportButtonState();
+        });
+      });
+
+      renderPagination(totalPages);
+      syncStatusButtons();
+      syncExportButtonState();
     }
 
     letterButtons.forEach((button) => {
       button.addEventListener("click", () => {
         activeLetter = button.dataset.clientLetter || "all";
+        currentPage = 1;
 
         letterButtons.forEach((item) => {
           item.classList.toggle("is-active", item === button);
         });
 
-        applyClientFilters();
+        renderDirectory();
       });
     });
 
     if (searchField) {
-      searchField.addEventListener("input", applyClientFilters);
+      searchField.addEventListener("input", () => {
+        currentPage = 1;
+        renderDirectory();
+      });
     }
-
-    rowCheckboxes.forEach((checkbox) => {
-      checkbox.addEventListener("change", syncExportButtonState);
-    });
 
     viewButtons.forEach((button) => {
       button.classList.toggle("is-active", button.dataset.clientView === activeView);
       button.addEventListener("click", () => {
         activeView = button.dataset.clientView || "individuals";
         sessionStorage.setItem(STORAGE_KEYS.clientView, activeView);
+        currentPage = 1;
         viewButtons.forEach((item) => {
           item.classList.toggle("is-active", item === button);
         });
+        renderDirectory();
       });
     });
 
@@ -1004,8 +1208,8 @@
       button.addEventListener("click", () => {
         activeStatus = button.dataset.clientStatus || "all";
         sessionStorage.setItem(STORAGE_KEYS.clientStatus, activeStatus);
-        syncStatusButtons();
-        applyClientFilters();
+        currentPage = 1;
+        renderDirectory();
       });
     });
 
@@ -1013,8 +1217,9 @@
       option.addEventListener("click", () => {
         itemsShown = Number(option.dataset.itemsOption) || 15;
         sessionStorage.setItem(STORAGE_KEYS.clientItemsShown, String(itemsShown));
+        currentPage = 1;
         syncItemsShownControls();
-        applyClientFilters();
+        renderDirectory();
         if (itemsDropdown) {
           itemsDropdown.classList.remove("is-open");
           itemsTrigger?.setAttribute("aria-expanded", "false");
@@ -1036,10 +1241,38 @@
       });
     }
 
-    syncStatusButtons();
+    if (prevPageButton) {
+      prevPageButton.addEventListener("click", () => {
+        if (currentPage > 1) {
+          currentPage -= 1;
+          renderDirectory();
+        }
+      });
+    }
+
+    if (nextPageButton) {
+      nextPageButton.addEventListener("click", () => {
+        const totalPages = Math.max(1, Math.ceil(getFilteredRecords().length / itemsShown));
+        if (currentPage < totalPages) {
+          currentPage += 1;
+          renderDirectory();
+        }
+      });
+    }
+
+    if (exportButton) {
+      exportButton.addEventListener("click", () => {
+        const selectedRecords = allRecords.filter((record) => selectedRecordIds.has(record.id));
+        if (!selectedRecords.length) {
+          return;
+        }
+
+        exportClientRecords(selectedRecords);
+      });
+    }
+
     syncItemsShownControls();
-    syncExportButtonState();
-    applyClientFilters();
+    renderDirectory();
   }
 
   function initializeClientDirectoryNavLinks() {
@@ -1124,6 +1357,159 @@
   function hideRouteLoadingOverlay() {
     document.body.classList.remove("is-route-loading");
     document.documentElement.classList.remove("is-route-loading");
+  }
+
+  function ensureClientRecords() {
+    if (!localStorage.getItem(STORAGE_KEYS.clientRecords)) {
+      localStorage.setItem(STORAGE_KEYS.clientRecords, JSON.stringify(DEFAULT_CLIENT_RECORDS));
+    }
+  }
+
+  function getClientRecords() {
+    ensureClientRecords();
+    return loadJson(STORAGE_KEYS.clientRecords) || [];
+  }
+
+  function buildNextCaseRef(records) {
+    const highestNumber = records.reduce((highest, record) => {
+      const match = String(record.caseRef || "").match(/CL\/(\d+)/);
+      return match ? Math.max(highest, Number(match[1])) : highest;
+    }, 80400);
+
+    return `CL/${highestNumber + 1}`;
+  }
+
+  function deriveStatusLabels(statusGroup, clientType) {
+    const statusMap = {
+      prospects: clientType === "household" ? ["Discovery", "Household"] : ["Discovery", "Individual"],
+      "in-review": clientType === "household" ? ["Review", "Needs"] : ["Review", "Income"],
+      "coverage-placed": clientType === "household" ? ["Placed", "Review"] : ["Placed", "Policy"],
+      closed: clientType === "household" ? ["Closed", "Archive"] : ["Closed", "Archive"]
+    };
+
+    return statusMap[statusGroup] || ["Review"];
+  }
+
+  function getClientStatusDisplay(statusGroup) {
+    const statusMap = {
+      prospects: "Prospect",
+      "in-review": "In Review",
+      "coverage-placed": "Coverage Placed",
+      closed: "Closed"
+    };
+
+    return statusMap[statusGroup] || "Prospect";
+  }
+
+  function buildStatusCounts(records, activeView) {
+    return records
+      .filter((record) => record.viewType === activeView)
+      .reduce((counts, record) => {
+        counts.all += 1;
+        counts[record.statusGroup] = (counts[record.statusGroup] || 0) + 1;
+        return counts;
+      }, { all: 0, prospects: 0, "in-review": 0, "coverage-placed": 0, closed: 0 });
+  }
+
+  function getLastInitial(lastName) {
+    const value = String(lastName || "").trim().toUpperCase();
+    return value ? value.charAt(0) : "";
+  }
+
+  function renderClientRow(record, isSelected) {
+    const avatarClass = getAvatarClass(record.lastName);
+    const clientStatus = getClientStatusDisplay(record.statusGroup);
+
+    return `
+      <div class="client-table" role="row">
+        <div class="client-table-cell client-table-cell-check"><input type="checkbox" aria-label="Select ${record.displayName}" data-client-checkbox="${record.id}" ${isSelected ? "checked" : ""}></div>
+        <div class="client-table-cell client-table-cell-client">
+          <span class="client-avatar ${avatarClass}">${getInitials(record.displayName)}</span>
+          <div>
+            <strong>${record.displayName}</strong>
+            <span>${record.summary}</span>
+          </div>
+        </div>
+        <div class="client-table-cell">${record.caseRef}</div>
+        <div class="client-table-cell client-table-cell-last-review">${formatDateForDirectory(record.lastReview)}</div>
+        <div class="client-table-cell client-table-cell-insured-value">${record.insured}</div>
+        <div class="client-table-cell client-table-cell-source-value">${record.source}</div>
+        <div class="client-table-cell client-table-cell-status-value">${clientStatus}</div>
+        <div class="client-table-cell client-table-cell-coverage-amount-value">${formatCurrencyCompact(record.coverageAmount)}</div>
+        <div class="client-table-cell client-table-cell-value">${formatCurrencyCompact(record.coverageGap)}</div>
+      </div>
+    `;
+  }
+
+  function exportClientRecords(records) {
+    const header = ["Client", "Case Ref", "Last Review", "Insured", "Source", "Client Status", "Coverage Amount", "Coverage Gap"];
+    const rows = records.map((record) => [
+      record.displayName,
+      record.caseRef,
+      formatDateForDirectory(record.lastReview),
+      record.insured,
+      record.source,
+      getClientStatusDisplay(record.statusGroup),
+      formatCurrencyCompact(record.coverageAmount),
+      formatCurrencyCompact(record.coverageGap)
+    ]);
+    const csv = [header, ...rows]
+      .map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(","))
+      .join("\n");
+
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "client-directory-export.csv";
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  function formatDateForDirectory(value) {
+    if (!value) {
+      return "--";
+    }
+
+    const date = new Date(`${value}T00:00:00`);
+    if (Number.isNaN(date.getTime())) {
+      return value;
+    }
+
+    return `${String(date.getMonth() + 1).padStart(2, "0")}/${String(date.getDate()).padStart(2, "0")}/${date.getFullYear()}`;
+  }
+
+  function formatCurrencyCompact(value) {
+    const amount = Number(value || 0);
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+      notation: amount >= 1000000 ? "compact" : "standard",
+      maximumFractionDigits: amount >= 1000000 ? 2 : 0
+    }).format(amount);
+  }
+
+  function getInitials(name) {
+    return String(name || "")
+      .split(" ")
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((part) => part.charAt(0).toUpperCase())
+      .join("") || "CL";
+  }
+
+  function getAvatarClass(lastName) {
+    const classes = [
+      "client-avatar-amber",
+      "client-avatar-slate",
+      "client-avatar-green",
+      "client-avatar-blue",
+      "client-avatar-rose"
+    ];
+    const seed = String(lastName || "A").charCodeAt(0);
+    return classes[seed % classes.length];
   }
 
   function populateForm(form, values) {

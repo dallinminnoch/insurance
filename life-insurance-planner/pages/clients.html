@@ -26,10 +26,13 @@
               <a class="site-dropdown-link is-active" href="clients.html" data-i18n="nav.clients" data-client-directory-nav>Clients</a>
             </div>
           </div>
+          <a class="site-nav-link" href="resources.html" data-i18n="nav.resources">Resources</a>
           <div class="site-dropdown">
             <button class="site-nav-link site-dropdown-toggle" type="button" aria-expanded="false" data-i18n="nav.financialProducts">Financial Products</button>
             <div class="site-dropdown-menu">
-              <a class="site-dropdown-link" href="lens.html">LENS</a>
+              <a class="site-dropdown-link" href="lens.html">LENS Analysis</a>
+              <a class="site-dropdown-link" href="strategy-builder.html">Strategy Builder</a>
+              <a class="site-dropdown-link" href="policy-web.html">Policy Web</a>
             </div>
           </div>
         </nav>
@@ -75,7 +78,7 @@
         <header class="client-directory-header">
           <div class="client-directory-title-block">
             <h1>Client Directory</h1>
-            <p>View all client information, active cases, planning activity, and related service items.</p>
+            <p>The Client Directory is the <strong>central hub</strong> for creating and managing household and individual profiles.<br><span class="client-directory-description-line">Each client account securely stores profile information and connects to the platform's planning and analysis tools.</span></p>
           </div>
           <div class="client-directory-header-actions">
             <button class="client-header-action client-header-action-secondary" type="button" data-export-button>Export</button>
@@ -86,33 +89,34 @@
           </div>
         </header>
 
-        <nav class="client-status-tabs" aria-label="Client status filters">
-          <button class="client-status-tab is-active" type="button" data-client-status="all">All Clients <span>80</span></button>
-          <button class="client-status-tab" type="button" data-client-status="prospects">Prospects <span>24</span></button>
-          <button class="client-status-tab" type="button" data-client-status="in-review">In Review <span>18</span></button>
-          <button class="client-status-tab" type="button" data-client-status="coverage-placed">Coverage Placed <span>21</span></button>
-          <button class="client-status-tab" type="button" data-client-status="closed">Closed <span>05</span></button>
-        </nav>
-
         <section class="client-directory-toolbar">
           <form class="client-table-search" role="search">
             <input type="search" placeholder="Search for Clients">
           </form>
-          <div class="client-directory-toolbar-actions">
-            <div class="client-view-toggle" role="group" aria-label="Client view type">
-              <button class="client-toolbar-button" type="button" data-client-view="households">Households</button>
-              <button class="client-toolbar-button is-active" type="button" data-client-view="individuals">Individuals</button>
-            </div>
-            <div class="client-items-dropdown" data-items-dropdown>
-              <button class="client-toolbar-button client-items-trigger" type="button" data-items-trigger aria-expanded="false">
-                Items Shown (15)
-              </button>
-              <div class="client-items-menu">
-                <button class="client-items-option is-active" type="button" data-items-option="5">5</button>
-                <button class="client-items-option" type="button" data-items-option="15">15</button>
-                <button class="client-items-option" type="button" data-items-option="35">35</button>
-                <button class="client-items-option" type="button" data-items-option="75">75</button>
-                <button class="client-items-option" type="button" data-items-option="100">100</button>
+          <nav class="client-status-tabs" aria-label="Client status filters">
+            <button class="client-status-tab is-active" type="button" data-client-status="all"><span class="client-status-tab-label">All Clients</span><span class="client-status-tab-count" data-status-count="all">0</span></button>
+            <button class="client-status-tab" type="button" data-client-status="prospects"><span class="client-status-tab-label">Prospects</span><span class="client-status-tab-count" data-status-count="prospects">0</span></button>
+            <button class="client-status-tab" type="button" data-client-status="in-review"><span class="client-status-tab-label">In Review</span><span class="client-status-tab-count" data-status-count="in-review">0</span></button>
+            <button class="client-status-tab" type="button" data-client-status="coverage-placed"><span class="client-status-tab-label">Coverage Placed</span><span class="client-status-tab-count" data-status-count="coverage-placed">0</span></button>
+            <button class="client-status-tab" type="button" data-client-status="closed"><span class="client-status-tab-label">Closed</span><span class="client-status-tab-count" data-status-count="closed">0</span></button>
+          </nav>
+          <div class="client-directory-filter-bar">
+            <div class="client-directory-toolbar-actions">
+              <div class="client-view-toggle" role="group" aria-label="Client view type">
+                <button class="client-toolbar-button" type="button" data-client-view="households">Households</button>
+                <button class="client-toolbar-button is-active" type="button" data-client-view="individuals">Individuals</button>
+              </div>
+              <div class="client-items-dropdown" data-items-dropdown>
+                <button class="client-toolbar-button client-items-trigger" type="button" data-items-trigger aria-expanded="false">
+                  Items Shown (15)
+                </button>
+                <div class="client-items-menu">
+                  <button class="client-items-option is-active" type="button" data-items-option="5">5</button>
+                  <button class="client-items-option" type="button" data-items-option="15">15</button>
+                  <button class="client-items-option" type="button" data-items-option="35">35</button>
+                  <button class="client-items-option" type="button" data-items-option="75">75</button>
+                  <button class="client-items-option" type="button" data-items-option="100">100</button>
+                </div>
               </div>
             </div>
           </div>
@@ -123,129 +127,20 @@
             <div class="client-table-cell client-table-cell-check"></div>
             <div class="client-table-cell client-table-cell-client">Client</div>
             <div class="client-table-cell">Case Ref</div>
-            <div class="client-table-cell">Last Review</div>
+            <div class="client-table-cell client-table-cell-last-review">Last Review</div>
             <div class="client-table-cell">Insured</div>
-            <div class="client-table-cell">Source</div>
-            <div class="client-table-cell">Client Status</div>
-            <div class="client-table-cell client-table-cell-nowrap">Coverage Amount</div>
+            <div class="client-table-cell client-table-cell-source-title">Source</div>
+            <div class="client-table-cell client-table-cell-status-title">Client Status</div>
+            <div class="client-table-cell client-table-cell-nowrap client-table-cell-coverage-amount-title">Coverage Amount</div>
             <div class="client-table-cell client-table-cell-value">Coverage Gap</div>
           </div>
-
-          <div class="client-table" role="row" data-client-row data-last-initial="C" data-client-status-group="in-review">
-            <div class="client-table-cell client-table-cell-check"><input type="checkbox" aria-label="Select Amelia Carter"></div>
-            <div class="client-table-cell client-table-cell-client">
-              <span class="client-avatar client-avatar-amber">AC</span>
-              <div>
-                <strong>Amelia Carter</strong>
-                <span>Household protection review</span>
-              </div>
-            </div>
-            <div class="client-table-cell">CL/80421</div>
-            <div class="client-table-cell">03/10/2026</div>
-            <div class="client-table-cell">High</div>
-            <div class="client-table-cell">Referral</div>
-            <div class="client-table-cell">
-              <span class="client-tag">Income</span>
-              <span class="client-tag client-tag-accent">Debt</span>
-            </div>
-            <div class="client-table-cell">$1.85M</div>
-            <div class="client-table-cell client-table-cell-value">$1.45M</div>
-          </div>
-
-          <div class="client-table" role="row" data-client-row data-last-initial="B" data-client-status-group="coverage-placed">
-            <div class="client-table-cell client-table-cell-check"><input type="checkbox" aria-label="Select Daniel Brooks"></div>
-            <div class="client-table-cell client-table-cell-client">
-              <span class="client-avatar client-avatar-slate">DB</span>
-              <div>
-                <strong>Daniel Brooks</strong>
-                <span>Key person coverage update</span>
-              </div>
-            </div>
-            <div class="client-table-cell">CL/80437</div>
-            <div class="client-table-cell">03/08/2026</div>
-            <div class="client-table-cell">Medium</div>
-            <div class="client-table-cell">CPA</div>
-            <div class="client-table-cell">
-              <span class="client-tag">Business</span>
-              <span class="client-tag client-tag-success">Estate</span>
-            </div>
-            <div class="client-table-cell">$1.20M</div>
-            <div class="client-table-cell client-table-cell-value">$780K</div>
-          </div>
-
-          <div class="client-table" role="row" data-client-row data-last-initial="N" data-client-status-group="prospects">
-            <div class="client-table-cell client-table-cell-check"><input type="checkbox" aria-label="Select Sophia Nguyen"></div>
-            <div class="client-table-cell client-table-cell-client">
-              <span class="client-avatar client-avatar-green">SN</span>
-              <div>
-                <strong>Sophia Nguyen</strong>
-                <span>Family education funding plan</span>
-              </div>
-            </div>
-            <div class="client-table-cell">CL/80462</div>
-            <div class="client-table-cell">03/07/2026</div>
-            <div class="client-table-cell">High</div>
-            <div class="client-table-cell">Seminar</div>
-            <div class="client-table-cell">
-              <span class="client-tag">Education</span>
-              <span class="client-tag client-tag-accent">Income</span>
-            </div>
-            <div class="client-table-cell">$2.60M</div>
-            <div class="client-table-cell client-table-cell-value">$2.10M</div>
-          </div>
-
-          <div class="client-table" role="row" data-client-row data-last-initial="T" data-client-status-group="coverage-placed">
-            <div class="client-table-cell client-table-cell-check"><input type="checkbox" aria-label="Select Michael Torres"></div>
-            <div class="client-table-cell client-table-cell-client">
-              <span class="client-avatar client-avatar-blue">MT</span>
-              <div>
-                <strong>Michael Torres</strong>
-                <span>Mortgage and survivor income analysis</span>
-              </div>
-            </div>
-            <div class="client-table-cell">CL/80488</div>
-            <div class="client-table-cell">03/05/2026</div>
-            <div class="client-table-cell">Medium</div>
-            <div class="client-table-cell">Website</div>
-            <div class="client-table-cell">
-              <span class="client-tag">Mortgage</span>
-              <span class="client-tag client-tag-success">Needs</span>
-            </div>
-            <div class="client-table-cell">$1.35M</div>
-            <div class="client-table-cell client-table-cell-value">$920K</div>
-          </div>
-
-          <div class="client-table" role="row" data-client-row data-last-initial="M" data-client-status-group="closed">
-            <div class="client-table-cell client-table-cell-check"><input type="checkbox" aria-label="Select Lauren Mitchell"></div>
-            <div class="client-table-cell client-table-cell-client">
-              <span class="client-avatar client-avatar-rose">LM</span>
-              <div>
-                <strong>Lauren Mitchell</strong>
-                <span>Coverage review before renewal</span>
-              </div>
-            </div>
-            <div class="client-table-cell">CL/80501</div>
-            <div class="client-table-cell">03/02/2026</div>
-            <div class="client-table-cell">Low</div>
-            <div class="client-table-cell">Client Referral</div>
-            <div class="client-table-cell">
-              <span class="client-tag">Review</span>
-              <span class="client-tag client-tag-success">Retention</span>
-            </div>
-            <div class="client-table-cell">$620K</div>
-            <div class="client-table-cell client-table-cell-value">$430K</div>
-          </div>
+          <div id="client-table-rows"></div>
+          <div class="client-empty-state" id="client-empty-state" hidden>No client records match the current filters.</div>
 
           <footer class="client-table-footer">
-            <button class="client-pagination-button" type="button">Previous</button>
-            <div class="client-pagination-numbers">
-              <button class="client-page-number is-active" type="button">1</button>
-              <button class="client-page-number" type="button">2</button>
-              <button class="client-page-number" type="button">3</button>
-              <span>...</span>
-              <button class="client-page-number" type="button">8</button>
-            </div>
-            <button class="client-pagination-button" type="button">Next</button>
+            <button class="client-pagination-button" type="button" id="client-prev-page">Previous</button>
+            <div class="client-pagination-numbers" id="client-pagination-numbers"></div>
+            <button class="client-pagination-button" type="button" id="client-next-page">Next</button>
           </footer>
         </section>
       </section>
