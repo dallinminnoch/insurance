@@ -153,6 +153,7 @@
           <section class="profile-form-section">
             <div class="profile-form-section-heading">
               <h2>Household / Company Information</h2>
+              <p class="profile-section-note">All new profiles will automatically generate a new household profile unless an existing household profile is linked below.</p>
             </div>
             <input type="hidden" name="interestType" value="family" data-interest-type-field>
             <input type="hidden" name="profileAssignmentTargetId" value="" data-profile-assignment-target-id>
@@ -339,7 +340,7 @@
 
           <section class="profile-form-section">
             <div class="profile-form-section-heading">
-              <h2>Advisor and System Assignment</h2>
+              <h2>Advisory Section</h2>
             </div>
             <div class="form-grid">
               <div class="field-group">
@@ -347,49 +348,17 @@
                 <input id="advisor-name" name="advisorName" type="text" required data-advisor-name>
               </div>
               <div class="field-group">
-                <label for="firm-name">Firm Name</label>
+                <label for="firm-name">Firm Name (optional)</label>
                 <input id="firm-name" name="firmName" type="text">
               </div>
-              <div class="field-group">
-                <label for="household-id">Household ID</label>
-                <input id="household-id" name="householdId" type="text" readonly data-household-id>
-              </div>
+              <input id="household-id" name="householdId" type="hidden" data-household-id>
               <div class="field-group">
                 <label for="date-profile-created">Date Profile Created</label>
-                <input id="date-profile-created" name="dateProfileCreated" type="date" readonly data-created-date>
+                <input id="date-profile-created" name="dateProfileCreated" type="date" data-created-date>
               </div>
               <div class="field-group">
                 <label for="last-updated-date">Last Updated Date</label>
-                <input id="last-updated-date" name="lastUpdatedDate" type="date" readonly data-last-updated-date>
-              </div>
-              <div class="field-group">
-                <label for="created-by">Created By</label>
-                <input id="created-by" name="createdBy" type="text" readonly data-created-by>
-              </div>
-              <div class="field-group">
-                <label for="data-source">Data Source</label>
-                <select id="data-source" name="dataSource" required>
-                  <option value="Advisor Entered">Advisor Entered</option>
-                  <option value="Client Questionnaire">Client Questionnaire</option>
-                  <option value="Imported Data">Imported Data</option>
-                </select>
-              </div>
-              <div class="field-group">
-                <label for="planning-priority">Planning Priority</label>
-                <select id="planning-priority" name="planningPriority" required>
-                  <option value="Protection">Protection</option>
-                  <option value="Accumulation">Accumulation</option>
-                  <option value="Estate">Estate</option>
-                  <option value="Business">Business</option>
-                </select>
-              </div>
-              <div class="field-group">
-                <label for="client-stage">Client Stage</label>
-                <select id="client-stage" name="clientStage" required>
-                  <option value="Prospect">Prospect</option>
-                  <option value="Active Client">Active Client</option>
-                  <option value="Review Client">Review Client</option>
-                </select>
+                <input id="last-updated-date" name="lastUpdatedDate" type="date" data-last-updated-date>
               </div>
               <div class="field-group full-width">
                 <label for="client-notes">Client Notes</label>
@@ -400,7 +369,7 @@
 
           <p class="profile-creation-feedback" id="client-creation-feedback" hidden></p>
           <div class="actions-row">
-            <button class="btn btn-primary" type="submit">Save Client Profile</button>
+            <a class="btn btn-primary" href="preliminary-underwriting.html" data-loading-link>Continue to Preliminary Underwriting</a>
           </div>
         </form>
       </section>
@@ -619,6 +588,7 @@
 
       function syncDependentFieldsetState() {
         const assignmentMode = String(assignmentModeField?.value || "");
+        const isFamilyInterest = String(interestTypeField?.value || "family") === "family";
         if (!dependentFields) {
           return;
         }
@@ -628,10 +598,33 @@
         const hasExistingSelection = Boolean(String(assignmentTargetIdField?.value || "").trim());
         const hasManualName = Boolean(String(assignmentNameField?.value || "").trim());
 
-        dependentFields.disabled = !(
+        dependentFields.disabled = !isFamilyInterest || !(
           (isExistingMode && hasExistingSelection) ||
           (isCreateMode && hasManualName)
         );
+
+        if (!isFamilyInterest) {
+          [
+            hasDependentsField,
+            dependentsCountField,
+            youngestDependentAgeField,
+            educationFundingPerDependentField,
+            projectedDependentsField,
+            projectedDependentsCountField,
+            sameEducationFundingField,
+            projectedEducationFundingPerDependentField
+          ].forEach(function (field) {
+            if (!field) {
+              return;
+            }
+
+            if (field.tagName === "SELECT") {
+              field.selectedIndex = 0;
+            } else {
+              field.value = "";
+            }
+          });
+        }
       }
 
       function syncEmploymentDetailFields() {

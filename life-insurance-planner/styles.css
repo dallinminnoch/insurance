@@ -1030,10 +1030,27 @@ body.is-direct-create-loading > *:not(.route-loading-overlay) {
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 250, 253, 0.96) 100%);
 }
 
+.profile-form-section-heading {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 0.75rem 1rem;
+}
+
 .profile-form-section-heading h2 {
   margin: 0;
   font-size: 1.02rem;
   color: #1b2230;
+}
+
+.profile-section-note {
+  margin: 0;
+  color: #000000;
+  font-size: 0.84rem;
+  font-style: italic;
+  font-weight: 500;
+  text-align: right;
+  white-space: nowrap;
 }
 
 .profile-interest-toggle {
@@ -1387,6 +1404,36 @@ select option:disabled {
   color: #7f8796;
   font-size: 0.95rem;
   font-weight: 600;
+}
+
+.underwriting-inline-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.underwriting-checkbox-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, max-content));
+  gap: 0.65rem 1.4rem;
+}
+
+.underwriting-checkbox-grid label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: #1c2535;
+  font-size: 0.92rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.underwriting-disclaimer {
+  margin: 0;
+  color: #556176;
+  font-size: 0.92rem;
+  font-style: italic;
+  line-height: 1.55;
 }
 
 .client-directory-workspace {

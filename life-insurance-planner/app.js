@@ -1037,7 +1037,6 @@
     const householdIdField = form?.querySelector("[data-household-id]");
     const createdDateField = form?.querySelector("[data-created-date]");
     const lastUpdatedDateField = form?.querySelector("[data-last-updated-date]");
-    const createdByField = form?.querySelector("[data-created-by]");
     const phoneNumberField = form?.querySelector("#phone-number");
     const assignmentModeField = form?.querySelector("[data-profile-assignment-mode]");
     const assignmentNameField = form?.querySelector("[data-profile-assignment-name]");
@@ -1062,10 +1061,6 @@
 
     if (advisorNameField && !advisorNameField.value) {
       advisorNameField.value = currentSession?.name || "";
-    }
-
-    if (createdByField && !createdByField.value) {
-      createdByField.value = currentSession?.name || "Advisor";
     }
 
     if (createdDateField && !createdDateField.value) {
@@ -1374,9 +1369,9 @@
 
       const formData = new FormData(form);
       const records = getClientRecords();
-      const clientStage = String(formData.get("clientStage") || "Prospect");
+      const clientStage = "Prospect";
       const statusGroup = mapClientStageToStatusGroup(clientStage);
-      const source = String(formData.get("dataSource") || "Advisor Entered").trim() || "Advisor Entered";
+      const source = "Advisor Entered";
       const coverageAmount = 0;
       const coverageGap = 0;
       const priority = "";
@@ -1389,7 +1384,7 @@
       const assignmentTargetType = String(formData.get("profileAssignmentTargetType") || "").trim();
       const requestedAssignmentName = String(formData.get("profileAssignmentName") || "").trim();
       const advisorName = String(formData.get("advisorName") || "").trim() || currentSession?.name || "";
-      const createdBy = String(formData.get("createdBy") || "").trim() || currentSession?.name || "Advisor";
+      const createdBy = currentSession?.name || "Advisor";
       const dateProfileCreated = String(formData.get("dateProfileCreated") || today);
       const lastUpdatedDate = String(formData.get("lastUpdatedDate") || today);
       let householdId = "";
@@ -1522,7 +1517,7 @@
         lastUpdatedDate,
         createdBy,
         dataSource: source,
-        planningPriority: String(formData.get("planningPriority") || ""),
+        planningPriority: "",
         clientStage,
         clientNotes: String(formData.get("clientNotes") || "").trim()
       };

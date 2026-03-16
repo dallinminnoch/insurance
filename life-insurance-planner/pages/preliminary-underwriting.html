@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Preliminary Underwriting | LENS</title>
+  <link rel="stylesheet" href="../styles.css">
+</head>
+<body data-page="preliminary-underwriting">
+  <header class="site-header">
+    <div class="site-header-inner">
+      <a class="site-brand" href="../index.html">LENS</a>
+      <div class="site-header-right">
+        <nav class="site-nav" aria-label="Primary">
+          <input class="site-search" type="search" placeholder="Search" aria-label="Search">
+          <div class="site-dropdown">
+            <button class="site-nav-link site-dropdown-toggle" type="button" aria-expanded="false">Records</button>
+            <div class="site-dropdown-menu">
+              <a class="site-dropdown-link" href="clients.html" data-client-directory-nav>Clients</a>
+            </div>
+          </div>
+          <a class="site-nav-link" href="resources.html">Resources</a>
+          <div class="site-dropdown">
+            <button class="site-nav-link site-dropdown-toggle" type="button" aria-expanded="false">Financial Products</button>
+            <div class="site-dropdown-menu">
+              <a class="site-dropdown-link" href="lens.html">LENS Analysis</a>
+              <a class="site-dropdown-link" href="strategy-builder.html">Strategy Builder</a>
+              <a class="site-dropdown-link" href="policy-web.html">Policy Web</a>
+            </div>
+          </div>
+          <div class="language-slot" data-language-slot>
+            <div class="language-dropdown">
+              <button class="language-trigger" type="button" aria-label="Language">
+                <img class="language-icon-image" src="../Images/Untitled design.png" alt="" aria-hidden="true">
+              </button>
+            </div>
+          </div>
+          <div class="account-slot" data-account-slot>
+            <div class="account-dropdown">
+              <a class="account-profile account-dropdown-toggle account-profile-signed-out" href="sign-in.html">
+                <span class="account-icon" aria-hidden="true">
+                  <span class="account-icon-head"></span>
+                  <span class="account-icon-body"></span>
+                </span>
+                <span class="sr-only">Open sign in menu</span>
+              </a>
+            </div>
+          </div>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <main class="home-shell app-home-shell prospect-shell">
+    <section class="prospect-stage">
+      <section class="prospect-empty-panel">
+        <div class="prospect-panel-header">
+          <a class="prospect-return-button" href="new-prospect.html" data-loading-link>Previous</a>
+          <h1>Preliminary Underwriting</h1>
+        </div>
+        <form class="profile-creation-form" id="preliminary-underwriting-form">
+          <section class="profile-form-section">
+            <div class="profile-form-section-heading">
+              <h2>Tobacco and Nicotine Use</h2>
+            </div>
+            <div class="form-grid">
+              <div class="field-group">
+                <label for="nicotine-use-status">Nicotine Use Status</label>
+                <select id="nicotine-use-status" name="nicotineUseStatus">
+                  <option value="Never Used">Never Used</option>
+                  <option value="Former User">Former User</option>
+                  <option value="Occasional Use">Occasional Use</option>
+                  <option value="Current User">Current User</option>
+                </select>
+              </div>
+              <div class="field-group">
+                <label for="nicotine-products-used">Nicotine Products Used</label>
+                <select id="nicotine-products-used" name="nicotineProductsUsed">
+                  <option value="Cigarettes">Cigarettes</option>
+                  <option value="Cigars">Cigars</option>
+                  <option value="Vaping">Vaping</option>
+                  <option value="Chewing Tobacco">Chewing Tobacco</option>
+                  <option value="Nicotine Replacement">Nicotine Replacement</option>
+                  <option value="Marijuana with Nicotine">Marijuana with Nicotine</option>
+                </select>
+              </div>
+              <div class="field-group">
+                <label for="last-nicotine-use-date">Last Nicotine Use Date</label>
+                <input id="last-nicotine-use-date" name="lastNicotineUseDate" type="date">
+              </div>
+              <div class="field-group">
+                <label for="nicotine-frequency">Frequency of Use</label>
+                <select id="nicotine-frequency" name="nicotineFrequency">
+                  <option value="Daily">Daily</option>
+                  <option value="Weekly">Weekly</option>
+                  <option value="Rare or Social">Rare or Social</option>
+                </select>
+              </div>
+            </div>
+          </section>
+
+          <section class="profile-form-section">
+            <div class="profile-form-section-heading">
+              <h2>Basic Health Indicators</h2>
+            </div>
+            <div class="form-grid">
+              <div class="field-group">
+                <label>Height</label>
+                <div class="underwriting-inline-row">
+                  <input id="height-feet" class="profile-small-number-field" name="heightFeet" type="number" min="0" max="8" placeholder="ft">
+                  <input id="height-inches" class="profile-small-number-field" name="heightInches" type="number" min="0" max="11" placeholder="in">
+                </div>
+              </div>
+              <div class="field-group">
+                <label for="weight">Weight</label>
+                <div class="profile-currency-field">
+                  <input id="weight" class="profile-small-number-field" name="weight" type="number" min="0" step="1">
+                  <span class="profile-currency-suffix">lbs</span>
+                </div>
+              </div>
+              <div class="field-group">
+                <label for="body-mass-index">Body Mass Index</label>
+                <input id="body-mass-index" class="profile-small-number-field" name="bodyMassIndex" type="number" step="0.1" readonly>
+              </div>
+              <div class="field-group">
+                <label for="blood-pressure">Blood Pressure (if known)</label>
+                <input id="blood-pressure" name="bloodPressure" type="text" placeholder="120/80">
+              </div>
+              <div class="field-group">
+                <label for="cholesterol-level">Cholesterol Level (optional)</label>
+                <input id="cholesterol-level" name="cholesterolLevel" type="text">
+              </div>
+            </div>
+          </section>
+
+          <section class="profile-form-section">
+            <div class="profile-form-section-heading">
+              <h2>Metabolic and Medical Conditions</h2>
+            </div>
+            <div class="form-grid">
+              <div class="field-group">
+                <label for="diabetes-status">Diabetes Status</label>
+                <select id="diabetes-status" name="diabetesStatus">
+                  <option value="No">No</option>
+                  <option value="Prediabetes">Prediabetes</option>
+                  <option value="Type 2 Diabetes">Type 2 Diabetes</option>
+                  <option value="Type 1 Diabetes">Type 1 Diabetes</option>
+                </select>
+              </div>
+              <div class="field-group full-width">
+                <label>Major Medical Conditions</label>
+                <div class="underwriting-checkbox-grid">
+                  <label><input type="checkbox" name="majorMedicalConditions" value="Heart Disease"> Heart Disease</label>
+                  <label><input type="checkbox" name="majorMedicalConditions" value="Stroke"> Stroke</label>
+                  <label><input type="checkbox" name="majorMedicalConditions" value="Cancer"> Cancer</label>
+                  <label><input type="checkbox" name="majorMedicalConditions" value="Diabetes"> Diabetes</label>
+                  <label><input type="checkbox" name="majorMedicalConditions" value="High Blood Pressure"> High Blood Pressure</label>
+                  <label><input type="checkbox" name="majorMedicalConditions" value="High Cholesterol"> High Cholesterol</label>
+                  <label><input type="checkbox" name="majorMedicalConditions" value="Sleep Apnea"> Sleep Apnea</label>
+                  <label><input type="checkbox" name="majorMedicalConditions" value="Mental Health Treatment"> Mental Health Treatment</label>
+                  <label><input type="checkbox" name="majorMedicalConditions" value="Respiratory Conditions"> Respiratory Conditions</label>
+                  <label><input type="checkbox" name="majorMedicalConditions" value="Liver Disease"> Liver Disease</label>
+                  <label><input type="checkbox" name="majorMedicalConditions" value="Kidney Disease"> Kidney Disease</label>
+                  <label><input type="checkbox" name="majorMedicalConditions" value="Neurological Disorders"> Neurological Disorders</label>
+                </div>
+              </div>
+              <div class="field-group">
+                <label for="other-major-condition">Other Major Condition</label>
+                <input id="other-major-condition" name="otherMajorCondition" type="text">
+              </div>
+              <div class="field-group">
+                <label for="condition-details">Condition Details (if applicable)</label>
+                <input id="condition-details" name="conditionDetails" type="text">
+              </div>
+              <div class="field-group">
+                <label for="year-diagnosed">Year Diagnosed</label>
+                <input id="year-diagnosed" class="profile-small-number-field" name="yearDiagnosed" type="number" min="1900" max="2100">
+              </div>
+              <div class="field-group">
+                <label for="condition-status">Condition Status</label>
+                <select id="condition-status" name="conditionStatus">
+                  <option value="Controlled">Controlled</option>
+                  <option value="Improving">Improving</option>
+                  <option value="Uncontrolled">Uncontrolled</option>
+                  <option value="In Remission">In Remission</option>
+                </select>
+              </div>
+              <div class="field-group full-width">
+                <label for="current-prescription-medications">Current Prescription Medications</label>
+                <textarea id="current-prescription-medications" name="currentPrescriptionMedications" rows="3"></textarea>
+              </div>
+            </div>
+          </section>
+
+          <section class="profile-form-section">
+            <div class="profile-form-section-heading">
+              <h2>Family Medical History</h2>
+            </div>
+            <div class="form-grid">
+              <div class="field-group">
+                <label for="family-heart-disease">Early Death Before Age 60 from Heart Disease</label>
+                <select id="family-heart-disease" name="familyHeartDisease">
+                  <option value="Yes">Yes</option>
+                  <option value="No">No</option>
+                  <option value="Unknown">Unknown</option>
+                </select>
+              </div>
+              <div class="field-group">
+                <label for="family-stroke">Early Death Before Age 60 from Stroke</label>
+                <select id="family-stroke" name="familyStroke">
+                  <option value="Yes">Yes</option>
+                  <option value="No">No</option>
+                  <option value="Unknown">Unknown</option>
+                </select>
+              </div>
+              <div class="field-group">
+                <label for="family-cancer">Early Death Before Age 60 from Cancer</label>
+                <select id="family-cancer" name="familyCancer">
+                  <option value="Yes">Yes</option>
+                  <option value="No">No</option>
+                  <option value="Unknown">Unknown</option>
+                </select>
+              </div>
+              <div class="field-group">
+                <label for="family-genetic-disorders">Known Genetic Disorders in Immediate Family</label>
+                <select id="family-genetic-disorders" name="familyGeneticDisorders">
+                  <option value="Yes">Yes</option>
+                  <option value="No">No</option>
+                  <option value="Unknown">Unknown</option>
+                </select>
+              </div>
+            </div>
+          </section>
+
+          <section class="profile-form-section">
+            <div class="profile-form-section-heading">
+              <h2>Driving, Activity, and Travel Risk</h2>
+            </div>
+            <div class="form-grid">
+              <div class="field-group">
+                <label for="major-driving-violations">Major Driving Violations in Last 5 Years</label>
+                <select id="major-driving-violations" name="majorDrivingViolations">
+                  <option value="None">None</option>
+                  <option value="Speeding">Speeding</option>
+                  <option value="Reckless Driving">Reckless Driving</option>
+                  <option value="DUI or DWI">DUI or DWI</option>
+                  <option value="License Suspension">License Suspension</option>
+                </select>
+              </div>
+              <div class="field-group">
+                <label for="number-of-violations">Number of Violations</label>
+                <input id="number-of-violations" class="profile-small-number-field" name="numberOfViolations" type="number" min="0" step="1">
+              </div>
+              <div class="field-group">
+                <label for="hazardous-activities">Participation in Hazardous Activities</label>
+                <select id="hazardous-activities" name="hazardousActivities">
+                  <option value="Yes">Yes</option>
+                  <option value="No">No</option>
+                </select>
+              </div>
+              <div class="field-group">
+                <label for="activity-types">Activity Types</label>
+                <select id="activity-types" name="activityTypes">
+                  <option value="Aviation">Aviation</option>
+                  <option value="Skydiving">Skydiving</option>
+                  <option value="Scuba Diving">Scuba Diving</option>
+                  <option value="Motor Racing">Motor Racing</option>
+                  <option value="Rock Climbing or Mountaineering">Rock Climbing or Mountaineering</option>
+                  <option value="Extreme Sports">Extreme Sports</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+              <div class="field-group">
+                <label for="activity-frequency">Activity Frequency</label>
+                <input id="activity-frequency" name="activityFrequency" type="text">
+              </div>
+              <div class="field-group">
+                <label for="occupation-risk-level">Occupation Risk Level</label>
+                <select id="occupation-risk-level" name="occupationRiskLevel">
+                  <option value="Low Risk">Low Risk</option>
+                  <option value="Moderate Risk">Moderate Risk</option>
+                  <option value="High Risk">High Risk</option>
+                </select>
+              </div>
+              <div class="field-group">
+                <label for="planned-travel-outside-us">Planned Travel Outside the United States in Next 12 Months</label>
+                <select id="planned-travel-outside-us" name="plannedTravelOutsideUs">
+                  <option value="Yes">Yes</option>
+                  <option value="No">No</option>
+                </select>
+              </div>
+              <div class="field-group">
+                <label for="travel-country">Travel Country</label>
+                <input id="travel-country" name="travelCountry" type="text">
+              </div>
+              <div class="field-group">
+                <label for="travel-duration">Travel Duration</label>
+                <input id="travel-duration" name="travelDuration" type="text">
+              </div>
+              <div class="field-group">
+                <label for="travel-purpose">Travel Purpose</label>
+                <input id="travel-purpose" name="travelPurpose" type="text">
+              </div>
+            </div>
+          </section>
+
+          <section class="profile-form-section">
+            <div class="profile-form-section-heading">
+              <h2>Financial and Prior Insurance Indicators</h2>
+            </div>
+            <div class="form-grid">
+              <div class="field-group">
+                <label for="annual-income">Annual Income</label>
+                <input id="annual-income" name="annualIncome" type="number" min="0" step="1000">
+              </div>
+              <div class="field-group">
+                <label for="net-worth">Net Worth</label>
+                <input id="net-worth" name="netWorth" type="number" min="0" step="1000">
+              </div>
+              <div class="field-group">
+                <label for="existing-life-insurance-coverage-amount">Existing Life Insurance Coverage Amount</label>
+                <input id="existing-life-insurance-coverage-amount" name="existingLifeInsuranceCoverageAmount" type="number" min="0" step="1000">
+              </div>
+              <div class="field-group">
+                <label for="requested-coverage-amount">Requested Coverage Amount</label>
+                <input id="requested-coverage-amount" name="requestedCoverageAmount" type="number" min="0" step="1000">
+              </div>
+              <div class="field-group">
+                <label for="previous-life-insurance-application-outcome">Previous Life Insurance Application Outcome</label>
+                <select id="previous-life-insurance-application-outcome" name="previousLifeInsuranceApplicationOutcome">
+                  <option value="Approved Standard">Approved Standard</option>
+                  <option value="Approved Rated">Approved Rated</option>
+                  <option value="Postponed">Postponed</option>
+                  <option value="Declined">Declined</option>
+                  <option value="Modified Offer">Modified Offer</option>
+                  <option value="Never Applied">Never Applied</option>
+                </select>
+              </div>
+              <div class="field-group">
+                <label for="date-of-last-application">Date of Last Application</label>
+                <input id="date-of-last-application" name="dateOfLastApplication" type="date">
+              </div>
+            </div>
+          </section>
+
+          <section class="profile-form-section">
+            <div class="profile-form-section-heading">
+              <h2>Legal, Concurrent, and System Estimate</h2>
+            </div>
+            <div class="form-grid">
+              <div class="field-group">
+                <label for="felony-convictions">Felony Convictions in Past 10 Years</label>
+                <select id="felony-convictions" name="felonyConvictions">
+                  <option value="Yes">Yes</option>
+                  <option value="No">No</option>
+                </select>
+              </div>
+              <div class="field-group">
+                <label for="bankruptcy-history">Bankruptcy History</label>
+                <select id="bankruptcy-history" name="bankruptcyHistory">
+                  <option value="None">None</option>
+                  <option value="Past Bankruptcy">Past Bankruptcy</option>
+                  <option value="Currently in Bankruptcy">Currently in Bankruptcy</option>
+                </select>
+              </div>
+              <div class="field-group">
+                <label for="concurrent-insurance-applications">Any Life Insurance Applications Currently in Process</label>
+                <select id="concurrent-insurance-applications" name="concurrentInsuranceApplications">
+                  <option value="Yes">Yes</option>
+                  <option value="No">No</option>
+                </select>
+              </div>
+              <div class="field-group">
+                <label for="carrier-name">Carrier Name</label>
+                <input id="carrier-name" name="carrierName" type="text">
+              </div>
+              <div class="field-group">
+                <label for="coverage-amount-applied-for">Coverage Amount Applied For</label>
+                <input id="coverage-amount-applied-for" name="coverageAmountAppliedFor" type="number" min="0" step="1000">
+              </div>
+              <div class="field-group">
+                <label for="estimated-underwriting-class">Estimated Underwriting Class</label>
+                <select id="estimated-underwriting-class" name="estimatedUnderwritingClass">
+                  <option value="Preferred Plus">Preferred Plus</option>
+                  <option value="Preferred">Preferred</option>
+                  <option value="Standard Plus">Standard Plus</option>
+                  <option value="Standard">Standard</option>
+                  <option value="Table Rated">Table Rated</option>
+                  <option value="Unknown">Unknown</option>
+                </select>
+              </div>
+              <div class="field-group">
+                <label for="confidence-level">Confidence Level</label>
+                <select id="confidence-level" name="confidenceLevel">
+                  <option value="Low">Low</option>
+                  <option value="Moderate">Moderate</option>
+                  <option value="High">High</option>
+                </select>
+              </div>
+              <div class="field-group full-width">
+                <label for="potential-underwriting-concerns">Potential Underwriting Concerns</label>
+                <textarea id="potential-underwriting-concerns" name="potentialUnderwritingConcerns" rows="3" placeholder="Auto-generated notes placeholder"></textarea>
+              </div>
+              <div class="field-group full-width">
+                <label>Underwriting Disclaimer</label>
+                <p class="underwriting-disclaimer">Preliminary underwriting estimate only. Final approval and rating are determined by the insurance carrier's underwriting process.</p>
+              </div>
+            </div>
+          </section>
+
+          <div class="actions-row">
+            <a class="btn btn-secondary" href="new-prospect.html" data-loading-link>Previous</a>
+          </div>
+        </form>
+      </section>
+    </section>
+  </main>
+
+  <script src="../data.js"></script>
+  <script src="../calculations.js"></script>
+  <script src="../charts.js"></script>
+  <script src="../app.js"></script>
+  <script>
+    (function () {
+      const heightFeetField = document.getElementById("height-feet");
+      const heightInchesField = document.getElementById("height-inches");
+      const weightField = document.getElementById("weight");
+      const bmiField = document.getElementById("body-mass-index");
+
+      if (!heightFeetField || !heightInchesField || !weightField || !bmiField) {
+        return;
+      }
+
+      function syncBmi() {
+        const feet = Number(heightFeetField.value || 0);
+        const inches = Number(heightInchesField.value || 0);
+        const weight = Number(weightField.value || 0);
+        const totalInches = (feet * 12) + inches;
+
+        if (!totalInches || !weight) {
+          bmiField.value = "";
+          return;
+        }
+
+        const bmi = (weight / (totalInches * totalInches)) * 703;
+        bmiField.value = String(Math.round(bmi * 10) / 10);
+      }
+
+      heightFeetField.addEventListener("input", syncBmi);
+      heightInchesField.addEventListener("input", syncBmi);
+      weightField.addEventListener("input", syncBmi);
+      syncBmi();
+    })();
+  </script>
+</body>
+</html>
