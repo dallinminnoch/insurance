@@ -4,24 +4,47 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Preliminary Underwriting | LENS</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@600&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../styles.css">
+  <script>
+    try {
+      if (sessionStorage.getItem("lensRouteLoading")) {
+        document.documentElement.classList.add("is-route-loading");
+      }
+    } catch (error) {}
+  </script>
 </head>
-<body data-page="preliminary-underwriting">
+<body class="home-page prospect-page profile-creation-page" data-page="preliminary-underwriting">
+  <div class="route-loading-overlay" data-route-loading-overlay>
+    <div class="route-loading-card">
+      <span class="route-loading-icon" aria-hidden="true">
+        <span class="account-icon-head route-loading-head"></span>
+        <span class="account-icon-body route-loading-body"></span>
+      </span>
+      <p class="route-loading-text">Opening client profile...</p>
+    </div>
+  </div>
   <header class="site-header">
     <div class="site-header-inner">
-      <a class="site-brand" href="../index.html">LENS</a>
-      <div class="site-header-right">
-        <nav class="site-nav" aria-label="Primary">
-          <input class="site-search" type="search" placeholder="Search" aria-label="Search">
+      <a class="site-brand" href="../index.html">
+        <span class="site-brand-mark">LENS</span>
+      </a>
+      <div class="site-header-actions">
+        <form class="site-search has-icon" role="search">
+          <input type="search" placeholder="Search" data-i18n-placeholder="search.placeholder">
+        </form>
+        <nav class="site-nav" aria-label="Main navigation">
           <div class="site-dropdown">
-            <button class="site-nav-link site-dropdown-toggle" type="button" aria-expanded="false">Records</button>
+            <button class="site-nav-link site-dropdown-toggle is-active" type="button" aria-expanded="true" data-i18n="nav.records">Records</button>
             <div class="site-dropdown-menu">
-              <a class="site-dropdown-link" href="clients.html" data-client-directory-nav>Clients</a>
+              <a class="site-dropdown-link" href="clients.html" data-i18n="nav.clients" data-client-directory-nav>Clients</a>
             </div>
           </div>
-          <a class="site-nav-link" href="resources.html">Resources</a>
+          <a class="site-nav-link" href="resources.html" data-i18n="nav.resources">Resources</a>
           <div class="site-dropdown">
-            <button class="site-nav-link site-dropdown-toggle" type="button" aria-expanded="false">Financial Products</button>
+            <button class="site-nav-link site-dropdown-toggle" type="button" aria-expanded="false" data-i18n="nav.financialProducts">Financial Products</button>
             <div class="site-dropdown-menu">
               <a class="site-dropdown-link" href="lens.html">LENS Analysis</a>
               <a class="site-dropdown-link" href="strategy-builder.html">Strategy Builder</a>
@@ -62,6 +85,7 @@
           <section class="profile-form-section">
             <div class="profile-form-section-heading">
               <h2>Tobacco and Nicotine Use</h2>
+              <p class="profile-section-note">Preliminary risk screen only. This page is for assumed underwriting risk, not official carrier underwriting.</p>
             </div>
             <div class="form-grid">
               <div class="field-group">
@@ -83,25 +107,18 @@
                   <option value="Nicotine Replacement">Nicotine Replacement</option>
                   <option value="Marijuana with Nicotine">Marijuana with Nicotine</option>
                 </select>
+                <p class="underwriting-helper-text">Nicotine replacement includes patches, gum, lozenges, nasal spray, inhalers, and similar stop-smoking products containing nicotine.</p>
               </div>
               <div class="field-group">
                 <label for="last-nicotine-use-date">Last Nicotine Use Date</label>
                 <input id="last-nicotine-use-date" name="lastNicotineUseDate" type="date">
-              </div>
-              <div class="field-group">
-                <label for="nicotine-frequency">Frequency of Use</label>
-                <select id="nicotine-frequency" name="nicotineFrequency">
-                  <option value="Daily">Daily</option>
-                  <option value="Weekly">Weekly</option>
-                  <option value="Rare or Social">Rare or Social</option>
-                </select>
               </div>
             </div>
           </section>
 
           <section class="profile-form-section">
             <div class="profile-form-section-heading">
-              <h2>Basic Health Indicators</h2>
+              <h2>Health Snapshot</h2>
             </div>
             <div class="form-grid">
               <div class="field-group">
@@ -123,22 +140,6 @@
                 <input id="body-mass-index" class="profile-small-number-field" name="bodyMassIndex" type="number" step="0.1" readonly>
               </div>
               <div class="field-group">
-                <label for="blood-pressure">Blood Pressure (if known)</label>
-                <input id="blood-pressure" name="bloodPressure" type="text" placeholder="120/80">
-              </div>
-              <div class="field-group">
-                <label for="cholesterol-level">Cholesterol Level (optional)</label>
-                <input id="cholesterol-level" name="cholesterolLevel" type="text">
-              </div>
-            </div>
-          </section>
-
-          <section class="profile-form-section">
-            <div class="profile-form-section-heading">
-              <h2>Metabolic and Medical Conditions</h2>
-            </div>
-            <div class="form-grid">
-              <div class="field-group">
                 <label for="diabetes-status">Diabetes Status</label>
                 <select id="diabetes-status" name="diabetesStatus">
                   <option value="No">No</option>
@@ -150,51 +151,68 @@
               <div class="field-group full-width">
                 <label>Major Medical Conditions</label>
                 <div class="underwriting-checkbox-grid">
-                  <label><input type="checkbox" name="majorMedicalConditions" value="Heart Disease"> Heart Disease</label>
-                  <label><input type="checkbox" name="majorMedicalConditions" value="Stroke"> Stroke</label>
-                  <label><input type="checkbox" name="majorMedicalConditions" value="Cancer"> Cancer</label>
-                  <label><input type="checkbox" name="majorMedicalConditions" value="Diabetes"> Diabetes</label>
-                  <label><input type="checkbox" name="majorMedicalConditions" value="High Blood Pressure"> High Blood Pressure</label>
-                  <label><input type="checkbox" name="majorMedicalConditions" value="High Cholesterol"> High Cholesterol</label>
-                  <label><input type="checkbox" name="majorMedicalConditions" value="Sleep Apnea"> Sleep Apnea</label>
-                  <label><input type="checkbox" name="majorMedicalConditions" value="Mental Health Treatment"> Mental Health Treatment</label>
-                  <label><input type="checkbox" name="majorMedicalConditions" value="Respiratory Conditions"> Respiratory Conditions</label>
-                  <label><input type="checkbox" name="majorMedicalConditions" value="Liver Disease"> Liver Disease</label>
-                  <label><input type="checkbox" name="majorMedicalConditions" value="Kidney Disease"> Kidney Disease</label>
-                  <label><input type="checkbox" name="majorMedicalConditions" value="Neurological Disorders"> Neurological Disorders</label>
+                  <label class="underwriting-condition-button" data-tooltip="Use for diagnosed coronary artery disease, heart attack history, angina, heart failure, stents, bypass, or similar cardiac disease."><input type="checkbox" name="majorMedicalConditions" value="Heart Disease"><span>Heart Disease</span></label>
+                  <label class="underwriting-condition-button" data-tooltip="Use for prior stroke, TIA, or other cerebrovascular event that an underwriter would likely ask about."><input type="checkbox" name="majorMedicalConditions" value="Stroke"><span>Stroke</span></label>
+                  <label class="underwriting-condition-button" data-tooltip="Use for current cancer, prior cancer, or ongoing surveillance from a significant cancer history."><input type="checkbox" name="majorMedicalConditions" value="Cancer"><span>Cancer</span></label>
+                  <label class="underwriting-condition-button" data-tooltip="Use if diabetes is diagnosed or treated. Prediabetes belongs in the diabetes status field above."><input type="checkbox" name="majorMedicalConditions" value="Diabetes"><span>Diabetes</span></label>
+                  <label class="underwriting-condition-button" data-tooltip="Use for diagnosed hypertension or ongoing medication or treatment for elevated blood pressure."><input type="checkbox" name="majorMedicalConditions" value="High Blood Pressure"><span>High Blood Pressure</span></label>
+                  <label class="underwriting-condition-button" data-tooltip="Use for diagnosed high cholesterol or active medication or treatment for lipid control."><input type="checkbox" name="majorMedicalConditions" value="High Cholesterol"><span>High Cholesterol</span></label>
+                  <label class="underwriting-condition-button" data-tooltip="Use for diagnosed sleep apnea, especially if CPAP, BiPAP, or other treatment has been recommended or used."><input type="checkbox" name="majorMedicalConditions" value="Sleep Apnea"><span>Sleep Apnea</span></label>
+                  <label class="underwriting-condition-button" data-tooltip="Use for counseling, psychiatric diagnosis, hospitalization, or prescription treatment such as SSRIs or anti-anxiety medication. For this preliminary screen, include it if it has been formally diagnosed or treated; severity can be clarified later."><input type="checkbox" name="majorMedicalConditions" value="Mental Health Treatment"><span>Mental Health Treatment</span></label>
+                  <label class="underwriting-condition-button" data-tooltip="Use for asthma, COPD, chronic bronchitis, emphysema, or other ongoing breathing or lung conditions."><input type="checkbox" name="majorMedicalConditions" value="Respiratory Conditions"><span>Respiratory Conditions</span></label>
+                  <label class="underwriting-condition-button" data-tooltip="Use for hepatitis, cirrhosis, fatty liver with documented disease, or other liver disease needing treatment or follow-up."><input type="checkbox" name="majorMedicalConditions" value="Liver Disease"><span>Liver Disease</span></label>
+                  <label class="underwriting-condition-button" data-tooltip="Use for chronic kidney disease, kidney failure, proteinuria under evaluation, or other ongoing renal disease."><input type="checkbox" name="majorMedicalConditions" value="Kidney Disease"><span>Kidney Disease</span></label>
+                  <label class="underwriting-condition-button" data-tooltip="Use for seizures, MS, Parkinson's, neuropathy, cognitive disorders, or other diagnosed neurological conditions."><input type="checkbox" name="majorMedicalConditions" value="Neurological Disorders"><span>Neurological Disorders</span></label>
                 </div>
               </div>
-              <div class="field-group">
-                <label for="other-major-condition">Other Major Condition</label>
-                <input id="other-major-condition" name="otherMajorCondition" type="text">
-              </div>
-              <div class="field-group">
-                <label for="condition-details">Condition Details (if applicable)</label>
-                <input id="condition-details" name="conditionDetails" type="text">
-              </div>
-              <div class="field-group">
-                <label for="year-diagnosed">Year Diagnosed</label>
-                <input id="year-diagnosed" class="profile-small-number-field" name="yearDiagnosed" type="number" min="1900" max="2100">
-              </div>
-              <div class="field-group">
-                <label for="condition-status">Condition Status</label>
-                <select id="condition-status" name="conditionStatus">
-                  <option value="Controlled">Controlled</option>
-                  <option value="Improving">Improving</option>
-                  <option value="Uncontrolled">Uncontrolled</option>
-                  <option value="In Remission">In Remission</option>
-                </select>
-              </div>
               <div class="field-group full-width">
-                <label for="current-prescription-medications">Current Prescription Medications</label>
-                <textarea id="current-prescription-medications" name="currentPrescriptionMedications" rows="3"></textarea>
+                <label>Treatment Categories and Medication Notes</label>
+                <div class="underwriting-medication-grid">
+                  <div class="field-group">
+                    <label for="treatment-category-trigger">Treatment Categories</label>
+                    <div class="underwriting-treatment-dropdown" data-treatment-dropdown>
+                      <button id="treatment-category-trigger" class="underwriting-treatment-trigger" type="button" aria-expanded="false" data-treatment-trigger>
+                        Select treatments
+                      </button>
+                      <div class="underwriting-treatment-menu" data-treatment-menu hidden>
+                        <div class="underwriting-treatment-menu-header">
+                          <input class="underwriting-treatment-search" type="search" placeholder="Search treatments" data-treatment-search>
+                          <button class="underwriting-treatment-reset" type="button" data-treatment-reset>Reset</button>
+                        </div>
+                        <div class="underwriting-treatment-options" data-treatment-options>
+                          <label class="underwriting-treatment-option"><input type="checkbox" value="Blood Pressure Treatment" data-treatment-option> <span>Blood Pressure Treatment</span></label>
+                          <label class="underwriting-treatment-option"><input type="checkbox" value="Cholesterol Treatment" data-treatment-option> <span>Cholesterol Treatment</span></label>
+                          <label class="underwriting-treatment-option"><input type="checkbox" value="Diabetes Treatment" data-treatment-option> <span>Diabetes Treatment</span></label>
+                          <label class="underwriting-treatment-option"><input type="checkbox" value="Insulin Use" data-treatment-option> <span>Insulin Use</span></label>
+                          <label class="underwriting-treatment-option"><input type="checkbox" value="Cardiac Treatment" data-treatment-option> <span>Cardiac Treatment</span></label>
+                          <label class="underwriting-treatment-option"><input type="checkbox" value="Respiratory Treatment" data-treatment-option> <span>Respiratory Treatment</span></label>
+                          <label class="underwriting-treatment-option"><input type="checkbox" value="Mental Health Treatment" data-treatment-option> <span>Mental Health Treatment</span></label>
+                          <label class="underwriting-treatment-option"><input type="checkbox" value="Sleep Apnea Treatment" data-treatment-option> <span>Sleep Apnea Treatment</span></label>
+                          <label class="underwriting-treatment-option"><input type="checkbox" value="Cancer Treatment" data-treatment-option> <span>Cancer Treatment</span></label>
+                          <label class="underwriting-treatment-option"><input type="checkbox" value="Neurological Treatment" data-treatment-option> <span>Neurological Treatment</span></label>
+                          <label class="underwriting-treatment-option"><input type="checkbox" value="Liver / Kidney Treatment" data-treatment-option> <span>Liver / Kidney Treatment</span></label>
+                          <label class="underwriting-treatment-option"><input type="checkbox" value="Other Significant Treatment" data-treatment-option> <span>Other Significant Treatment</span></label>
+                        </div>
+                      </div>
+                    </div>
+                    <input type="hidden" name="selectedTreatmentCategories" data-treatment-hidden>
+                  </div>
+                  <div class="field-group">
+                    <label for="selected-treatment-categories">Selected Treatments</label>
+                    <textarea id="selected-treatment-categories" name="selectedTreatmentCategoriesDisplay" rows="2" readonly data-treatment-display></textarea>
+                  </div>
+                  <div class="field-group">
+                    <label for="current-prescription-medications">Current Prescription Medications</label>
+                    <textarea id="current-prescription-medications" name="currentPrescriptionMedications" rows="2"></textarea>
+                  </div>
+                </div>
               </div>
             </div>
           </section>
 
           <section class="profile-form-section">
             <div class="profile-form-section-heading">
-              <h2>Family Medical History</h2>
+              <h2>Family and Lifestyle Risk</h2>
             </div>
             <div class="form-grid">
               <div class="field-group">
@@ -229,14 +247,6 @@
                   <option value="Unknown">Unknown</option>
                 </select>
               </div>
-            </div>
-          </section>
-
-          <section class="profile-form-section">
-            <div class="profile-form-section-heading">
-              <h2>Driving, Activity, and Travel Risk</h2>
-            </div>
-            <div class="form-grid">
               <div class="field-group">
                 <label for="major-driving-violations">Major Driving Violations in Last 5 Years</label>
                 <select id="major-driving-violations" name="majorDrivingViolations">
@@ -259,22 +269,6 @@
                 </select>
               </div>
               <div class="field-group">
-                <label for="activity-types">Activity Types</label>
-                <select id="activity-types" name="activityTypes">
-                  <option value="Aviation">Aviation</option>
-                  <option value="Skydiving">Skydiving</option>
-                  <option value="Scuba Diving">Scuba Diving</option>
-                  <option value="Motor Racing">Motor Racing</option>
-                  <option value="Rock Climbing or Mountaineering">Rock Climbing or Mountaineering</option>
-                  <option value="Extreme Sports">Extreme Sports</option>
-                  <option value="Other">Other</option>
-                </select>
-              </div>
-              <div class="field-group">
-                <label for="activity-frequency">Activity Frequency</label>
-                <input id="activity-frequency" name="activityFrequency" type="text">
-              </div>
-              <div class="field-group">
                 <label for="occupation-risk-level">Occupation Risk Level</label>
                 <select id="occupation-risk-level" name="occupationRiskLevel">
                   <option value="Low Risk">Low Risk</option>
@@ -288,18 +282,6 @@
                   <option value="Yes">Yes</option>
                   <option value="No">No</option>
                 </select>
-              </div>
-              <div class="field-group">
-                <label for="travel-country">Travel Country</label>
-                <input id="travel-country" name="travelCountry" type="text">
-              </div>
-              <div class="field-group">
-                <label for="travel-duration">Travel Duration</label>
-                <input id="travel-duration" name="travelDuration" type="text">
-              </div>
-              <div class="field-group">
-                <label for="travel-purpose">Travel Purpose</label>
-                <input id="travel-purpose" name="travelPurpose" type="text">
               </div>
             </div>
           </section>
@@ -345,39 +327,9 @@
 
           <section class="profile-form-section">
             <div class="profile-form-section-heading">
-              <h2>Legal, Concurrent, and System Estimate</h2>
+              <h2>Preliminary Underwriting Estimate</h2>
             </div>
             <div class="form-grid">
-              <div class="field-group">
-                <label for="felony-convictions">Felony Convictions in Past 10 Years</label>
-                <select id="felony-convictions" name="felonyConvictions">
-                  <option value="Yes">Yes</option>
-                  <option value="No">No</option>
-                </select>
-              </div>
-              <div class="field-group">
-                <label for="bankruptcy-history">Bankruptcy History</label>
-                <select id="bankruptcy-history" name="bankruptcyHistory">
-                  <option value="None">None</option>
-                  <option value="Past Bankruptcy">Past Bankruptcy</option>
-                  <option value="Currently in Bankruptcy">Currently in Bankruptcy</option>
-                </select>
-              </div>
-              <div class="field-group">
-                <label for="concurrent-insurance-applications">Any Life Insurance Applications Currently in Process</label>
-                <select id="concurrent-insurance-applications" name="concurrentInsuranceApplications">
-                  <option value="Yes">Yes</option>
-                  <option value="No">No</option>
-                </select>
-              </div>
-              <div class="field-group">
-                <label for="carrier-name">Carrier Name</label>
-                <input id="carrier-name" name="carrierName" type="text">
-              </div>
-              <div class="field-group">
-                <label for="coverage-amount-applied-for">Coverage Amount Applied For</label>
-                <input id="coverage-amount-applied-for" name="coverageAmountAppliedFor" type="number" min="0" step="1000">
-              </div>
               <div class="field-group">
                 <label for="estimated-underwriting-class">Estimated Underwriting Class</label>
                 <select id="estimated-underwriting-class" name="estimatedUnderwritingClass">
@@ -426,6 +378,14 @@
       const heightInchesField = document.getElementById("height-inches");
       const weightField = document.getElementById("weight");
       const bmiField = document.getElementById("body-mass-index");
+      const treatmentDropdown = document.querySelector("[data-treatment-dropdown]");
+      const treatmentTrigger = document.querySelector("[data-treatment-trigger]");
+      const treatmentMenu = document.querySelector("[data-treatment-menu]");
+      const treatmentSearch = document.querySelector("[data-treatment-search]");
+      const treatmentReset = document.querySelector("[data-treatment-reset]");
+      const treatmentOptions = document.querySelectorAll("[data-treatment-option]");
+      const treatmentDisplay = document.querySelector("[data-treatment-display]");
+      const treatmentHidden = document.querySelector("[data-treatment-hidden]");
 
       if (!heightFeetField || !heightInchesField || !weightField || !bmiField) {
         return;
@@ -450,6 +410,75 @@
       heightInchesField.addEventListener("input", syncBmi);
       weightField.addEventListener("input", syncBmi);
       syncBmi();
+
+      if (!treatmentDropdown || !treatmentTrigger || !treatmentMenu || !treatmentDisplay || !treatmentHidden) {
+        return;
+      }
+
+      function syncSelectedTreatments() {
+        const selected = Array.from(treatmentOptions)
+          .filter((option) => option.checked)
+          .map((option) => option.value);
+
+        treatmentDisplay.value = selected.join(", ");
+        treatmentHidden.value = selected.join("|");
+        treatmentTrigger.textContent = selected.length ? `${selected.length} treatment${selected.length === 1 ? "" : "s"} selected` : "Select treatments";
+      }
+
+      function filterTreatments() {
+        const query = String(treatmentSearch?.value || "").trim().toLowerCase();
+        treatmentOptions.forEach((option) => {
+          const label = option.closest(".underwriting-treatment-option");
+          const isMatch = !query || String(option.value).toLowerCase().includes(query);
+          label?.classList.toggle("is-hidden", !isMatch);
+        });
+      }
+
+      function closeTreatmentMenu() {
+        treatmentMenu.hidden = true;
+        treatmentTrigger.setAttribute("aria-expanded", "false");
+      }
+
+      function openTreatmentMenu() {
+        treatmentMenu.hidden = false;
+        treatmentTrigger.setAttribute("aria-expanded", "true");
+        window.setTimeout(() => {
+          treatmentSearch?.focus();
+        }, 20);
+      }
+
+      treatmentTrigger.addEventListener("click", () => {
+        if (treatmentMenu.hidden) {
+          openTreatmentMenu();
+        } else {
+          closeTreatmentMenu();
+        }
+      });
+
+      treatmentOptions.forEach((option) => {
+        option.addEventListener("change", syncSelectedTreatments);
+      });
+
+      treatmentSearch?.addEventListener("input", filterTreatments);
+
+      treatmentReset?.addEventListener("click", () => {
+        treatmentOptions.forEach((option) => {
+          option.checked = false;
+          option.closest(".underwriting-treatment-option")?.classList.remove("is-hidden");
+        });
+        if (treatmentSearch) {
+          treatmentSearch.value = "";
+        }
+        syncSelectedTreatments();
+      });
+
+      document.addEventListener("click", (event) => {
+        if (!treatmentDropdown.contains(event.target)) {
+          closeTreatmentMenu();
+        }
+      });
+
+      syncSelectedTreatments();
     })();
   </script>
 </body>
