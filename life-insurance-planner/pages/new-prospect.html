@@ -80,6 +80,7 @@
         <div class="prospect-panel-header">
           <a class="prospect-return-button" href="clients.html">Return to Client Directory</a>
           <h1>Create Client Profile</h1>
+          <p class="profile-required-key"><span class="profile-required-star" aria-hidden="true">*</span> = Required</p>
         </div>
         <form class="profile-creation-form" id="client-creation-form" data-client-type="individual">
           <section class="profile-form-section">
@@ -88,23 +89,23 @@
             </div>
             <div class="form-grid">
               <div class="field-group">
-                <label for="first-name">First Name</label>
+                <label for="first-name">First Name <span class="profile-required-star" aria-hidden="true">*</span></label>
                 <input id="first-name" name="firstName" type="text" required>
               </div>
               <div class="field-group">
-                <label for="middle-name">Middle Name (optional)</label>
+                <label for="middle-name">Middle Name</label>
                 <input id="middle-name" name="middleName" type="text">
               </div>
               <div class="field-group">
-                <label for="last-name">Last Name</label>
+                <label for="last-name">Last Name <span class="profile-required-star" aria-hidden="true">*</span></label>
                 <input id="last-name" name="lastName" type="text" required>
               </div>
               <div class="field-group">
-                <label for="preferred-name">Preferred Name (optional)</label>
+                <label for="preferred-name">Preferred Name</label>
                 <input id="preferred-name" name="preferredName" type="text">
               </div>
               <div class="field-group">
-                <label for="date-of-birth">Date of Birth</label>
+                <label for="date-of-birth">Date of Birth <span class="profile-required-star" aria-hidden="true">*</span></label>
                 <input id="date-of-birth" name="dateOfBirth" type="date" required data-date-of-birth>
               </div>
               <div class="field-group">
@@ -123,7 +124,7 @@
                 </div>
               </div>
               <div class="field-group">
-                <label for="insurance-rating-sex">Insurance Rating Sex</label>
+                <label for="insurance-rating-sex">Insurance Rating Sex <span class="profile-required-star" aria-hidden="true">*</span></label>
                 <select id="insurance-rating-sex" class="profile-placeholder-select is-placeholder" name="insuranceRatingSex" required data-placeholder-select>
                   <option value="" selected disabled>Please Select</option>
                   <option value="Male">Male</option>
@@ -132,15 +133,15 @@
                 </select>
               </div>
               <div class="field-group">
-                <label for="email-address">Email Address</label>
+                <label for="email-address">Email Address <span class="profile-required-star" aria-hidden="true">*</span></label>
                 <input id="email-address" name="emailAddress" type="email" required>
               </div>
               <div class="field-group">
-                <label for="phone-number">Phone Number</label>
+                <label for="phone-number">Phone Number <span class="profile-required-star" aria-hidden="true">*</span></label>
                 <input id="phone-number" name="phoneNumber" type="tel" required>
               </div>
               <div class="field-group">
-                <label for="preferred-contact-method">Preferred Contact Method</label>
+                <label for="preferred-contact-method">Preferred Contact Method <span class="profile-required-star" aria-hidden="true">*</span></label>
                 <select id="preferred-contact-method" name="preferredContactMethod" required>
                   <option value="Phone">Phone</option>
                   <option value="Email">Email</option>
@@ -164,7 +165,7 @@
             </div>
             <div class="form-grid">
               <div class="field-group">
-                <label for="marital-status">Marital Status</label>
+                <label for="marital-status">Marital Status <span class="profile-required-star" aria-hidden="true">*</span></label>
                 <select id="marital-status" name="maritalStatus" required>
                   <option value="Single">Single</option>
                   <option value="Married">Married</option>
@@ -175,7 +176,7 @@
                 </select>
               </div>
               <div class="field-group">
-                <label for="household-role">Household / Company Role</label>
+                <label for="household-role">Household / Company Role <span class="profile-required-star" aria-hidden="true">*</span></label>
                 <select id="household-role" name="householdRole" required>
                   <option value="Primary Client">Primary Client</option>
                   <option value="Spouse or Partner" data-family-only>Spouse or Partner</option>
@@ -185,7 +186,7 @@
                 </select>
               </div>
               <div class="field-group">
-                <label for="profile-assignment-mode">Household / Company Assignment</label>
+                <label for="profile-assignment-mode">Household / Company Assignment <span class="profile-required-star" aria-hidden="true">*</span></label>
                 <select id="profile-assignment-mode" name="profileAssignmentMode" class="profile-placeholder-select is-placeholder" data-placeholder-select data-profile-assignment-mode required>
                   <option value="" selected disabled>Please Select to Continue</option>
                   <option value="create-household" data-family-assignment>Create New Household</option>
@@ -199,8 +200,8 @@
                 <button class="profile-assignment-search-button" type="button" data-search-companies disabled>Search Company Profiles</button>
               </div>
               <div class="field-group full-width">
-                <label for="profile-assignment-name">Selected Household / Company Name</label>
-                <input id="profile-assignment-name" name="profileAssignmentName" type="text" data-profile-assignment-name disabled>
+                <label for="profile-assignment-name">Selected Household / Company Name <span class="profile-required-star" aria-hidden="true">*</span></label>
+                <input id="profile-assignment-name" name="profileAssignmentName" type="text" data-profile-assignment-name disabled required>
               </div>
               <div class="profile-inline-divider" aria-hidden="true"></div>
               <fieldset class="profile-dependent-fields" data-profile-dependent-fields disabled>
@@ -344,7 +345,7 @@
             </div>
             <div class="form-grid">
               <div class="field-group">
-                <label for="advisor-name">Advisor Name</label>
+                <label for="advisor-name">Advisor Name <span class="profile-required-star" aria-hidden="true">*</span></label>
                 <input id="advisor-name" name="advisorName" type="text" required data-advisor-name>
               </div>
               <div class="field-group">
@@ -353,12 +354,54 @@
               </div>
               <input id="household-id" name="householdId" type="hidden" data-household-id>
               <div class="field-group">
-                <label for="date-profile-created">Date Profile Created</label>
-                <input id="date-profile-created" name="dateProfileCreated" type="date" data-created-date>
+                <label for="date-profile-created">Date Profile Created <span class="profile-required-star" aria-hidden="true">*</span></label>
+                <input id="date-profile-created" name="dateProfileCreated" type="date" data-created-date required>
               </div>
               <div class="field-group">
                 <label for="last-updated-date">Last Updated Date</label>
                 <input id="last-updated-date" name="lastUpdatedDate" type="date" data-last-updated-date>
+              </div>
+              <div class="profile-advisory-row full-width">
+                <div class="field-group profile-advisory-priority-group">
+                  <label>Priority <span class="profile-required-star" aria-hidden="true">*</span></label>
+                  <div class="client-priority-dropdown profile-priority-dropdown" data-profile-priority-dropdown>
+                    <button class="client-priority-button client-priority-button-unset" type="button" data-profile-priority-trigger>Select Priority</button>
+                    <div class="client-priority-menu" data-profile-priority-menu>
+                      <button class="client-priority-option client-priority-option-low" type="button" data-profile-priority-option="low">Low</button>
+                      <button class="client-priority-option client-priority-option-medium" type="button" data-profile-priority-option="medium">Medium</button>
+                      <button class="client-priority-option client-priority-option-high" type="button" data-profile-priority-option="high">High</button>
+                    </div>
+                    <input type="hidden" name="advisoryPriority" value="" data-profile-priority-input>
+                  </div>
+                </div>
+                <div class="field-group profile-advisory-source-group">
+                  <label for="acquisition-source">Source <span class="profile-required-star" aria-hidden="true">*</span></label>
+                  <select id="acquisition-source" name="acquisitionSource" data-acquisition-source required>
+                    <option value="Referral">Referral</option>
+                    <option value="Existing Client">Existing Client</option>
+                    <option value="Website">Website</option>
+                    <option value="Social Media">Social Media</option>
+                    <option value="Seminar / Event">Seminar / Event</option>
+                    <option value="COI / Partner">COI / Partner</option>
+                    <option value="Direct Outreach">Direct Outreach</option>
+                    <option value="Walk-In">Walk-In</option>
+                    <option value="Purchased Lead">Purchased Lead</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+                <div class="field-group profile-advisory-other-group">
+                  <label for="acquisition-source-other">Other Source</label>
+                  <input id="acquisition-source-other" name="acquisitionSourceOther" type="text" disabled data-acquisition-source-other>
+                </div>
+                <div class="field-group profile-advisory-status-group">
+                  <label for="client-status">Client Status <span class="profile-required-star" aria-hidden="true">*</span></label>
+                  <select id="client-status" name="clientStatus" required>
+                    <option value="Prospect">Prospect</option>
+                    <option value="In Review">In Review</option>
+                    <option value="Coverage Placed">Coverage Placed</option>
+                    <option value="Closed">Closed</option>
+                  </select>
+                </div>
               </div>
               <div class="field-group full-width">
                 <label for="client-notes">Client Notes</label>
@@ -368,8 +411,9 @@
           </section>
 
           <p class="profile-creation-feedback" id="client-creation-feedback" hidden></p>
-          <div class="actions-row">
-            <a class="btn btn-primary" href="preliminary-underwriting.html" data-loading-link>Continue to Preliminary Underwriting</a>
+          <div class="actions-row profile-actions-row">
+            <a class="btn btn-primary btn-prelim-continue btn-prelim-continue-primary" href="preliminary-underwriting.html" data-loading-link>Continue to Preliminary Underwriting</a>
+            <a class="btn btn-primary btn-prelim-continue btn-prelim-skip" href="next-step.html" data-loading-link>Skip Preliminary Underwriting</a>
           </div>
         </form>
       </section>
@@ -420,6 +464,12 @@
       const projectedDependentsCountField = document.getElementById("projected-dependents-count");
       const sameEducationFundingField = document.getElementById("same-education-funding");
       const projectedEducationFundingPerDependentField = document.getElementById("projected-education-funding-per-dependent");
+      const profilePriorityDropdown = document.querySelector("[data-profile-priority-dropdown]");
+      const profilePriorityTrigger = document.querySelector("[data-profile-priority-trigger]");
+      const profilePriorityInput = document.querySelector("[data-profile-priority-input]");
+      const profilePriorityOptions = document.querySelectorAll("[data-profile-priority-option]");
+      const acquisitionSourceField = document.querySelector("[data-acquisition-source]");
+      const acquisitionSourceOtherField = document.querySelector("[data-acquisition-source-other]");
       const familyAssignmentOptions = document.querySelectorAll("[data-family-assignment]");
       const businessAssignmentOptions = document.querySelectorAll("[data-business-assignment]");
       const searchHouseholdsButton = document.querySelector("[data-search-households]");
@@ -713,6 +763,52 @@
         setProjectedFieldDisabled(projectedEducationFundingPerDependentField, sameEducationFunding, sameEducationFunding);
       }
 
+      function syncAcquisitionSourceField() {
+        const isOther = String(acquisitionSourceField?.value || "") === "Other";
+        if (!acquisitionSourceOtherField) {
+          return;
+        }
+
+        acquisitionSourceOtherField.disabled = !isOther;
+        acquisitionSourceOtherField.closest(".field-group")?.classList.toggle("is-disabled", !isOther);
+        acquisitionSourceOtherField.required = isOther;
+        if (!isOther) {
+          acquisitionSourceOtherField.value = "";
+        }
+      }
+
+      function applyProfilePriority(priority) {
+        if (!profilePriorityTrigger || !profilePriorityInput) {
+          return;
+        }
+
+        const normalized = String(priority || "").trim().toLowerCase();
+        profilePriorityInput.value = normalized;
+        profilePriorityDropdown?.classList.remove("is-open");
+        profilePriorityTrigger.className = "client-priority-button";
+
+        if (normalized === "low") {
+          profilePriorityTrigger.textContent = "Low";
+          profilePriorityTrigger.classList.add("client-priority-button-low");
+          return;
+        }
+
+        if (normalized === "medium") {
+          profilePriorityTrigger.textContent = "Medium";
+          profilePriorityTrigger.classList.add("client-priority-button-medium");
+          return;
+        }
+
+        if (normalized === "high") {
+          profilePriorityTrigger.textContent = "High";
+          profilePriorityTrigger.classList.add("client-priority-button-high");
+          return;
+        }
+
+        profilePriorityTrigger.textContent = "Select Priority";
+        profilePriorityTrigger.classList.add("client-priority-button-unset");
+      }
+
       function showAgeHint() {
         if (!ageHint || dobField.value) {
           return;
@@ -767,10 +863,26 @@
       sameEducationFundingField?.addEventListener("change", syncProjectedDependentsFields);
       educationFundingPerDependentField?.addEventListener("input", syncProjectedDependentsFields);
       educationFundingPerDependentField?.addEventListener("change", syncProjectedDependentsFields);
+      acquisitionSourceField?.addEventListener("change", syncAcquisitionSourceField);
+      profilePriorityTrigger?.addEventListener("click", function () {
+        profilePriorityDropdown?.classList.toggle("is-open");
+      });
+      profilePriorityOptions.forEach(function (option) {
+        option.addEventListener("click", function () {
+          applyProfilePriority(option.dataset.profilePriorityOption || "");
+        });
+      });
       interestButtons.forEach(function (button) {
         button.addEventListener("click", function () {
           syncInterestButtons(button.dataset.interestButton || "family");
         });
+      });
+      document.addEventListener("click", function (event) {
+        if (!profilePriorityDropdown || profilePriorityDropdown.contains(event.target)) {
+          return;
+        }
+
+        profilePriorityDropdown.classList.remove("is-open");
       });
       syncAge();
       syncPhone();
@@ -780,6 +892,8 @@
       syncEmploymentDetailFields();
       syncDependentsCountField();
       syncProjectedDependentsFields();
+      syncAcquisitionSourceField();
+      applyProfilePriority(profilePriorityInput?.value || "");
       syncInterestButtons(interestTypeField?.value || "family");
     })();
   </script>

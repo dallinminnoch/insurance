@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Protection Modeling Inputs | LENS</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@600&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../styles.css">
+  <script>
+    try {
+      if (sessionStorage.getItem("lensRouteLoading")) {
+        document.documentElement.classList.add("is-route-loading");
+      }
+    } catch (error) {}
+  </script>
+</head>
+<body class="home-page prospect-page profile-creation-page" data-page="next-step">
+  <div class="route-loading-overlay" data-route-loading-overlay>
+    <div class="route-loading-card">
+      <span class="route-loading-icon" aria-hidden="true">
+        <span class="account-icon-head route-loading-head"></span>
+        <span class="account-icon-body route-loading-body"></span>
+      </span>
+      <p class="route-loading-text">Opening protection modeling inputs...</p>
+    </div>
+  </div>
+  <header class="site-header">
+    <div class="site-header-inner">
+      <a class="site-brand" href="../index.html">
+        <span class="site-brand-mark">LENS</span>
+      </a>
+      <div class="site-header-actions">
+        <form class="site-search has-icon" role="search">
+          <input type="search" placeholder="Search" data-i18n-placeholder="search.placeholder">
+        </form>
+        <nav class="site-nav" aria-label="Main navigation">
+          <div class="site-dropdown">
+            <button class="site-nav-link site-dropdown-toggle is-active" type="button" aria-expanded="true" data-i18n="nav.records">Records</button>
+            <div class="site-dropdown-menu">
+              <a class="site-dropdown-link" href="clients.html" data-i18n="nav.clients" data-client-directory-nav>Clients</a>
+            </div>
+          </div>
+          <a class="site-nav-link" href="resources.html" data-i18n="nav.resources">Resources</a>
+          <div class="site-dropdown">
+            <button class="site-nav-link site-dropdown-toggle" type="button" aria-expanded="false" data-i18n="nav.financialProducts">Financial Products</button>
+            <div class="site-dropdown-menu">
+              <a class="site-dropdown-link" href="lens.html">LENS Analysis</a>
+              <a class="site-dropdown-link" href="strategy-builder.html">Strategy Builder</a>
+              <a class="site-dropdown-link" href="policy-web.html">Policy Web</a>
+            </div>
+          </div>
+          <div class="language-slot" data-language-slot>
+            <div class="language-dropdown">
+              <button class="language-trigger" type="button" aria-label="Language">
+                <img class="language-icon-image" src="../Images/Untitled design.png" alt="" aria-hidden="true">
+              </button>
+            </div>
+          </div>
+          <div class="account-slot" data-account-slot>
+            <div class="account-dropdown">
+              <a class="account-profile account-dropdown-toggle account-profile-signed-out" href="sign-in.html">
+                <span class="account-icon" aria-hidden="true">
+                  <span class="account-icon-head"></span>
+                  <span class="account-icon-body"></span>
+                </span>
+                <span class="sr-only">Open sign in menu</span>
+              </a>
+            </div>
+          </div>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <main class="home-shell app-home-shell prospect-shell">
+    <section class="prospect-stage">
+      <section class="prospect-empty-panel">
+        <div class="prospect-panel-header">
+          <a class="prospect-return-button" href="new-prospect.html" data-loading-link>Previous</a>
+          <h1>Protection Modeling Inputs</h1>
+        </div>
+        <form class="profile-creation-form" id="protection-modeling-form">
+          <section class="profile-form-section">
+            <div class="profile-form-section-heading">
+              <h2>Household Context</h2>
+              <p class="profile-section-note">Fields already captured on the client profile are intentionally excluded here.</p>
+            </div>
+            <div class="form-grid">
+              <div class="field-group">
+                <label for="spouse-age">Spouse Age</label>
+                <input id="spouse-age" class="profile-small-number-field" name="spouseAge" type="number" min="0" max="120" step="1">
+              </div>
+              <div class="field-group">
+                <label for="spouse-income">Spouse Income</label>
+                <div class="profile-currency-field">
+                  <input id="spouse-income" name="spouseIncome" type="number" min="0" step="1000">
+                  <span class="profile-currency-suffix">USD</span>
+                </div>
+              </div>
+              <div class="field-group">
+                <label for="dependent-ages">Dependents' Ages</label>
+                <input id="dependent-ages" name="dependentAges" type="text" placeholder="Example: 4, 8, 12">
+              </div>
+            </div>
+          </section>
+
+          <section class="profile-form-section">
+            <div class="profile-form-section-heading">
+              <h2>Income and Economic Value</h2>
+            </div>
+            <div class="form-grid">
+              <div class="field-group">
+                <label for="gross-annual-income">Gross Annual Income</label>
+                <div class="profile-currency-field">
+                  <input id="gross-annual-income" name="grossAnnualIncome" type="number" min="0" step="1000">
+                  <span class="profile-currency-suffix">USD</span>
+                </div>
+              </div>
+              <div class="field-group">
+                <label for="net-annual-income">Net Annual Income</label>
+                <div class="profile-currency-field">
+                  <input id="net-annual-income" name="netAnnualIncome" type="number" min="0" step="1000">
+                  <span class="profile-currency-suffix">USD</span>
+                </div>
+              </div>
+              <div class="field-group">
+                <label for="income-growth-rate">Income Growth Rate Assumption</label>
+                <div class="profile-currency-field">
+                  <input id="income-growth-rate" class="profile-small-number-field" name="incomeGrowthRate" type="number" min="0" max="25" step="0.1">
+                  <span class="profile-currency-suffix">%</span>
+                </div>
+              </div>
+              <div class="field-group">
+                <label for="bonus-variable-income">Bonus / Variable Income</label>
+                <div class="profile-currency-field">
+                  <input id="bonus-variable-income" name="bonusVariableIncome" type="number" min="0" step="1000">
+                  <span class="profile-currency-suffix">USD</span>
+                </div>
+              </div>
+              <div class="field-group">
+                <label for="years-until-retirement">Years Until Retirement</label>
+                <input id="years-until-retirement" class="profile-small-number-field" name="yearsUntilRetirement" type="number" min="0" max="80" step="1">
+              </div>
+              <div class="field-group">
+                <label for="employer-benefits-value">Employer Benefits Value</label>
+                <div class="profile-currency-field">
+                  <input id="employer-benefits-value" name="employerBenefitsValue" type="number" min="0" step="1000">
+                  <span class="profile-currency-suffix">USD</span>
+                </div>
+              </div>
+              <div class="field-group">
+                <label for="household-income-use">Percent of Income Used for Household</label>
+                <div class="profile-currency-field">
+                  <input id="household-income-use" class="profile-small-number-field" name="householdIncomeUsePercent" type="number" min="0" max="100" step="1">
+                  <span class="profile-currency-suffix">%</span>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="profile-form-section">
+            <div class="profile-form-section-heading">
+              <h2>Expenses and Lifestyle</h2>
+            </div>
+            <div class="form-grid">
+              <div class="field-group">
+                <label for="monthly-housing-cost">Monthly Housing Cost</label>
+                <div class="profile-currency-field">
+                  <input id="monthly-housing-cost" name="monthlyHousingCost" type="number" min="0" step="50">
+                  <span class="profile-currency-suffix">USD</span>
+                </div>
+              </div>
+              <div class="field-group">
+                <label for="utilities-cost">Utilities</label>
+                <div class="profile-currency-field">
+                  <input id="utilities-cost" name="utilitiesCost" type="number" min="0" step="50">
+                  <span class="profile-currency-suffix">USD</span>
+                </div>
+              </div>
+              <div class="field-group">
+                <label for="food-cost">Food</label>
+                <div class="profile-currency-field">
+                  <input id="food-cost" name="foodCost" type="number" min="0" step="50">
+                  <span class="profile-currency-suffix">USD</span>
+                </div>
+              </div>
+              <div class="field-group">
+                <label for="insurance-cost">Insurance</label>
+                <div class="profile-currency-field">
+                  <input id="insurance-cost" name="insuranceCost" type="number" min="0" step="50">
+                  <span class="profile-currency-suffix">USD</span>
+                </div>
+              </div>
+              <div class="field-group">
+                <label for="transportation-cost">Transportation</label>
+                <div class="profile-currency-field">
+                  <input id="transportation-cost" name="transportationCost" type="number" min="0" step="50">
+                  <span class="profile-currency-suffix">USD</span>
+                </div>
+              </div>
+              <div class="field-group">
+                <label for="travel-discretionary-cost">Travel / Discretionary</label>
+                <div class="profile-currency-field">
+                  <input id="travel-discretionary-cost" name="travelDiscretionaryCost" type="number" min="0" step="50">
+                  <span class="profile-currency-suffix">USD</span>
+                </div>
+              </div>
+              <div class="field-group">
+                <label for="subscriptions-cost">Subscriptions / Non-Essentials</label>
+                <div class="profile-currency-field">
+                  <input id="subscriptions-cost" name="subscriptionsCost" type="number" min="0" step="50">
+                  <span class="profile-currency-suffix">USD</span>
+                </div>
+              </div>
+              <div class="field-group">
+                <label for="current-total-monthly-spending">Current Total Monthly Spending</label>
+                <div class="profile-currency-field">
+                  <input id="current-total-monthly-spending" name="currentTotalMonthlySpending" type="number" min="0" step="50">
+                  <span class="profile-currency-suffix">USD</span>
+                </div>
+              </div>
+              <div class="field-group">
+                <label for="monthly-expense-target">Total Monthly Expense Target</label>
+                <div class="profile-currency-field">
+                  <input id="monthly-expense-target" name="monthlyExpenseTarget" type="number" min="0" step="50">
+                  <span class="profile-currency-suffix">USD</span>
+                </div>
+              </div>
+              <div class="field-group">
+                <label for="expense-replacement-percent">Percent of Expenses to Replace</label>
+                <div class="profile-currency-field">
+                  <input id="expense-replacement-percent" class="profile-small-number-field" name="expenseReplacementPercent" type="number" min="0" max="100" step="1">
+                  <span class="profile-currency-suffix">%</span>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="profile-form-section">
+            <div class="profile-form-section-heading">
+              <h2>Debt and Liabilities</h2>
+            </div>
+            <div class="form-grid">
+              <div class="field-group">
+                <label for="mortgage-balance">Mortgage Balance</label>
+                <div class="profile-currency-field">
+                  <input id="mortgage-balance" name="mortgageBalance" type="number" min="0" step="1000">
+                  <span class="profile-currency-suffix">USD</span>
+                </div>
+              </div>
+              <div class="field-group">
+                <label for="mortgage-term-remaining">Mortgage Remaining Term</label>
+                <input id="mortgage-term-remaining" class="profile-small-number-field" name="mortgageTermRemaining" type="number" min="0" max="50" step="1">
+              </div>
+              <div class="field-group">
+                <label for="mortgage-interest-rate">Interest Rate</label>
+                <div class="profile-currency-field">
+                  <input id="mortgage-interest-rate" class="profile-small-number-field" name="mortgageInterestRate" type="number" min="0" max="25" step="0.01">
+                  <span class="profile-currency-suffix">%</span>
+                </div>
+              </div>
+              <div class="field-group">
+                <label for="other-real-estate-loans">Other Real Estate Loans</label>
+                <div class="profile-currency-field">
+                  <input id="other-real-estate-loans" name="otherRealEstateLoans" type="number" min="0" step="1000">
+                  <span class="profile-currency-suffix">USD</span>
+                </div>
+              </div>
+              <div class="field-group">
+                <label for="auto-loans">Auto Loans</label>
+                <div class="profile-currency-field">
+                  <input id="auto-loans" name="autoLoans" type="number" min="0" step="1000">
+                  <span class="profile-currency-suffix">USD</span>
+                </div>
+              </div>
+              <div class="field-group">
+                <label for="credit-card-debt">Credit Card Debt</label>
+                <div class="profile-currency-field">
+                  <input id="credit-card-debt" name="creditCardDebt" type="number" min="0" step="100">
+                  <span class="profile-currency-suffix">USD</span>
+                </div>
+              </div>
+              <div class="field-group">
+                <label for="student-loans">Student Loans</label>
+                <div class="profile-currency-field">
+                  <input id="student-loans" name="studentLoans" type="number" min="0" step="1000">
+                  <span class="profile-currency-suffix">USD</span>
+                </div>
+              </div>
+              <div class="field-group">
+                <label for="personal-loans">Personal Loans</label>
+                <div class="profile-currency-field">
+                  <input id="personal-loans" name="personalLoans" type="number" min="0" step="1000">
+                  <span class="profile-currency-suffix">USD</span>
+                </div>
+              </div>
+              <div class="field-group">
+                <label for="business-debt">Business Debt</label>
+                <div class="profile-currency-field">
+                  <input id="business-debt" name="businessDebt" type="number" min="0" step="1000">
+                  <span class="profile-currency-suffix">USD</span>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="profile-form-section">
+            <div class="profile-form-section-heading">
+              <h2>Education Funding</h2>
+            </div>
+            <div class="form-grid">
+              <div class="field-group">
+                <label for="children-needing-funding">Number of Children Needing Funding</label>
+                <input id="children-needing-funding" class="profile-small-number-field" name="childrenNeedingFunding" type="number" min="0" step="1">
+              </div>
+              <div class="field-group">
+                <label for="years-until-college">Years Until Each Child Starts College</label>
+                <input id="years-until-college" name="yearsUntilCollege" type="text" placeholder="Example: 6, 10, 14">
+              </div>
+              <div class="field-group">
+                <label for="estimated-cost-per-child">Estimated Cost Per Child</label>
+                <div class="profile-currency-field">
+                  <input id="estimated-cost-per-child" name="estimatedCostPerChild" type="number" min="0" step="1000">
+                  <span class="profile-currency-suffix">USD</span>
+                </div>
+              </div>
+              <div class="field-group">
+                <label for="cost-to-fund-percent">Percent of Cost to Fund</label>
+                <div class="profile-currency-field">
+                  <input id="cost-to-fund-percent" class="profile-small-number-field" name="costToFundPercent" type="number" min="0" max="100" step="1">
+                  <span class="profile-currency-suffix">%</span>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="profile-form-section">
+            <div class="profile-form-section-heading">
+              <h2>Assets and Existing Coverage</h2>
+            </div>
+            <div class="form-grid">
+              <div class="field-group">
+                <label for="cash-savings">Cash / Savings</label>
+                <div class="profile-currency-field">
+                  <input id="cash-savings" name="cashSavings" type="number" min="0" step="1000">
+                  <span class="profile-currency-suffix">USD</span>
+                </div>
+              </div>
+              <div class="field-group">
+                <label for="emergency-fund">Emergency Fund</label>
+                <div class="profile-currency-field">
+                  <input id="emergency-fund" name="emergencyFund" type="number" min="0" step="1000">
+                  <span class="profile-currency-suffix">USD</span>
+                </div>
+              </div>
+              <div class="field-group">
+                <label for="brokerage-accounts">Brokerage Accounts</label>
+                <div class="profile-currency-field">
+                  <input id="brokerage-accounts" name="brokerageAccounts" type="number" min="0" step="1000">
+                  <span class="profile-currency-suffix">USD</span>
+                </div>
+              </div>
+              <div class="field-group">
+                <label for="retirement-assets">401(k), IRA Balances</label>
+                <div class="profile-currency-field">
+                  <input id="retirement-assets" name="retirementAssets" type="number" min="0" step="1000">
+                  <span class="profile-currency-suffix">USD</span>
+                </div>
+              </div>
+              <div class="field-group">
+                <label for="real-estate-equity">Real Estate Equity</label>
+                <div class="profile-currency-field">
+                  <input id="real-estate-equity" name="realEstateEquity" type="number" min="0" step="1000">
+                  <span class="profile-currency-suffix">USD</span>
+                </div>
+              </div>
+              <div class="field-group">
+                <label for="business-value">Business Value</label>
+                <div class="profile-currency-field">
+                  <input id="business-value" name="businessValue" type="number" min="0" step="1000">
+                  <span class="profile-currency-suffix">USD</span>
+                </div>
+              </div>
+              <div class="field-group">
+                <label for="individual-policy-type">Individual Life Insurance Type</label>
+                <select id="individual-policy-type" name="individualPolicyType">
+                  <option value="">Please select</option>
+                  <option value="Term">Term</option>
+                  <option value="Whole">Whole</option>
+                  <option value="UL">UL</option>
+                </select>
+              </div>
+              <div class="field-group">
+                <label for="individual-death-benefit">Individual Death Benefit</label>
+                <div class="profile-currency-field">
+                  <input id="individual-death-benefit" name="individualDeathBenefit" type="number" min="0" step="1000">
+                  <span class="profile-currency-suffix">USD</span>
+                </div>
+              </div>
+              <div class="field-group">
+                <label for="individual-years-remaining">Years Remaining</label>
+                <input id="individual-years-remaining" class="profile-small-number-field" name="individualYearsRemaining" type="number" min="0" max="80" step="1">
+              </div>
+              <div class="field-group">
+                <label for="group-life-coverage">Group Life Coverage Amount</label>
+                <div class="profile-currency-field">
+                  <input id="group-life-coverage" name="groupLifeCoverage" type="number" min="0" step="1000">
+                  <span class="profile-currency-suffix">USD</span>
+                </div>
+              </div>
+              <div class="field-group">
+                <label for="group-life-portability">Group Life Portability</label>
+                <select id="group-life-portability" name="groupLifePortability">
+                  <option value="">Please select</option>
+                  <option value="Yes">Yes</option>
+                  <option value="No">No</option>
+                </select>
+              </div>
+            </div>
+          </section>
+
+          <section class="profile-form-section">
+            <div class="profile-form-section-heading">
+              <h2>Final Expenses and Assumptions</h2>
+            </div>
+            <div class="form-grid">
+              <div class="field-group">
+                <label for="funeral-burial-estimate">Funeral / Burial Estimate</label>
+                <div class="profile-currency-field">
+                  <input id="funeral-burial-estimate" name="funeralBurialEstimate" type="number" min="0" step="1000">
+                  <span class="profile-currency-suffix">USD</span>
+                </div>
+              </div>
+              <div class="field-group">
+                <label for="medical-end-of-life-costs">Medical End-of-Life Costs</label>
+                <div class="profile-currency-field">
+                  <input id="medical-end-of-life-costs" name="medicalEndOfLifeCosts" type="number" min="0" step="1000">
+                  <span class="profile-currency-suffix">USD</span>
+                </div>
+              </div>
+              <div class="field-group">
+                <label for="estate-settlement-costs">Estate Settlement Costs</label>
+                <div class="profile-currency-field">
+                  <input id="estate-settlement-costs" name="estateSettlementCosts" type="number" min="0" step="1000">
+                  <span class="profile-currency-suffix">USD</span>
+                </div>
+              </div>
+              <div class="field-group">
+                <label for="inflation-rate-assumption">Inflation Rate Assumption</label>
+                <div class="profile-currency-field">
+                  <input id="inflation-rate-assumption" class="profile-small-number-field" name="inflationRateAssumption" type="number" min="0" max="25" step="0.1">
+                  <span class="profile-currency-suffix">%</span>
+                </div>
+              </div>
+              <div class="field-group">
+                <label for="discount-rate">Discount Rate</label>
+                <div class="profile-currency-field">
+                  <input id="discount-rate" class="profile-small-number-field" name="discountRate" type="number" min="0" max="25" step="0.1">
+                  <span class="profile-currency-suffix">%</span>
+                </div>
+              </div>
+              <div class="field-group">
+                <label for="investment-return-assumption">Investment Return Assumption</label>
+                <div class="profile-currency-field">
+                  <input id="investment-return-assumption" class="profile-small-number-field" name="investmentReturnAssumption" type="number" min="0" max="25" step="0.1">
+                  <span class="profile-currency-suffix">%</span>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="profile-form-section">
+            <div class="profile-form-section-heading">
+              <h2>Survivorship Adjustments</h2>
+            </div>
+            <div class="form-grid">
+              <div class="field-group">
+                <label for="income-replacement-duration">Income Replacement Duration</label>
+                <input id="income-replacement-duration" class="profile-small-number-field" name="incomeReplacementDuration" type="number" min="0" max="80" step="1">
+              </div>
+              <div class="field-group">
+                <label for="survivor-income">Survivor Income</label>
+                <div class="profile-currency-field">
+                  <input id="survivor-income" name="survivorIncome" type="number" min="0" step="1000">
+                  <span class="profile-currency-suffix">USD</span>
+                </div>
+              </div>
+              <div class="field-group">
+                <label for="survivor-continues-working">Spouse Continues Working?</label>
+                <select id="survivor-continues-working" name="survivorContinuesWorking">
+                  <option value="">Please select</option>
+                  <option value="Yes">Yes</option>
+                  <option value="No">No</option>
+                </select>
+              </div>
+              <div class="field-group">
+                <label for="expense-reduction-at-death">Expense Reduction at Death</label>
+                <div class="profile-currency-field">
+                  <input id="expense-reduction-at-death" class="profile-small-number-field" name="expenseReductionAtDeath" type="number" min="0" max="100" step="1">
+                  <span class="profile-currency-suffix">%</span>
+                </div>
+              </div>
+              <div class="field-group">
+                <label for="child-dependency-duration">Child Dependency Duration</label>
+                <input id="child-dependency-duration" class="profile-small-number-field" name="childDependencyDuration" type="number" min="0" max="40" step="1">
+              </div>
+            </div>
+          </section>
+
+          <section class="profile-form-section">
+            <div class="profile-form-section-heading">
+              <h2>Client Intent and Constraints</h2>
+            </div>
+            <div class="form-grid">
+              <div class="field-group">
+                <label for="primary-goal">Primary Goal</label>
+                <select id="primary-goal" name="primaryGoal">
+                  <option value="">Please select</option>
+                  <option value="Income Replacement">Income Replacement</option>
+                  <option value="Debt Elimination">Debt Elimination</option>
+                  <option value="Legacy">Legacy</option>
+                  <option value="Business Protection">Business Protection</option>
+                </select>
+              </div>
+              <div class="field-group">
+                <label for="coverage-time-horizon">Coverage Time Horizon Preference</label>
+                <select id="coverage-time-horizon" name="coverageTimeHorizon">
+                  <option value="">Please select</option>
+                  <option value="Temporary">Temporary (term)</option>
+                  <option value="Permanent">Permanent (lifetime)</option>
+                  <option value="Blended">Blended</option>
+                </select>
+              </div>
+              <div class="field-group">
+                <label for="budget-range">Budget Range</label>
+                <div class="profile-currency-field">
+                  <input id="budget-range" name="budgetRange" type="number" min="0" step="25">
+                  <span class="profile-currency-suffix">USD/mo</span>
+                </div>
+              </div>
+              <div class="field-group">
+                <label for="risk-preference">Risk Preference</label>
+                <select id="risk-preference" name="riskPreference">
+                  <option value="">Please select</option>
+                  <option value="Lowest Cost">Lowest Cost</option>
+                  <option value="Balanced">Balanced</option>
+                  <option value="Guarantees / Certainty">Guarantees / Certainty</option>
+                </select>
+              </div>
+            </div>
+          </section>
+
+          <div class="actions-row">
+            <a class="btn btn-secondary" href="new-prospect.html" data-loading-link>Previous</a>
+          </div>
+        </form>
+      </section>
+    </section>
+  </main>
+
+  <script src="../data.js"></script>
+  <script src="../calculations.js"></script>
+  <script src="../charts.js"></script>
+  <script src="../app.js"></script>
+  <script>
+    (function () {
+      const form = document.getElementById("protection-modeling-form");
+
+      if (!form) {
+        return;
+      }
+
+      const formatter = new Intl.NumberFormat("en-US", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      });
+      const liveFormatter = new Intl.NumberFormat("en-US", {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 2
+      });
+
+      const numberInputs = Array.from(form.querySelectorAll('input[type="number"]'));
+
+      function sanitizeNumericValue(value) {
+        const cleaned = String(value || "").replace(/[^0-9.]/g, "");
+        const parts = cleaned.split(".");
+
+        if (parts.length <= 1) {
+          return cleaned;
+        }
+
+        return `${parts[0]}.${parts.slice(1).join("")}`;
+      }
+
+      function formatNumericValue(input) {
+        const sanitized = sanitizeNumericValue(input.value);
+
+        if (!sanitized) {
+          input.value = "";
+          return;
+        }
+
+        const numericValue = Number(sanitized);
+
+        if (!Number.isFinite(numericValue)) {
+          input.value = "";
+          return;
+        }
+
+        input.value = formatter.format(numericValue);
+      }
+
+      function formatNumericValueLive(input) {
+        const sanitized = sanitizeNumericValue(input.value);
+
+        if (!sanitized) {
+          input.value = "";
+          return;
+        }
+
+        const parts = sanitized.split(".");
+        const wholePart = parts[0] || "0";
+        const decimalPart = parts[1] || "";
+        const wholeNumber = Number(wholePart);
+
+        if (!Number.isFinite(wholeNumber)) {
+          input.value = "";
+          return;
+        }
+
+        const formattedWhole = liveFormatter.format(wholeNumber).split(".")[0];
+        input.value = decimalPart ? `${formattedWhole}.${decimalPart.slice(0, 2)}` : formattedWhole;
+      }
+
+      function stripFormatting(input) {
+        input.value = sanitizeNumericValue(input.value);
+      }
+
+      numberInputs.forEach((input) => {
+        input.type = "text";
+        input.inputMode = "decimal";
+        input.autocomplete = "off";
+
+        input.addEventListener("focus", () => {
+          stripFormatting(input);
+          input.select();
+        });
+
+        input.addEventListener("input", () => {
+          formatNumericValueLive(input);
+        });
+
+        input.addEventListener("blur", () => {
+          formatNumericValue(input);
+        });
+
+        formatNumericValue(input);
+      });
+
+      form.addEventListener("submit", () => {
+        numberInputs.forEach((input) => {
+          stripFormatting(input);
+        });
+      });
+    })();
+  </script>
+</body>
+</html>

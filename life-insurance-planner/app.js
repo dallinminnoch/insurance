@@ -1369,12 +1369,18 @@
 
       const formData = new FormData(form);
       const records = getClientRecords();
-      const clientStage = "Prospect";
+      const clientStage = String(formData.get("clientStatus") || "Prospect");
       const statusGroup = mapClientStageToStatusGroup(clientStage);
-      const source = "Advisor Entered";
+      const advisorySource = String(formData.get("acquisitionSource") || "").trim();
+      const advisorySourceOther = String(formData.get("acquisitionSourceOther") || "").trim();
+      const source = advisorySource === "Other" ? (advisorySourceOther || "Other") : (advisorySource || "Advisor Entered");
       const coverageAmount = 0;
       const coverageGap = 0;
-      const priority = "";
+      const priority = normalizePriority(String(formData.get("advisoryPriority") || ""));
+      if (!priority) {
+        setFormFeedback(feedback, "Select a priority before continuing.");
+        return;
+      }
       const firstName = String(formData.get("firstName") || "").trim();
       const preferredName = String(formData.get("preferredName") || "").trim();
       const summary = String(formData.get("clientNotes") || "").trim() || "New client profile";
@@ -2134,12 +2140,16 @@
 
   function mapClientStageToStatusGroup(value) {
     const normalized = String(value || "").trim().toLowerCase();
-    if (normalized === "active client") {
+    if (normalized === "active client" || normalized === "coverage placed") {
       return "coverage-placed";
     }
 
-    if (normalized === "review client") {
+    if (normalized === "review client" || normalized === "in review") {
       return "in-review";
+    }
+
+    if (normalized === "closed") {
+      return "closed";
     }
 
     return "prospects";
