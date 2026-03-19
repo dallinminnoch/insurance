@@ -151,18 +151,102 @@
               <div class="field-group full-width">
                 <label>Major Medical Conditions</label>
                 <div class="underwriting-checkbox-grid">
-                  <label class="underwriting-condition-button" data-tooltip="Use for diagnosed coronary artery disease, heart attack history, angina, heart failure, stents, bypass, or similar cardiac disease."><input type="checkbox" name="majorMedicalConditions" value="Heart Disease"><span>Heart Disease</span></label>
-                  <label class="underwriting-condition-button" data-tooltip="Use for prior stroke, TIA, or other cerebrovascular event that an underwriter would likely ask about."><input type="checkbox" name="majorMedicalConditions" value="Stroke"><span>Stroke</span></label>
-                  <label class="underwriting-condition-button" data-tooltip="Use for current cancer, prior cancer, or ongoing surveillance from a significant cancer history."><input type="checkbox" name="majorMedicalConditions" value="Cancer"><span>Cancer</span></label>
-                  <label class="underwriting-condition-button" data-tooltip="Use if diabetes is diagnosed or treated. Prediabetes belongs in the diabetes status field above."><input type="checkbox" name="majorMedicalConditions" value="Diabetes"><span>Diabetes</span></label>
-                  <label class="underwriting-condition-button" data-tooltip="Use for diagnosed hypertension or ongoing medication or treatment for elevated blood pressure."><input type="checkbox" name="majorMedicalConditions" value="High Blood Pressure"><span>High Blood Pressure</span></label>
-                  <label class="underwriting-condition-button" data-tooltip="Use for diagnosed high cholesterol or active medication or treatment for lipid control."><input type="checkbox" name="majorMedicalConditions" value="High Cholesterol"><span>High Cholesterol</span></label>
-                  <label class="underwriting-condition-button" data-tooltip="Use for diagnosed sleep apnea, especially if CPAP, BiPAP, or other treatment has been recommended or used."><input type="checkbox" name="majorMedicalConditions" value="Sleep Apnea"><span>Sleep Apnea</span></label>
-                  <label class="underwriting-condition-button" data-tooltip="Use for counseling, psychiatric diagnosis, hospitalization, or prescription treatment such as SSRIs or anti-anxiety medication. For this preliminary screen, include it if it has been formally diagnosed or treated; severity can be clarified later."><input type="checkbox" name="majorMedicalConditions" value="Mental Health Treatment"><span>Mental Health Treatment</span></label>
-                  <label class="underwriting-condition-button" data-tooltip="Use for asthma, COPD, chronic bronchitis, emphysema, or other ongoing breathing or lung conditions."><input type="checkbox" name="majorMedicalConditions" value="Respiratory Conditions"><span>Respiratory Conditions</span></label>
-                  <label class="underwriting-condition-button" data-tooltip="Use for hepatitis, cirrhosis, fatty liver with documented disease, or other liver disease needing treatment or follow-up."><input type="checkbox" name="majorMedicalConditions" value="Liver Disease"><span>Liver Disease</span></label>
-                  <label class="underwriting-condition-button" data-tooltip="Use for chronic kidney disease, kidney failure, proteinuria under evaluation, or other ongoing renal disease."><input type="checkbox" name="majorMedicalConditions" value="Kidney Disease"><span>Kidney Disease</span></label>
-                  <label class="underwriting-condition-button" data-tooltip="Use for seizures, MS, Parkinson's, neuropathy, cognitive disorders, or other diagnosed neurological conditions."><input type="checkbox" name="majorMedicalConditions" value="Neurological Disorders"><span>Neurological Disorders</span></label>
+                  <div class="underwriting-condition-card" data-condition-card>
+                    <label class="underwriting-condition-button" data-tooltip="Use for diagnosed coronary artery disease, heart attack history, angina, heart failure, stents, bypass, or similar cardiac disease."><input type="checkbox" name="majorMedicalConditions" value="Heart Disease" data-condition-toggle><span>Heart Disease</span></label>
+                    <select class="underwriting-condition-severity" name="heartDiseaseSeverity" data-condition-severity disabled>
+                      <option value="">Select severity</option>
+                      <option value="mild">Mild / Controlled</option>
+                      <option value="moderate">Moderate / Ongoing</option>
+                      <option value="severe">Severe / Recent / Complex</option>
+                    </select>
+                  </div>
+                  <div class="underwriting-condition-card" data-condition-card>
+                    <label class="underwriting-condition-button" data-tooltip="Use for prior stroke, TIA, or other cerebrovascular event that an underwriter would likely ask about."><input type="checkbox" name="majorMedicalConditions" value="Stroke" data-condition-toggle><span>Stroke</span></label>
+                    <select class="underwriting-condition-severity" name="strokeSeverity" data-condition-severity disabled>
+                      <option value="">Select severity</option>
+                      <option value="mild">Mild / Controlled</option>
+                      <option value="moderate">Moderate / Ongoing</option>
+                      <option value="severe">Severe / Recent / Complex</option>
+                    </select>
+                  </div>
+                  <div class="underwriting-condition-card" data-condition-card>
+                    <label class="underwriting-condition-button" data-tooltip="Use for current cancer, prior cancer, or ongoing surveillance from a significant cancer history."><input type="checkbox" name="majorMedicalConditions" value="Cancer" data-condition-toggle><span>Cancer</span></label>
+                    <select class="underwriting-condition-severity" name="cancerSeverity" data-condition-severity disabled>
+                      <option value="">Select severity</option>
+                      <option value="mild">Mild / Controlled</option>
+                      <option value="moderate">Moderate / Ongoing</option>
+                      <option value="severe">Severe / Recent / Complex</option>
+                    </select>
+                  </div>
+                  <div class="underwriting-condition-card" data-condition-card>
+                    <label class="underwriting-condition-button" data-tooltip="Use for diagnosed autoimmune disease such as lupus, rheumatoid arthritis, Crohn's disease, ulcerative colitis, or similar immune-mediated disorders that may affect underwriting."><input type="checkbox" name="majorMedicalConditions" value="Autoimmune Disorders" data-condition-toggle><span>Autoimmune Disorders</span></label>
+                    <select class="underwriting-condition-severity" name="autoimmuneDisordersSeverity" data-condition-severity disabled>
+                      <option value="">Select severity</option>
+                      <option value="mild">Mild / Controlled</option>
+                      <option value="moderate">Moderate / Ongoing</option>
+                      <option value="severe">Severe / Recent / Complex</option>
+                    </select>
+                  </div>
+                  <div class="underwriting-condition-card">
+                    <label class="underwriting-condition-button" data-tooltip="Use for diagnosed hypertension or ongoing medication or treatment for elevated blood pressure."><input type="checkbox" name="majorMedicalConditions" value="High Blood Pressure"><span>High Blood Pressure</span></label>
+                  </div>
+                  <div class="underwriting-condition-card">
+                    <label class="underwriting-condition-button" data-tooltip="Use for diagnosed high cholesterol or active medication or treatment for lipid control."><input type="checkbox" name="majorMedicalConditions" value="High Cholesterol"><span>High Cholesterol</span></label>
+                  </div>
+                  <div class="underwriting-condition-card" data-condition-card>
+                    <label class="underwriting-condition-button" data-tooltip="Use for diagnosed sleep apnea, especially if CPAP, BiPAP, or other treatment has been recommended or used."><input type="checkbox" name="majorMedicalConditions" value="Sleep Apnea" data-condition-toggle><span>Sleep Apnea</span></label>
+                    <select class="underwriting-condition-severity" name="sleepApneaSeverity" data-condition-severity disabled>
+                      <option value="">Select severity</option>
+                      <option value="mild">Mild / Controlled</option>
+                      <option value="moderate">Moderate / Ongoing</option>
+                      <option value="severe">Severe / Recent / Complex</option>
+                    </select>
+                  </div>
+                  <div class="underwriting-condition-card" data-condition-card>
+                    <label class="underwriting-condition-button" data-tooltip="Use for counseling, psychiatric diagnosis, hospitalization, or prescription treatment such as SSRIs or anti-anxiety medication. For this preliminary screen, include it if it has been formally diagnosed or treated; severity can be clarified later."><input type="checkbox" name="majorMedicalConditions" value="Mental Health Treatment" data-condition-toggle><span>Mental Health Treatment</span></label>
+                    <select class="underwriting-condition-severity" name="mentalHealthSeverity" data-condition-severity disabled>
+                      <option value="">Select severity</option>
+                      <option value="mild">Mild / Controlled</option>
+                      <option value="moderate">Moderate / Ongoing</option>
+                      <option value="severe">Severe / Recent / Complex</option>
+                    </select>
+                  </div>
+                  <div class="underwriting-condition-card" data-condition-card>
+                    <label class="underwriting-condition-button" data-tooltip="Use for asthma, COPD, chronic bronchitis, emphysema, or other ongoing breathing or lung conditions."><input type="checkbox" name="majorMedicalConditions" value="Respiratory Conditions" data-condition-toggle><span>Respiratory Conditions</span></label>
+                    <select class="underwriting-condition-severity" name="respiratorySeverity" data-condition-severity disabled>
+                      <option value="">Select severity</option>
+                      <option value="mild">Mild / Controlled</option>
+                      <option value="moderate">Moderate / Ongoing</option>
+                      <option value="severe">Severe / Recent / Complex</option>
+                    </select>
+                  </div>
+                  <div class="underwriting-condition-card" data-condition-card>
+                    <label class="underwriting-condition-button" data-tooltip="Use for hepatitis, cirrhosis, fatty liver with documented disease, or other liver disease needing treatment or follow-up."><input type="checkbox" name="majorMedicalConditions" value="Liver Disease" data-condition-toggle><span>Liver Disease</span></label>
+                    <select class="underwriting-condition-severity" name="liverDiseaseSeverity" data-condition-severity disabled>
+                      <option value="">Select severity</option>
+                      <option value="mild">Mild / Controlled</option>
+                      <option value="moderate">Moderate / Ongoing</option>
+                      <option value="severe">Severe / Recent / Complex</option>
+                    </select>
+                  </div>
+                  <div class="underwriting-condition-card" data-condition-card>
+                    <label class="underwriting-condition-button" data-tooltip="Use for chronic kidney disease, kidney failure, proteinuria under evaluation, or other ongoing renal disease."><input type="checkbox" name="majorMedicalConditions" value="Kidney Disease" data-condition-toggle><span>Kidney Disease</span></label>
+                    <select class="underwriting-condition-severity" name="kidneyDiseaseSeverity" data-condition-severity disabled>
+                      <option value="">Select severity</option>
+                      <option value="mild">Mild / Controlled</option>
+                      <option value="moderate">Moderate / Ongoing</option>
+                      <option value="severe">Severe / Recent / Complex</option>
+                    </select>
+                  </div>
+                  <div class="underwriting-condition-card" data-condition-card>
+                    <label class="underwriting-condition-button" data-tooltip="Use for seizures, MS, Parkinson's, neuropathy, cognitive disorders, or other diagnosed neurological conditions."><input type="checkbox" name="majorMedicalConditions" value="Neurological Disorders" data-condition-toggle><span>Neurological Disorders</span></label>
+                    <select class="underwriting-condition-severity" name="neurologicalSeverity" data-condition-severity disabled>
+                      <option value="">Select severity</option>
+                      <option value="mild">Mild / Controlled</option>
+                      <option value="moderate">Moderate / Ongoing</option>
+                      <option value="severe">Severe / Recent / Complex</option>
+                    </select>
+                  </div>
                 </div>
               </div>
               <div class="field-group full-width">
@@ -288,6 +372,7 @@
 
           <div class="actions-row">
             <a class="btn btn-secondary" href="new-prospect.html" data-loading-link>Previous</a>
+            <a class="btn btn-primary btn-prelim-continue btn-prelim-continue-primary" href="modeling-overview.html" data-loading-link>Continue to Next Step</a>
           </div>
         </form>
       </section>
@@ -312,6 +397,7 @@
       const treatmentOptions = document.querySelectorAll("[data-treatment-option]");
       const treatmentDisplay = document.querySelector("[data-treatment-display]");
       const treatmentHidden = document.querySelector("[data-treatment-hidden]");
+      const conditionCards = document.querySelectorAll("[data-condition-card]");
 
       if (!heightFeetField || !heightInchesField || !weightField || !bmiField) {
         return;
@@ -340,6 +426,34 @@
       if (!treatmentDropdown || !treatmentTrigger || !treatmentMenu || !treatmentDisplay || !treatmentHidden) {
         return;
       }
+
+      function syncConditionSeverityCards() {
+        conditionCards.forEach((card) => {
+          const toggle = card.querySelector("[data-condition-toggle]");
+          const severity = card.querySelector("[data-condition-severity]");
+
+          if (!toggle || !severity) {
+            return;
+          }
+
+          const isActive = toggle.checked;
+          card.classList.toggle("is-severity-active", isActive);
+          severity.disabled = !isActive;
+
+          if (!isActive) {
+            severity.value = "";
+          }
+        });
+      }
+
+      conditionCards.forEach((card) => {
+        const toggle = card.querySelector("[data-condition-toggle]");
+        if (!toggle) {
+          return;
+        }
+
+        toggle.addEventListener("change", syncConditionSeverityCards);
+      });
 
       function syncSelectedTreatments() {
         const selected = Array.from(treatmentOptions)
@@ -404,6 +518,7 @@
         }
       });
 
+      syncConditionSeverityCards();
       syncSelectedTreatments();
     })();
   </script>

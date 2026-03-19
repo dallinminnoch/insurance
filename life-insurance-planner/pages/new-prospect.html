@@ -164,7 +164,18 @@
               <button class="profile-interest-button" type="button" data-interest-button="business">Business Interest</button>
             </div>
             <div class="form-grid">
-              <div class="field-group">
+              <div class="profile-household-top-row full-width">
+                <div class="field-group profile-household-role-field">
+                <label for="household-role">Household / Company Role <span class="profile-required-star" aria-hidden="true">*</span></label>
+                <select id="household-role" name="householdRole" required>
+                  <option value="Primary Client">Primary Client</option>
+                  <option value="Spouse or Partner" data-family-only>Spouse or Partner</option>
+                  <option value="Child or Dependent" data-family-only>Child or Dependent</option>
+                  <option value="Business Partner" data-business-only>Business Partner</option>
+                  <option value="Key Employee" data-business-only>Key Employee</option>
+                </select>
+                </div>
+                <div class="field-group">
                 <label for="marital-status">Marital Status <span class="profile-required-star" aria-hidden="true">*</span></label>
                 <select id="marital-status" name="maritalStatus" required>
                   <option value="Single">Single</option>
@@ -174,16 +185,15 @@
                   <option value="Widowed">Widowed</option>
                   <option value="Separated">Separated</option>
                 </select>
-              </div>
-              <div class="field-group">
-                <label for="household-role">Household / Company Role <span class="profile-required-star" aria-hidden="true">*</span></label>
-                <select id="household-role" name="householdRole" required>
-                  <option value="Primary Client">Primary Client</option>
-                  <option value="Spouse or Partner" data-family-only>Spouse or Partner</option>
-                  <option value="Child or Dependent" data-family-only>Child or Dependent</option>
-                  <option value="Business Partner" data-business-only>Business Partner</option>
-                  <option value="Key Employee" data-business-only>Key Employee</option>
-                </select>
+                </div>
+                <div class="field-group">
+                  <label for="spouse-date-of-birth">Spouse/Partner Date of Birth</label>
+                  <input id="spouse-date-of-birth" name="spouseDateOfBirth" type="date" data-spouse-date-of-birth>
+                </div>
+                <div class="field-group profile-compact-field-group">
+                  <label for="spouse-age">Age</label>
+                  <input id="spouse-age" class="profile-age-field" name="spouseAge" type="number" readonly data-spouse-age-field>
+                </div>
               </div>
               <div class="field-group">
                 <label for="profile-assignment-mode">Household / Company Assignment <span class="profile-required-star" aria-hidden="true">*</span></label>
@@ -413,7 +423,7 @@
           <p class="profile-creation-feedback" id="client-creation-feedback" hidden></p>
           <div class="actions-row profile-actions-row">
             <a class="btn btn-primary btn-prelim-continue btn-prelim-continue-primary" href="preliminary-underwriting.html" data-loading-link>Continue to Preliminary Underwriting</a>
-            <a class="btn btn-primary btn-prelim-continue btn-prelim-skip" href="next-step.html" data-loading-link>Skip Preliminary Underwriting</a>
+            <a class="btn btn-primary btn-prelim-continue btn-prelim-skip" href="modeling-overview.html" data-loading-link>Skip Preliminary Underwriting</a>
           </div>
         </form>
       </section>
@@ -443,12 +453,15 @@
     (function () {
       const dobField = document.querySelector("[data-date-of-birth]");
       const ageField = document.querySelector("[data-age-field]");
+      const spouseDobField = document.querySelector("[data-spouse-date-of-birth]");
+      const spouseAgeField = document.querySelector("[data-spouse-age-field]");
       const ageHint = document.querySelector("[data-age-hint]");
       const phoneField = document.getElementById("phone-number");
       const placeholderSelects = document.querySelectorAll("[data-placeholder-select]");
       const interestButtons = document.querySelectorAll("[data-interest-button]");
       const interestTypeField = document.querySelector("[data-interest-type-field]");
       const householdRoleField = document.getElementById("household-role");
+      const maritalStatusField = document.getElementById("marital-status");
       const familyOnlyRoleOptions = document.querySelectorAll("[data-family-only]");
       const businessOnlyRoleOptions = document.querySelectorAll("[data-business-only]");
       const assignmentModeField = document.querySelector("[data-profile-assignment-mode]");
@@ -504,6 +517,35 @@
 
       function syncAge() {
         ageField.value = calculateAge(dobField.value);
+      }
+
+      function syncSpouseAge() {
+        if (!spouseAgeField) {
+          return;
+        }
+
+        spouseAgeField.value = calculateAge(spouseDobField?.value || "");
+      }
+
+      function syncSpouseFields() {
+        const applicableStatuses = ["Married", "Domestic Partnership", "Separated"];
+        const isApplicable = applicableStatuses.includes(String(maritalStatusField?.value || ""));
+
+        [spouseDobField, spouseAgeField].forEach(function (field) {
+          if (!field) {
+            return;
+          }
+
+          field.disabled = !isApplicable;
+          field.closest(".field-group")?.classList.toggle("is-disabled", !isApplicable);
+          if (!isApplicable) {
+            field.value = "";
+          }
+        });
+
+        if (isApplicable) {
+          syncSpouseAge();
+        }
       }
 
       function formatPhone(value) {
@@ -836,6 +878,9 @@
 
       dobField.addEventListener("input", syncAge);
       dobField.addEventListener("change", syncAge);
+      spouseDobField?.addEventListener("input", syncSpouseAge);
+      spouseDobField?.addEventListener("change", syncSpouseAge);
+      maritalStatusField?.addEventListener("change", syncSpouseFields);
       ageField.addEventListener("click", showAgeHint);
       ageField.addEventListener("focus", showAgeHint);
       phoneField?.addEventListener("input", syncPhone);
@@ -885,6 +930,7 @@
         profilePriorityDropdown.classList.remove("is-open");
       });
       syncAge();
+      syncSpouseFields();
       syncPhone();
       syncAssignmentActionButtons();
       syncAssignmentNameField();

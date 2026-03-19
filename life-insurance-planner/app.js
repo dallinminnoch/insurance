@@ -1497,6 +1497,8 @@
         targetRetirementAge: String(formData.get("targetRetirementAge") || "").trim(),
         insuranceRatingSex: String(formData.get("insuranceRatingSex") || ""),
         maritalStatus: String(formData.get("maritalStatus") || ""),
+        spouseDateOfBirth: String(formData.get("spouseDateOfBirth") || ""),
+        spouseAge: Number(formData.get("spouseAge") || 0),
         householdRole: String(formData.get("householdRole") || ""),
         hasDependents: String(formData.get("hasDependents") || "No"),
         projectedDependents: String(formData.get("projectedDependents") || "No"),

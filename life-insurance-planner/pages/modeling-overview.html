@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Protection Modeling Inputs | LENS</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@600&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../styles.css">
+  <script>
+    try {
+      if (sessionStorage.getItem("lensRouteLoading")) {
+        document.documentElement.classList.add("is-route-loading");
+      }
+    } catch (error) {}
+  </script>
+</head>
+<body class="home-page prospect-page profile-creation-page" data-page="modeling-overview">
+  <div class="route-loading-overlay" data-route-loading-overlay>
+    <div class="route-loading-card">
+      <span class="route-loading-icon" aria-hidden="true">
+        <span class="account-icon-head route-loading-head"></span>
+        <span class="account-icon-body route-loading-body"></span>
+      </span>
+      <p class="route-loading-text">Opening protection modeling inputs...</p>
+    </div>
+  </div>
+  <header class="site-header">
+    <div class="site-header-inner">
+      <a class="site-brand" href="../index.html">
+        <span class="site-brand-mark">LENS</span>
+      </a>
+      <div class="site-header-actions">
+        <form class="site-search has-icon" role="search">
+          <input type="search" placeholder="Search" data-i18n-placeholder="search.placeholder">
+        </form>
+        <nav class="site-nav" aria-label="Main navigation">
+          <div class="site-dropdown">
+            <button class="site-nav-link site-dropdown-toggle is-active" type="button" aria-expanded="true" data-i18n="nav.records">Records</button>
+            <div class="site-dropdown-menu">
+              <a class="site-dropdown-link" href="clients.html" data-i18n="nav.clients" data-client-directory-nav>Clients</a>
+            </div>
+          </div>
+          <a class="site-nav-link" href="resources.html" data-i18n="nav.resources">Resources</a>
+          <div class="site-dropdown">
+            <button class="site-nav-link site-dropdown-toggle" type="button" aria-expanded="false" data-i18n="nav.financialProducts">Financial Products</button>
+            <div class="site-dropdown-menu">
+              <a class="site-dropdown-link" href="lens.html">LENS Analysis</a>
+              <a class="site-dropdown-link" href="strategy-builder.html">Strategy Builder</a>
+              <a class="site-dropdown-link" href="policy-web.html">Policy Web</a>
+            </div>
+          </div>
+          <div class="language-slot" data-language-slot>
+            <div class="language-dropdown">
+              <button class="language-trigger" type="button" aria-label="Language">
+                <img class="language-icon-image" src="../Images/Untitled design.png" alt="" aria-hidden="true">
+              </button>
+            </div>
+          </div>
+          <div class="account-slot" data-account-slot>
+            <div class="account-dropdown">
+              <a class="account-profile account-dropdown-toggle account-profile-signed-out" href="sign-in.html">
+                <span class="account-icon" aria-hidden="true">
+                  <span class="account-icon-head"></span>
+                  <span class="account-icon-body"></span>
+                </span>
+                <span class="sr-only">Open sign in menu</span>
+              </a>
+            </div>
+          </div>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <main class="home-shell app-home-shell prospect-shell">
+    <section class="prospect-stage">
+      <section class="prospect-empty-panel">
+        <div class="prospect-panel-header">
+          <a class="prospect-return-button" href="new-prospect.html" data-loading-link>Previous</a>
+          <h1>Protection Modeling Inputs</h1>
+          <p class="profile-section-note entry-mode-heading-note">Choose Entry Mode</p>
+        </div>
+        <section class="entry-mode-panel">
+          <div class="entry-mode-actions">
+            <div class="entry-mode-option">
+              <a class="btn btn-primary btn-prelim-continue entry-mode-button" href="next-step.html" data-loading-link>Advisor Assisted</a>
+              <span class="entry-mode-icon entry-mode-icon-unlocked" aria-hidden="true"></span>
+            </div>
+            <div class="entry-mode-option">
+              <button class="btn btn-primary btn-prelim-continue entry-mode-button entry-mode-button-confidential" type="button" data-confidential-trigger>Confidential Entry Mode</button>
+              <span class="entry-mode-icon entry-mode-icon-locked" aria-hidden="true"></span>
+            </div>
+          </div>
+          <p class="entry-mode-note">The client may enter sensitive financial details privately. This information will still be used for analysis but should remain hidden during discussion unless the client chooses to share it.</p>
+          <div class="entry-mode-pin-shell is-disabled" data-pin-shell>
+            <label class="entry-mode-pin-label" for="confidential-pin-1">
+              <span>Create 4-Digit PIN</span>
+              <span class="entry-mode-help" aria-hidden="true" data-entry-mode-help="The client should create this PIN privately. Confidential financial details should not be viewable anywhere in this flow without entering that PIN.">?</span>
+            </label>
+            <div class="entry-mode-pin-grid" data-pin-grid>
+              <input id="confidential-pin-1" class="entry-mode-pin-input" type="password" inputmode="numeric" maxlength="1" data-pin-input>
+              <input class="entry-mode-pin-input" type="password" inputmode="numeric" maxlength="1" data-pin-input>
+              <input class="entry-mode-pin-input" type="password" inputmode="numeric" maxlength="1" data-pin-input>
+              <input class="entry-mode-pin-input" type="password" inputmode="numeric" maxlength="1" data-pin-input>
+            </div>
+            <a class="btn btn-primary btn-prelim-continue entry-mode-button entry-mode-button-confidential-continue" href="next-step.html" data-loading-link data-confidential-continue aria-disabled="true" tabindex="-1">Continue in Confidential Mode</a>
+          </div>
+        </section>
+      </section>
+    </section>
+  </main>
+
+  <script src="../data.js"></script>
+  <script src="../calculations.js"></script>
+  <script src="../charts.js"></script>
+  <script src="../app.js"></script>
+  <script>
+    (function () {
+      const confidentialTrigger = document.querySelector("[data-confidential-trigger]");
+      const pinShell = document.querySelector("[data-pin-shell]");
+      const pinInputs = Array.from(document.querySelectorAll("[data-pin-input]"));
+      const confidentialContinue = document.querySelector("[data-confidential-continue]");
+
+      if (!confidentialTrigger || !pinShell || !pinInputs.length || !confidentialContinue) {
+        return;
+      }
+
+      function syncContinueState() {
+        const pin = pinInputs.map((input) => input.value).join("");
+        const isComplete = pin.length === 4 && /^\d{4}$/.test(pin);
+
+        confidentialContinue.setAttribute("aria-disabled", isComplete ? "false" : "true");
+        confidentialContinue.tabIndex = isComplete ? 0 : -1;
+        confidentialContinue.classList.toggle("is-disabled", !isComplete);
+
+        if (isComplete) {
+          sessionStorage.setItem("lensConfidentialEntryPin", pin);
+        } else {
+          sessionStorage.removeItem("lensConfidentialEntryPin");
+        }
+      }
+
+      function enablePinShell() {
+        pinShell.classList.remove("is-disabled");
+        confidentialTrigger.classList.add("is-selected");
+        pinInputs[0]?.focus();
+      }
+
+      confidentialTrigger.addEventListener("click", enablePinShell);
+
+      confidentialContinue.addEventListener("click", (event) => {
+        if (confidentialContinue.getAttribute("aria-disabled") === "true") {
+          event.preventDefault();
+          enablePinShell();
+        }
+      });
+
+      pinInputs.forEach((input, index) => {
+        input.addEventListener("input", () => {
+          input.value = String(input.value || "").replace(/\D/g, "").slice(0, 1);
+          if (input.value && pinInputs[index + 1]) {
+            pinInputs[index + 1].focus();
+          }
+          syncContinueState();
+        });
+
+        input.addEventListener("keydown", (event) => {
+          if (event.key === "Backspace" && !input.value && pinInputs[index - 1]) {
+            pinInputs[index - 1].focus();
+          }
+        });
+      });
+
+      syncContinueState();
+    })();
+  </script>
+</body>
+</html>

@@ -78,37 +78,14 @@
     <section class="prospect-stage">
       <section class="prospect-empty-panel">
         <div class="prospect-panel-header">
-          <a class="prospect-return-button" href="new-prospect.html" data-loading-link>Previous</a>
+          <a class="prospect-return-button" href="modeling-overview.html" data-loading-link>Previous</a>
           <h1>Protection Modeling Inputs</h1>
         </div>
         <form class="profile-creation-form" id="protection-modeling-form">
           <section class="profile-form-section">
             <div class="profile-form-section-heading">
-              <h2>Household Context</h2>
-              <p class="profile-section-note">Fields already captured on the client profile are intentionally excluded here.</p>
-            </div>
-            <div class="form-grid">
-              <div class="field-group">
-                <label for="spouse-age">Spouse Age</label>
-                <input id="spouse-age" class="profile-small-number-field" name="spouseAge" type="number" min="0" max="120" step="1">
-              </div>
-              <div class="field-group">
-                <label for="spouse-income">Spouse Income</label>
-                <div class="profile-currency-field">
-                  <input id="spouse-income" name="spouseIncome" type="number" min="0" step="1000">
-                  <span class="profile-currency-suffix">USD</span>
-                </div>
-              </div>
-              <div class="field-group">
-                <label for="dependent-ages">Dependents' Ages</label>
-                <input id="dependent-ages" name="dependentAges" type="text" placeholder="Example: 4, 8, 12">
-              </div>
-            </div>
-          </section>
-
-          <section class="profile-form-section">
-            <div class="profile-form-section-heading">
               <h2>Income and Economic Value</h2>
+              <p class="profile-section-note">Fields already captured on the client profile are intentionally excluded here.</p>
             </div>
             <div class="form-grid">
               <div class="field-group">
@@ -122,6 +99,13 @@
                 <label for="net-annual-income">Net Annual Income</label>
                 <div class="profile-currency-field">
                   <input id="net-annual-income" name="netAnnualIncome" type="number" min="0" step="1000">
+                  <span class="profile-currency-suffix">USD</span>
+                </div>
+              </div>
+              <div class="field-group">
+                <label for="spouse-income">Spouse Income</label>
+                <div class="profile-currency-field">
+                  <input id="spouse-income" name="spouseIncome" type="number" min="0" step="1000">
                   <span class="profile-currency-suffix">USD</span>
                 </div>
               </div>
