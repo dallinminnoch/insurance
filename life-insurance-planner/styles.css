@@ -1336,6 +1336,12 @@ select option:disabled {
   gap: 0.45rem;
 }
 
+.profile-inline-unit-field {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
 .profile-currency-field.is-recommended input {
   color: #8b94a3;
   font-style: italic;
@@ -1367,6 +1373,14 @@ select option:disabled {
   color: #6f7685;
   font-size: 0.86rem;
   font-weight: 700;
+}
+
+.profile-inline-unit {
+  color: #6f7685;
+  font-size: 0.86rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  white-space: nowrap;
 }
 
 .profile-dependent-row {
