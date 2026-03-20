@@ -1412,6 +1412,7 @@ select option:disabled {
 .btn-prelim-continue:hover,
 .btn-prelim-continue:focus-visible {
   transform: translate(-0.3rem, -0.3rem);
+  outline: 2px solid #000000;
   box-shadow: 0.3rem 0.3rem 0 #000000;
 }
 
