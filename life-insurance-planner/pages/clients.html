@@ -10,15 +10,6 @@
   <link rel="stylesheet" href="../styles.css">
 </head>
 <body class="home-page clients-page">
-  <div class="route-loading-overlay" data-route-loading-overlay>
-    <div class="route-loading-card">
-      <span class="route-loading-icon" aria-hidden="true">
-        <span class="account-icon-head route-loading-head"></span>
-        <span class="account-icon-body route-loading-body"></span>
-      </span>
-      <p class="route-loading-text">Opening client profile...</p>
-    </div>
-  </div>
   <header class="site-header">
     <div class="site-header-inner">
       <a class="site-brand" href="../index.html">
@@ -114,10 +105,10 @@
                 <button class="client-export-option" type="button" data-export-action="share">Share</button>
               </div>
             </div>
-            <a class="client-header-action client-header-action-primary" href="new-prospect.html" data-add-client-button data-loading-link>
+            <button class="client-header-action client-header-action-primary" type="button" data-add-client-button>
               <span class="client-add-icon" aria-hidden="true">+</span>
               <span>Add New</span>
-            </a>
+            </button>
           </div>
         </header>
 
@@ -179,9 +170,67 @@
     </section>
   </main>
 
+  <div class="client-add-modal" data-add-client-modal hidden>
+    <div class="client-add-modal-backdrop" data-add-client-modal-close></div>
+    <div class="client-add-modal-panel" role="dialog" aria-modal="true" aria-labelledby="add-client-modal-title">
+      <button class="client-add-modal-close" type="button" aria-label="Close" data-add-client-modal-close>&times;</button>
+      <div class="client-add-modal-content">
+        <h2 id="add-client-modal-title">Choose a Form to Continue</h2>
+      </div>
+      <div class="client-add-modal-actions">
+        <a class="client-header-action client-header-action-primary client-add-modal-continue" href="new-prospect.html" data-loading-link>Start Full Form</a>
+        <a class="client-header-action client-header-action-primary client-add-modal-continue client-add-modal-secondary" href="profile-only-form.html" data-loading-link>Create Profile</a>
+        <a class="client-header-action client-header-action-primary client-add-modal-continue client-add-modal-secondary" href="preliminary-only-form.html" data-loading-link>Preliminary Underwriting</a>
+        <button class="client-header-action client-header-action-primary client-add-modal-continue client-add-modal-secondary" type="button">Protection Modeling Inputs</button>
+        <button class="client-header-action client-header-action-primary client-add-modal-continue client-add-modal-secondary" type="button">Create New Household</button>
+        <button class="client-header-action client-header-action-primary client-add-modal-continue client-add-modal-secondary" type="button">Create New Company Profile</button>
+      </div>
+    </div>
+  </div>
+
   <script src="../data.js"></script>
   <script src="../calculations.js"></script>
   <script src="../charts.js"></script>
   <script src="../app.js"></script>
+  <script>
+    (function () {
+      const addButton = document.querySelector("[data-add-client-button]");
+      const modal = document.querySelector("[data-add-client-modal]");
+      const closeTargets = document.querySelectorAll("[data-add-client-modal-close]");
+
+      if (!addButton || !modal) {
+        return;
+      }
+
+      function openModal() {
+        modal.hidden = false;
+        modal.style.display = "grid";
+        modal.classList.add("is-open");
+        document.body.classList.add("is-modal-open");
+      }
+
+      function closeModal() {
+        modal.classList.remove("is-open");
+        modal.style.display = "none";
+        modal.hidden = true;
+        document.body.classList.remove("is-modal-open");
+      }
+
+      addButton.addEventListener("click", (event) => {
+        event.preventDefault();
+        openModal();
+      });
+
+      closeTargets.forEach((target) => {
+        target.addEventListener("click", closeModal);
+      });
+
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape" && !modal.hidden) {
+          closeModal();
+        }
+      });
+    })();
+  </script>
 </body>
 </html>

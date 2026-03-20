@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Create Client Profile | Advisor Planning Suite</title>
+  <title>Profile Only Form | Advisor Planning Suite</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@600&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -63,7 +63,7 @@
       <section class="prospect-empty-panel">
         <div class="prospect-panel-header">
           <a class="prospect-return-button" href="clients.html">Return to Client Directory</a>
-          <h1>Create Client Profile</h1>
+          <h1>Profile Only Form</h1>
           <p class="profile-required-key"><span class="profile-required-star" aria-hidden="true">*</span> = Required</p>
         </div>
         <form class="profile-creation-form" id="client-creation-form" data-client-type="individual">
@@ -405,9 +405,8 @@
           </section>
 
           <p class="profile-creation-feedback" id="client-creation-feedback" hidden></p>
-          <div class="actions-row profile-actions-row">
-            <a class="btn btn-primary btn-prelim-continue btn-prelim-continue-primary" href="preliminary-underwriting.html" data-loading-link>Continue to Preliminary Underwriting</a>
-            <a class="btn btn-primary btn-prelim-continue btn-prelim-skip" href="modeling-overview.html" data-loading-link>Skip Preliminary Underwriting</a>
+          <div class="actions-row">
+            <button class="btn btn-primary btn-prelim-continue btn-prelim-continue-primary" type="submit">Save Profile</button>
           </div>
         </form>
       </section>

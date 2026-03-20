@@ -11,7 +11,6 @@
     clientItemsShown: "lensClientItemsShown",
     clientItemsShownReset: "lensClientItemsShownReset",
     clientRecords: "lensClientRecords",
-    routeLoading: "lensRouteLoading",
     authUsers: "lipPlannerAuthUsers",
     authSession: "lipPlannerAuthSession",
     workflowNavExpanded: "lipPlannerWorkflowNavExpanded",
@@ -318,7 +317,6 @@
     initializeClientCreationForm();
     initializeClientDirectory();
     initializeClientDirectoryNavLinks();
-    initializeRouteLoading();
   });
 
   function initializeLanguageSelector() {
@@ -385,11 +383,6 @@
     if (!form) {
       return;
     }
-
-    // The auth screen should never inherit stale route-loading state from other pages.
-    hideRouteLoadingOverlay();
-    document.body.classList.remove("is-direct-create-loading");
-    sessionStorage.removeItem(STORAGE_KEYS.routeLoading);
 
     if (form.dataset.localAuth === "true") {
       return;
@@ -1536,14 +1529,7 @@
       sessionStorage.setItem(STORAGE_KEYS.clientView, "individuals");
       sessionStorage.setItem(STORAGE_KEYS.clientStatus, "all");
       sessionStorage.setItem(STORAGE_KEYS.clientItemsShownReset, "true");
-      sessionStorage.setItem(STORAGE_KEYS.routeLoading, JSON.stringify({
-        target: "clients.html",
-        startedAt: Date.now()
-      }));
-      showRouteLoadingOverlay();
-      window.setTimeout(() => {
-        window.location.href = "clients.html";
-      }, 60);
+      window.location.href = "clients.html";
     });
   }
 
@@ -1564,6 +1550,8 @@
     const paginationHost = document.getElementById("client-pagination-numbers");
     const prevPageButton = document.getElementById("client-prev-page");
     const nextPageButton = document.getElementById("client-next-page");
+    const addClientModal = document.querySelector("[data-add-client-modal]");
+    const addClientModalCloseTargets = document.querySelectorAll("[data-add-client-modal-close]");
 
     if (!letterButtons.length || !rowsHost) {
       return;
@@ -1639,6 +1627,26 @@
       if (addClientButton) {
         addClientButton.classList.toggle("is-inactive", hasSelection);
       }
+    }
+
+    function openAddClientModal() {
+      if (!addClientModal) {
+        return;
+      }
+
+      addClientModal.hidden = false;
+      addClientModal.classList.add("is-open");
+      document.body.classList.add("is-modal-open");
+    }
+
+    function closeAddClientModal() {
+      if (!addClientModal) {
+        return;
+      }
+
+      addClientModal.hidden = true;
+      addClientModal.classList.remove("is-open");
+      document.body.classList.remove("is-modal-open");
     }
 
     function getSelectedRecords() {
@@ -1844,21 +1852,26 @@
 
     if (addClientButton) {
       addClientButton.addEventListener("click", (event) => {
-        const href = addClientButton.getAttribute("href");
-        if (!href) {
-          return;
-        }
-
         event.preventDefault();
-        document.body.classList.add("is-direct-create-loading");
-        sessionStorage.setItem(STORAGE_KEYS.routeLoading, JSON.stringify({
-          target: href,
-          startedAt: Date.now()
-        }));
-        showRouteLoadingOverlay("Opening client profile...");
-        window.setTimeout(() => {
-          window.location.href = href;
-        }, 60);
+        openAddClientModal();
+      });
+    }
+
+    addClientModalCloseTargets.forEach((target) => {
+      target.addEventListener("click", closeAddClientModal);
+    });
+
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") {
+        closeAddClientModal();
+      }
+    });
+
+    if (addClientModal) {
+      addClientModal.addEventListener("click", (event) => {
+        if (event.target === addClientModal) {
+          closeAddClientModal();
+        }
       });
     }
 
@@ -1930,109 +1943,10 @@
     });
   }
 
-  function initializeRouteLoading() {
-    const loadingLinks = document.querySelectorAll("[data-loading-link]");
-    const routeLoadingRaw = sessionStorage.getItem(STORAGE_KEYS.routeLoading);
-    let routeLoading = null;
-    if (routeLoadingRaw) {
-      try {
-        routeLoading = JSON.parse(routeLoadingRaw);
-      } catch (error) {
-        sessionStorage.removeItem(STORAGE_KEYS.routeLoading);
-      }
-    }
-    loadingLinks.forEach((link) => {
-      link.addEventListener("click", (event) => {
-        const href = link.getAttribute("href");
-        if (!href) {
-          return;
-        }
-
-        event.preventDefault();
-        sessionStorage.setItem(STORAGE_KEYS.routeLoading, JSON.stringify({
-          target: href,
-          startedAt: Date.now()
-        }));
-        showRouteLoadingOverlay();
-        window.setTimeout(() => {
-          window.location.href = href;
-        }, 60);
-      });
-    });
-
-    if (!routeLoading?.startedAt) {
-      return;
-    }
-
-    const currentPath = window.location.pathname.split("/").pop() || "";
-    const targetPath = String(routeLoading.target || "").split("/").pop();
-    if (targetPath && currentPath && targetPath !== currentPath) {
-      hideRouteLoadingOverlay();
-      sessionStorage.removeItem(STORAGE_KEYS.routeLoading);
-      return;
-    }
-
-    showRouteLoadingOverlay();
-    const elapsed = Date.now() - routeLoading.startedAt;
-    const remaining = Math.max(0, 1000 - elapsed);
-
-    window.setTimeout(() => {
-      hideRouteLoadingOverlay();
-      sessionStorage.removeItem(STORAGE_KEYS.routeLoading);
-    }, remaining);
-  }
-
-  function showRouteLoadingOverlay(message = "Opening client profile...", options = {}) {
-    let overlay = document.querySelector("[data-route-loading-overlay]");
-    const variant = options.variant || "default";
-
-    if (!overlay) {
-      overlay = document.createElement("div");
-      overlay.className = "route-loading-overlay";
-      overlay.setAttribute("data-route-loading-overlay", "");
-      overlay.innerHTML = `
-        <div class="route-loading-card">
-          <span class="route-loading-icon" aria-hidden="true">
-            <span class="account-icon-head route-loading-head"></span>
-            <span class="account-icon-body route-loading-body"></span>
-          </span>
-          <p class="route-loading-text">${message}</p>
-          <div class="route-loading-progress" aria-hidden="true">
-            <span class="route-loading-progress-bar"></span>
-          </div>
-        </div>
-      `;
-      document.body.appendChild(overlay);
-    }
-
-    const textHost = overlay.querySelector(".route-loading-text");
-    if (textHost) {
-      textHost.textContent = message;
-    }
-
-    overlay.classList.toggle("is-sign-out", variant === "signout");
-
-    document.body.classList.add("is-route-loading");
-    document.documentElement.classList.add("is-route-loading");
-  }
-
-  function hideRouteLoadingOverlay() {
-    document.body.classList.remove("is-route-loading");
-    document.documentElement.classList.remove("is-route-loading");
-    const overlay = document.querySelector("[data-route-loading-overlay]");
-    if (overlay) {
-      overlay.classList.remove("is-sign-out");
-    }
-  }
-
   function performSignOut() {
-    showRouteLoadingOverlay("Signing out...", { variant: "signout" });
-
-    window.setTimeout(() => {
-      localStorage.removeItem(STORAGE_KEYS.authSession);
-      const prefix = getPathPrefix();
-      window.location.href = `${prefix}index.html`;
-    }, 1000);
+    localStorage.removeItem(STORAGE_KEYS.authSession);
+    const prefix = getPathPrefix();
+    window.location.href = `${prefix}index.html`;
   }
 
   function ensureClientRecords() {

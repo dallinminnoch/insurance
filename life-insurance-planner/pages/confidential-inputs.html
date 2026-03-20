@@ -3,13 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Protection Modeling Inputs | LENS</title>
+  <title>Confidential Inputs | LENS</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@600&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../styles.css">
 </head>
-<body class="home-page prospect-page profile-creation-page" data-page="next-step">
+<body class="home-page prospect-page profile-creation-page" data-page="confidential-inputs">
   <header class="site-header">
     <div class="site-header-inner">
       <a class="site-brand" href="../index.html">
@@ -64,6 +64,10 @@
         <div class="prospect-panel-header">
           <a class="prospect-return-button" href="modeling-overview.html" data-loading-link>Previous</a>
           <h1>Protection Modeling Inputs</h1>
+          <div class="confidential-inputs-badge" aria-label="Confidential Inputs">
+            <span class="entry-mode-icon entry-mode-icon-locked" aria-hidden="true"></span>
+            <span>Confidential Inputs</span>
+          </div>
         </div>
         <form class="profile-creation-form" id="protection-modeling-form">
           <section class="profile-form-section">
@@ -631,6 +635,93 @@
         numberInputs.forEach((input) => {
           stripFormatting(input);
         });
+      });
+    })();
+  </script>
+  <script>
+    (function () {
+      const form = document.getElementById("protection-modeling-form");
+
+      if (!form) {
+        return;
+      }
+
+      const helpByFieldId = {
+        "gross-annual-income": "Total annual household income before taxes.",
+        "net-annual-income": "Annual income after taxes and deductions, if known.",
+        "spouse-income": "Annual income earned by a spouse or partner.",
+        "income-growth-rate": "Expected annual income growth used for future projections.",
+        "bonus-variable-income": "Bonuses, commissions, or other variable pay to include in the plan.",
+        "years-until-retirement": "Expected years until the main earner plans to retire.",
+        "employer-benefits-value": "Estimated annual value of employer benefits that reduce household need.",
+        "household-income-use": "Portion of income used to support the household rather than personal spending.",
+        "monthly-housing-cost": "Average monthly housing payment or rent.",
+        "utilities-cost": "Average monthly utilities.",
+        "food-cost": "Average monthly food spending.",
+        "insurance-cost": "Monthly insurance costs such as health, auto, and other recurring coverage.",
+        "transportation-cost": "Monthly transportation spending, including fuel, maintenance, transit, and vehicle costs.",
+        "travel-discretionary-cost": "Optional spending such as travel, entertainment, and discretionary purchases.",
+        "subscriptions-cost": "Monthly nonessential recurring subscriptions.",
+        "current-total-monthly-spending": "Current combined monthly household spending.",
+        "monthly-expense-target": "Monthly spending level you want income replacement to support.",
+        "expense-replacement-percent": "Percent of monthly expenses you want to replace.",
+        "mortgage-balance": "Current unpaid mortgage balance.",
+        "mortgage-term-remaining": "Remaining years on the mortgage.",
+        "mortgage-interest-rate": "Mortgage interest rate, if used in the analysis.",
+        "other-real-estate-loans": "Loans secured by other real estate.",
+        "auto-loans": "Outstanding auto loan balances.",
+        "credit-card-debt": "Revolving credit card balances.",
+        "student-loans": "Outstanding student loan balances.",
+        "personal-loans": "Other unsecured personal loans.",
+        "business-debt": "Business debt that would matter if the client died.",
+        "children-needing-funding": "Number of children expected to need education funding.",
+        "years-until-college": "Years until each child starts college. Example values can be entered in order.",
+        "estimated-cost-per-child": "Estimated education cost per child.",
+        "cost-to-fund-percent": "Percent of education cost you want to fund.",
+        "cash-savings": "Cash and savings available to offset need.",
+        "emergency-fund": "Emergency reserve funds available.",
+        "brokerage-accounts": "Taxable investment accounts that could be used in a survivor plan.",
+        "retirement-assets": "Retirement account balances, which may be discounted in planning.",
+        "real-estate-equity": "Home or other property equity available to support the plan.",
+        "business-value": "Estimated business value or ownership value.",
+        "individual-policy-type": "Type of existing individual life insurance coverage.",
+        "individual-death-benefit": "Total death benefit on existing individual coverage.",
+        "individual-years-remaining": "Remaining years on any term policy.",
+        "group-life-coverage": "Employer-provided group life coverage amount.",
+        "group-life-portability": "Whether group coverage can continue after employment changes.",
+        "funeral-burial-estimate": "Expected funeral and burial expenses.",
+        "medical-end-of-life-costs": "Expected end-of-life medical expenses not covered elsewhere.",
+        "estate-settlement-costs": "Potential legal, probate, or estate settlement expenses.",
+        "inflation-rate-assumption": "Inflation assumption used for future value estimates.",
+        "discount-rate": "Discount rate used when converting future needs to present value.",
+        "investment-return-assumption": "Assumed investment return used in projections.",
+        "income-replacement-duration": "How long income should be replaced.",
+        "survivor-income": "Expected income the surviving spouse or partner may continue to earn.",
+        "survivor-continues-working": "Whether the spouse or partner is expected to keep working after a death.",
+        "expense-reduction-at-death": "Percent of expenses expected to disappear after the insured dies.",
+        "child-dependency-duration": "Years children are expected to remain financially dependent.",
+        "primary-goal": "Primary planning goal for the analysis.",
+        "coverage-time-horizon": "Whether the client wants temporary, permanent, or blended coverage.",
+        "budget-range": "Monthly premium comfort range.",
+        "risk-preference": "Whether the client prefers lowest cost, balanced, or certainty-focused coverage."
+      };
+
+      form.querySelectorAll(".field-group > label[for]").forEach((label) => {
+        const fieldId = label.getAttribute("for");
+        const helpText = helpByFieldId[fieldId];
+
+        if (!helpText || label.querySelector("[data-confidential-field-help]")) {
+          return;
+        }
+
+        const help = document.createElement("span");
+        help.className = "entry-mode-help confidential-field-help";
+        help.setAttribute("tabindex", "0");
+        help.setAttribute("aria-hidden", "true");
+        help.setAttribute("data-entry-mode-help", helpText);
+        help.setAttribute("data-confidential-field-help", "");
+        help.textContent = "?";
+        label.appendChild(help);
       });
     })();
   </script>

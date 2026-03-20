@@ -9,24 +9,10 @@
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@600&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../styles.css">
   <script>
-    try {
-      if (sessionStorage.getItem("lensRouteLoading")) {
-        document.documentElement.classList.add("is-route-loading");
-      }
-    } catch (error) {}
     window.location.replace("new-prospect.html");
   </script>
 </head>
 <body class="home-page prospect-page profile-creation-page">
-  <div class="route-loading-overlay" data-route-loading-overlay>
-    <div class="route-loading-card">
-      <span class="route-loading-icon" aria-hidden="true">
-        <span class="account-icon-head route-loading-head"></span>
-        <span class="account-icon-body route-loading-body"></span>
-      </span>
-      <p class="route-loading-text">Opening household profile...</p>
-    </div>
-  </div>
   <header class="site-header">
     <div class="site-header-inner">
       <a class="site-brand" href="../index.html">
