@@ -3,13 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PMI Entry | LENS</title>
+  <title>Simplified PMI Entry | LENS</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@600&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../styles.css">
 </head>
-<body class="home-page prospect-page profile-creation-page" data-page="modeling-overview">
+<body class="home-page prospect-page profile-creation-page" data-page="protection-modeling-inputs">
   <header class="site-header">
     <div class="site-header-inner">
       <a class="site-brand" href="../index.html">
@@ -62,14 +62,30 @@
     <section class="prospect-stage">
       <section class="prospect-empty-panel">
         <div class="prospect-panel-header">
-          <a class="prospect-return-button" href="new-prospect.html" data-loading-link>Previous</a>
-          <h1>PMI Entry</h1>
-          <p class="profile-section-note entry-mode-heading-note">Choose Entry Mode</p>
+          <a class="prospect-return-button" href="clients.html" data-loading-link>Return to Client Directory</a>
+          <h1>Simplified PMI Entry</h1>
         </div>
+        <section class="profile-form-section protection-modeling-link-section">
+          <div class="profile-form-section-heading">
+            <h2>Client Link</h2>
+          </div>
+          <div class="form-grid preliminary-link-grid">
+            <div class="field-group preliminary-link-button-group">
+              <label for="protection-modeling-link-button">Search Client Directory</label>
+              <button id="protection-modeling-link-button" class="btn btn-secondary preliminary-link-search-button" type="button" data-protection-modeling-link-open>Search Client Directory</button>
+            </div>
+            <div class="field-group">
+              <label for="protection-modeling-case-ref">Case Ref Number</label>
+              <input id="protection-modeling-case-ref" name="protectionModelingCaseRef" type="text" placeholder="CL/00000" data-protection-modeling-case-ref autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">
+            </div>
+          </div>
+          <p class="underwriting-helper-text preliminary-link-helper">Use either the search button or the case reference number to link this protection modeling form to a client profile.</p>
+        </section>
+        <p class="profile-section-note entry-mode-heading-note">Choose Entry Mode</p>
         <section class="entry-mode-panel">
             <div class="entry-mode-actions">
               <div class="entry-mode-option">
-              <a class="btn btn-primary btn-prelim-continue entry-mode-button" href="protection-modeling-advisor.html" data-loading-link>Advisor Assisted</a>
+              <a class="btn btn-primary btn-prelim-continue entry-mode-button" href="simplified-pmi-advisor.html" data-loading-link>Advisor Assisted</a>
               <span class="entry-mode-icon entry-mode-icon-unlocked" aria-hidden="true"></span>
               </div>
               <div class="entry-mode-option">
@@ -89,12 +105,27 @@
               <input class="entry-mode-pin-input" type="password" inputmode="numeric" maxlength="1" data-pin-input>
               <input class="entry-mode-pin-input" type="password" inputmode="numeric" maxlength="1" data-pin-input>
             </div>
-            <a class="btn btn-primary btn-prelim-continue entry-mode-button entry-mode-button-confidential-continue" href="protection-modeling-confidential.html" data-loading-link data-confidential-continue aria-disabled="true" tabindex="-1">Continue in Confidential Mode</a>
+            <a class="btn btn-primary btn-prelim-continue entry-mode-button entry-mode-button-confidential-continue" href="simplified-pmi-confidential.html" data-loading-link data-confidential-continue aria-disabled="true" tabindex="-1">Continue in Confidential Mode</a>
           </div>
         </section>
       </section>
     </section>
   </main>
+
+  <div class="profile-search-modal" data-protection-modeling-link-modal hidden>
+    <div class="profile-search-modal-backdrop" data-protection-modeling-link-close></div>
+    <div class="profile-search-modal-panel" role="dialog" aria-modal="true" aria-labelledby="protection-modeling-link-modal-title">
+      <button class="profile-search-modal-close" type="button" aria-label="Close search" data-protection-modeling-link-close>x</button>
+      <div class="profile-search-modal-header">
+        <h2 id="protection-modeling-link-modal-title">Select Client Profile</h2>
+      </div>
+      <div class="field-group full-width">
+        <label for="protection-modeling-link-search-input">Search</label>
+        <input id="protection-modeling-link-search-input" type="text" placeholder="Search client directory" data-protection-modeling-link-search-input>
+      </div>
+      <div class="profile-search-results" data-protection-modeling-link-results></div>
+    </div>
+  </div>
 
   <script src="../data.js"></script>
   <script src="../calculations.js"></script>
@@ -102,12 +133,126 @@
   <script src="../app.js"></script>
   <script>
     (function () {
+      const authSessionKey = "lipPlannerAuthSession";
+      const clientRecordsKey = "lensClientRecords";
+      const linkOpenButton = document.querySelector("[data-protection-modeling-link-open]");
+      const linkModal = document.querySelector("[data-protection-modeling-link-modal]");
+      const linkModalInput = document.querySelector("[data-protection-modeling-link-search-input]");
+      const linkModalResults = document.querySelector("[data-protection-modeling-link-results]");
+      const linkModalClose = document.querySelectorAll("[data-protection-modeling-link-close]");
+      const caseRefField = document.querySelector("[data-protection-modeling-case-ref]");
+      const saveButton = document.querySelector("[data-protection-modeling-save-button]");
       const confidentialTrigger = document.querySelector("[data-confidential-trigger]");
       const pinShell = document.querySelector("[data-pin-shell]");
       const pinInputs = Array.from(document.querySelectorAll("[data-pin-input]"));
       const confidentialContinue = document.querySelector("[data-confidential-continue]");
 
+      if (caseRefField) {
+        caseRefField.addEventListener("input", () => {
+          caseRefField.value = caseRefField.value.toUpperCase();
+        });
+      }
+
+      function getClientRecordsStorageKey() {
+        let session = null;
+        try {
+          session = JSON.parse(localStorage.getItem(authSessionKey) || "null");
+        } catch (error) {
+          session = null;
+        }
+
+        const identity = session?.email ? String(session.email).trim().toLowerCase() : "guest";
+        return `${clientRecordsKey}:${identity}`;
+      }
+
+      function loadClientRecords() {
+        try {
+          const records = JSON.parse(localStorage.getItem(getClientRecordsStorageKey()) || "[]");
+          return Array.isArray(records) ? records : [];
+        } catch (error) {
+          return [];
+        }
+      }
+
+      function openLinkModal() {
+        if (!linkModal) {
+          return;
+        }
+
+        linkModal.hidden = false;
+        linkModal.classList.add("is-open");
+        renderLinkResults();
+        window.setTimeout(() => {
+          linkModalInput?.focus();
+        }, 20);
+      }
+
+      function closeLinkModal() {
+        if (!linkModal) {
+          return;
+        }
+
+        linkModal.hidden = true;
+        linkModal.classList.remove("is-open");
+      }
+
+      function renderLinkResults() {
+        if (!linkModalResults) {
+          return;
+        }
+
+        const query = String(linkModalInput?.value || "").trim().toLowerCase();
+        const records = loadClientRecords()
+          .filter((record) => String(record.caseRef || "").trim())
+          .sort((left, right) => String(left.displayName || "").localeCompare(String(right.displayName || "")));
+        const filtered = records.filter((record) => {
+          const displayName = String(record.displayName || "").toLowerCase();
+          const caseRef = String(record.caseRef || "").toLowerCase();
+          const summary = String(record.summary || "").toLowerCase();
+          return !query || displayName.includes(query) || caseRef.includes(query) || summary.includes(query);
+        });
+
+        linkModalResults.innerHTML = "";
+
+        if (!filtered.length) {
+          const emptyState = document.createElement("div");
+          emptyState.className = "profile-search-results-empty";
+          emptyState.textContent = "No matching client profiles found.";
+          linkModalResults.appendChild(emptyState);
+          return;
+        }
+
+        filtered.forEach((record) => {
+          const button = document.createElement("button");
+          button.type = "button";
+          button.className = "profile-search-result-button";
+          button.textContent = `${record.displayName} - ${record.caseRef}`;
+          button.addEventListener("click", () => {
+            if (caseRefField) {
+              caseRefField.value = String(record.caseRef || "").trim();
+            }
+            closeLinkModal();
+          });
+          linkModalResults.appendChild(button);
+        });
+      }
+
+      linkOpenButton?.addEventListener("click", openLinkModal);
+      linkModalInput?.addEventListener("input", renderLinkResults);
+      linkModalClose.forEach((button) => {
+        button.addEventListener("click", closeLinkModal);
+      });
+
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape" && linkModal && !linkModal.hidden) {
+          closeLinkModal();
+        }
+      });
+
+      linkModal?.querySelector(".profile-search-modal-backdrop")?.addEventListener("click", closeLinkModal);
+
       if (!confidentialTrigger || !pinShell || !pinInputs.length || !confidentialContinue) {
+        renderLinkResults();
         return;
       }
 
@@ -158,6 +303,8 @@
       });
 
       syncContinueState();
+
+      renderLinkResults();
     })();
   </script>
 </body>

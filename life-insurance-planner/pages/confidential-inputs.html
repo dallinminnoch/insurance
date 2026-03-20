@@ -62,7 +62,7 @@
     <section class="prospect-stage">
       <section class="prospect-empty-panel">
         <div class="prospect-panel-header">
-          <a class="prospect-return-button" href="modeling-overview.html" data-loading-link>Previous</a>
+          <a class="prospect-return-button" href="protection-modeling-linked.html" data-loading-link>Previous</a>
           <h1>Protection Modeling Inputs</h1>
           <div class="confidential-inputs-badge" aria-label="Confidential Inputs">
             <span class="entry-mode-icon entry-mode-icon-locked" aria-hidden="true"></span>
@@ -84,7 +84,7 @@
             </svg>
           </button>
         </div>
-        <form class="profile-creation-form" id="protection-modeling-form">
+        <form class="profile-creation-form" id="protection-modeling-form" data-pmi-draft-key="confidential">
           <section class="profile-form-section">
             <div class="profile-form-section-heading">
               <h2>Income and Economic Value</h2>
@@ -302,7 +302,7 @@
               <div class="field-group">
                 <label for="cost-to-fund-percent">Percent of Cost to Fund</label>
                 <div class="profile-currency-field">
-                  <input id="cost-to-fund-percent" class="profile-small-number-field" name="costToFundPercent" type="number" min="0" max="100" step="1">
+                  <input id="cost-to-fund-percent" class="profile-small-number-field" name="costToFundPercent" type="number" min="0" max="100" step="1" value="100" oninput="if (this.value === '') return; this.value = String(Math.min(100, Math.max(0, Number(this.value) || 0)));">
                   <span class="profile-currency-suffix">%</span>
                 </div>
               </div>
@@ -359,7 +359,7 @@
               <div class="field-group">
                 <label for="individual-policy-type">Individual Life Insurance Type</label>
                 <select id="individual-policy-type" name="individualPolicyType">
-                  <option value="">Please select</option>
+                  <option value="">Leave Blank if None</option>
                   <option value="Term">Term</option>
                   <option value="Whole">Whole</option>
                   <option value="UL">UL</option>
@@ -386,7 +386,7 @@
               <div class="field-group">
                 <label for="group-life-portability">Group Life Portability</label>
                 <select id="group-life-portability" name="groupLifePortability">
-                  <option value="">Please select</option>
+                  <option value="">Leave Blank if None</option>
                   <option value="Yes">Yes</option>
                   <option value="No">No</option>
                 </select>
@@ -401,23 +401,26 @@
             <div class="form-grid">
               <div class="field-group">
                 <label for="funeral-burial-estimate">Funeral / Burial Estimate</label>
-                <div class="profile-currency-field">
-                  <input id="funeral-burial-estimate" name="funeralBurialEstimate" type="number" min="0" step="1000">
+                <div class="profile-currency-field is-recommended" data-recommended-default="15000">
+                  <input id="funeral-burial-estimate" name="funeralBurialEstimate" type="number" min="0" step="1000" value="15000">
                   <span class="profile-currency-suffix">USD</span>
+                  <span class="profile-recommended-label">(Recommended amount)</span>
                 </div>
               </div>
               <div class="field-group">
                 <label for="medical-end-of-life-costs">Medical End-of-Life Costs</label>
-                <div class="profile-currency-field">
-                  <input id="medical-end-of-life-costs" name="medicalEndOfLifeCosts" type="number" min="0" step="1000">
+                <div class="profile-currency-field is-recommended" data-recommended-default="15000">
+                  <input id="medical-end-of-life-costs" name="medicalEndOfLifeCosts" type="number" min="0" step="1000" value="15000">
                   <span class="profile-currency-suffix">USD</span>
+                  <span class="profile-recommended-label">(Recommended amount)</span>
                 </div>
               </div>
               <div class="field-group">
                 <label for="estate-settlement-costs">Estate Settlement Costs</label>
-                <div class="profile-currency-field">
-                  <input id="estate-settlement-costs" name="estateSettlementCosts" type="number" min="0" step="1000">
+                <div class="profile-currency-field is-recommended" data-recommended-default="10000">
+                  <input id="estate-settlement-costs" name="estateSettlementCosts" type="number" min="0" step="1000" value="10000">
                   <span class="profile-currency-suffix">USD</span>
+                  <span class="profile-recommended-label">(Recommended amount)</span>
                 </div>
               </div>
               <div class="field-group">
@@ -450,17 +453,6 @@
             </div>
             <div class="form-grid">
               <div class="field-group">
-                <label for="income-replacement-duration">Income Replacement Duration</label>
-                <input id="income-replacement-duration" class="profile-small-number-field" name="incomeReplacementDuration" type="number" min="0" max="80" step="1">
-              </div>
-              <div class="field-group">
-                <label for="survivor-income">Survivor Income</label>
-                <div class="profile-currency-field">
-                  <input id="survivor-income" name="survivorIncome" type="number" min="0" step="1000">
-                  <span class="profile-currency-suffix">USD</span>
-                </div>
-              </div>
-              <div class="field-group">
                 <label for="survivor-continues-working">Spouse Continues Working?</label>
                 <select id="survivor-continues-working" name="survivorContinuesWorking">
                   <option value="">Please select</option>
@@ -469,64 +461,39 @@
                 </select>
               </div>
               <div class="field-group">
+                <label for="survivor-income">Gross Survivor Income</label>
+                <div class="profile-currency-field">
+                  <input id="survivor-income" name="survivorIncome" type="number" min="0" step="1000" disabled>
+                  <span class="profile-currency-suffix">USD</span>
+                </div>
+              </div>
+              <div class="field-group">
+                <label for="survivor-net-annual-income">Net Annual Income</label>
+                <div class="profile-currency-field">
+                  <input id="survivor-net-annual-income" name="survivorNetAnnualIncome" type="number" min="0" step="1000" disabled>
+                  <span class="profile-currency-suffix">USD</span>
+                </div>
+              </div>
+              <div class="field-group">
+                <label for="income-replacement-duration">Income Replacement Duration</label>
+                <input id="income-replacement-duration" class="profile-small-number-field" name="incomeReplacementDuration" type="number" min="0" max="80" step="1" disabled>
+              </div>
+              <div class="field-group">
                 <label for="expense-reduction-at-death">Expense Reduction at Death</label>
                 <div class="profile-currency-field">
-                  <input id="expense-reduction-at-death" class="profile-small-number-field" name="expenseReductionAtDeath" type="number" min="0" max="100" step="1">
+                  <input id="expense-reduction-at-death" class="profile-small-number-field" name="expenseReductionAtDeath" type="number" min="0" max="100" step="1" disabled>
                   <span class="profile-currency-suffix">%</span>
                 </div>
               </div>
               <div class="field-group">
                 <label for="child-dependency-duration">Child Dependency Duration</label>
-                <input id="child-dependency-duration" class="profile-small-number-field" name="childDependencyDuration" type="number" min="0" max="40" step="1">
-              </div>
-            </div>
-          </section>
-
-          <section class="profile-form-section">
-            <div class="profile-form-section-heading">
-              <h2>Client Intent and Constraints</h2>
-            </div>
-            <div class="form-grid">
-              <div class="field-group">
-                <label for="primary-goal">Primary Goal</label>
-                <select id="primary-goal" name="primaryGoal">
-                  <option value="">Please select</option>
-                  <option value="Income Replacement">Income Replacement</option>
-                  <option value="Debt Elimination">Debt Elimination</option>
-                  <option value="Legacy">Legacy</option>
-                  <option value="Business Protection">Business Protection</option>
-                </select>
-              </div>
-              <div class="field-group">
-                <label for="coverage-time-horizon">Coverage Time Horizon Preference</label>
-                <select id="coverage-time-horizon" name="coverageTimeHorizon">
-                  <option value="">Please select</option>
-                  <option value="Temporary">Temporary (term)</option>
-                  <option value="Permanent">Permanent (lifetime)</option>
-                  <option value="Blended">Blended</option>
-                </select>
-              </div>
-              <div class="field-group">
-                <label for="budget-range">Budget Range</label>
-                <div class="profile-currency-field">
-                  <input id="budget-range" name="budgetRange" type="number" min="0" step="25">
-                  <span class="profile-currency-suffix">USD/mo</span>
-                </div>
-              </div>
-              <div class="field-group">
-                <label for="risk-preference">Risk Preference</label>
-                <select id="risk-preference" name="riskPreference">
-                  <option value="">Please select</option>
-                  <option value="Lowest Cost">Lowest Cost</option>
-                  <option value="Balanced">Balanced</option>
-                  <option value="Guarantees / Certainty">Guarantees / Certainty</option>
-                </select>
+                <input id="child-dependency-duration" class="profile-small-number-field" name="childDependencyDuration" type="number" min="0" max="40" step="1" disabled>
               </div>
             </div>
           </section>
 
           <div class="actions-row">
-            <a class="btn btn-secondary" href="new-prospect.html" data-loading-link>Previous</a>
+            <button class="btn btn-secondary pmi-save-exit-button" type="button" data-pmi-save-exit>Save and Exit</button>
           </div>
         </form>
       </section>
@@ -682,6 +649,33 @@
   </script>
   <script>
     (function () {
+      const defaults = [
+        { id: "funeral-burial-estimate", value: "15,000" },
+        { id: "medical-end-of-life-costs", value: "15,000" },
+        { id: "estate-settlement-costs", value: "10,000" }
+      ];
+
+      defaults.forEach(({ id, value }) => {
+        const input = document.getElementById(id);
+
+        if (!input) {
+          return;
+        }
+
+        const field = input.closest(".profile-currency-field");
+
+        if (!field) {
+          return;
+        }
+
+        input.addEventListener("input", () => {
+          field.classList.remove("is-recommended");
+        }, { once: true });
+      });
+    })();
+  </script>
+  <script>
+    (function () {
       const form = document.getElementById("protection-modeling-form");
 
       if (!form) {
@@ -729,14 +723,15 @@
         "individual-years-remaining": "Remaining years on any term policy.",
         "group-life-coverage": "Employer-provided group life coverage amount.",
         "group-life-portability": "Whether group coverage can continue after employment changes.",
-        "funeral-burial-estimate": "A common national reference point is about $8,300 for a funeral with burial and about $6,280 for cremation, based on NFDA medians. Use your best estimate for the service you expect.",
-        "medical-end-of-life-costs": "Expected end-of-life medical expenses not covered elsewhere.",
-        "estate-settlement-costs": "Potential legal, probate, or estate settlement expenses.",
+        "funeral-burial-estimate": "A common national reference point is about $8,300 for a funeral with burial and about $6,280 for cremation, based on NFDA medians. Once cemetery, marker, and other burial fees are added, the total can commonly reach $15,000 or more.",
+        "medical-end-of-life-costs": "A practical planning range is often $10,000 to $25,000, depending on coverage and expected care needs.",
+        "estate-settlement-costs": "A practical starting range is often $5,000 to $15,000, with higher amounts for larger or more complex estates.",
         "inflation-rate-assumption": "Inflation assumption used for future value estimates.",
         "discount-rate": "Discount rate used when converting future needs to present value.",
         "investment-return-assumption": "Assumed investment return used in projections.",
         "income-replacement-duration": "How long income should be replaced.",
-        "survivor-income": "Expected income the surviving spouse or partner may continue to earn.",
+        "survivor-net-annual-income": "Net annual household income available for survivorship planning.",
+        "survivor-income": "Gross survivor income before reductions or taxes.",
         "survivor-continues-working": "Whether the spouse or partner is expected to keep working after a death.",
         "expense-reduction-at-death": "Percent of expenses expected to disappear after the insured dies.",
         "child-dependency-duration": "Years children are expected to remain financially dependent.",
@@ -961,6 +956,152 @@
       dragHandle.addEventListener("pointercancel", endDrag);
 
       setDisplayValue("");
+    })();
+  </script>
+  <script>
+    (function () {
+      const form = document.getElementById("protection-modeling-form");
+      const saveExitButton = document.querySelector("[data-pmi-save-exit]");
+
+      if (!form || !saveExitButton) {
+        return;
+      }
+
+      const storageKey = `lipPlannerProtectionDraft:${form.dataset.pmiDraftKey || "confidential"}`;
+      const costToFundPercentField = form.elements.namedItem("costToFundPercent");
+
+      function clampCostToFundPercent() {
+        if (!costToFundPercentField || !("value" in costToFundPercentField)) {
+          return;
+        }
+
+        const rawValue = Number(costToFundPercentField.value);
+
+        if (!Number.isFinite(rawValue)) {
+          return;
+        }
+
+        const clampedValue = Math.min(100, Math.max(0, rawValue));
+        if (String(clampedValue) !== String(costToFundPercentField.value)) {
+          costToFundPercentField.value = String(clampedValue);
+        }
+      }
+
+      function syncSurvivorshipAdjustments() {
+        const survivorWorkingSelect = form.elements.namedItem("survivorContinuesWorking");
+        if (!survivorWorkingSelect || survivorWorkingSelect instanceof RadioNodeList) {
+          return;
+        }
+
+        const shouldEnable = String(survivorWorkingSelect.value || "").trim().toLowerCase() === "yes";
+        const dependentNames = [
+          "survivorIncome",
+          "survivorNetAnnualIncome",
+          "incomeReplacementDuration",
+          "expenseReductionAtDeath",
+          "childDependencyDuration"
+        ];
+
+        dependentNames.forEach((name) => {
+          const field = form.elements.namedItem(name);
+          if (!field || field instanceof RadioNodeList) {
+            return;
+          }
+
+          const fieldGroup = field.closest?.(".field-group");
+          field.disabled = !shouldEnable;
+
+          if (!shouldEnable) {
+            field.value = "";
+          }
+
+          fieldGroup?.classList.toggle("is-disabled", !shouldEnable);
+        });
+      }
+
+      function restoreDraft() {
+        try {
+          const saved = JSON.parse(localStorage.getItem(storageKey) || "{}");
+
+          Object.entries(saved).forEach(([name, value]) => {
+            const control = form.elements.namedItem(name);
+
+            if (!control) {
+              return;
+            }
+
+            if (value === "" || value == null) {
+              return;
+            }
+
+            if (control instanceof RadioNodeList) {
+              Array.from(control).forEach((input) => {
+                input.checked = input.value === value;
+              });
+              return;
+            }
+
+            if (control.type === "checkbox") {
+              control.checked = Boolean(value);
+              return;
+            }
+
+            control.value = value ?? "";
+            if (control.tagName === "INPUT") {
+              control.dispatchEvent(new Event("input", { bubbles: true }));
+            }
+          });
+          clampCostToFundPercent();
+        } catch (_error) {
+        }
+      }
+
+      function serializeForm() {
+        const draft = {};
+
+        Array.from(form.elements).forEach((element) => {
+          if (!element.name || element.disabled) {
+            return;
+          }
+
+          if (element.type === "radio") {
+            if (element.checked) {
+              draft[element.name] = element.value;
+            }
+            return;
+          }
+
+          if (element.type === "checkbox") {
+            draft[element.name] = element.checked;
+            return;
+          }
+
+          draft[element.name] = element.value;
+        });
+
+        return draft;
+      }
+
+      saveExitButton.addEventListener("click", () => {
+        clampCostToFundPercent();
+        localStorage.setItem(storageKey, JSON.stringify(serializeForm()));
+        window.location.href = "clients.html";
+      });
+
+      if (costToFundPercentField) {
+        costToFundPercentField.addEventListener("input", clampCostToFundPercent);
+        costToFundPercentField.addEventListener("change", clampCostToFundPercent);
+        costToFundPercentField.addEventListener("blur", clampCostToFundPercent);
+      }
+
+      const survivorWorkingSelect = form.elements.namedItem("survivorContinuesWorking");
+      if (survivorWorkingSelect && !(survivorWorkingSelect instanceof RadioNodeList)) {
+        survivorWorkingSelect.addEventListener("change", syncSurvivorshipAdjustments);
+        survivorWorkingSelect.addEventListener("input", syncSurvivorshipAdjustments);
+      }
+
+      restoreDraft();
+      syncSurvivorshipAdjustments();
     })();
   </script>
 </body>

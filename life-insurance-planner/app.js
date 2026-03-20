@@ -315,6 +315,7 @@
     initializeSummaryPage();
     initializeNotesSync();
     initializeClientCreationForm();
+    initializeSurvivorshipAdjustments();
     initializeClientDirectory();
     initializeClientDirectoryNavLinks();
   });
@@ -1940,6 +1941,46 @@
       link.addEventListener("click", () => {
         sessionStorage.setItem(STORAGE_KEYS.clientItemsShownReset, "true");
       });
+    });
+  }
+
+  function initializeSurvivorshipAdjustments() {
+    const survivorWorkingSelects = document.querySelectorAll("select[name='survivorContinuesWorking']");
+
+    survivorWorkingSelects.forEach((select) => {
+      const section = select.closest(".profile-form-section");
+      if (!section) {
+        return;
+      }
+
+      const dependentFields = [
+        section.querySelector("[name='survivorIncome']"),
+        section.querySelector("[name='incomeReplacementDuration']"),
+        section.querySelector("[name='survivorNetAnnualIncome']"),
+        section.querySelector("[name='expenseReductionAtDeath']"),
+        section.querySelector("[name='childDependencyDuration']")
+      ].filter(Boolean);
+
+      const syncDependentState = () => {
+        const shouldEnable = String(select.value || "").trim().toLowerCase() === "yes";
+
+        dependentFields.forEach((field) => {
+          const fieldGroup = field.closest(".field-group");
+          field.disabled = !shouldEnable;
+
+          if (!shouldEnable) {
+            field.value = "";
+          }
+
+          if (fieldGroup) {
+            fieldGroup.classList.toggle("is-disabled", !shouldEnable);
+          }
+        });
+      };
+
+      select.addEventListener("change", syncDependentState);
+      select.addEventListener("input", syncDependentState);
+      syncDependentState();
     });
   }
 
