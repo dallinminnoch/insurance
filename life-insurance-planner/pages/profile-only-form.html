@@ -66,7 +66,7 @@
           <h1>Profile Only Form</h1>
           <p class="profile-required-key"><span class="profile-required-star" aria-hidden="true">*</span> = Required</p>
         </div>
-        <form class="profile-creation-form" id="client-creation-form" data-client-type="individual">
+        <form class="profile-creation-form" id="client-creation-form" data-client-type="individual" data-local-client-save="true">
           <section class="profile-form-section">
             <div class="profile-form-section-heading">
               <h2>Client Identification</h2>
@@ -924,6 +924,286 @@
       syncAcquisitionSourceField();
       applyProfilePriority(profilePriorityInput?.value || "");
       syncInterestButtons(interestTypeField?.value || "family");
+    })();
+  </script>
+  <script>
+    (function () {
+      const form = document.getElementById("client-creation-form");
+      const feedback = document.getElementById("client-creation-feedback");
+
+      if (!form || !feedback || form.dataset.localClientSave !== "true") {
+        return;
+      }
+
+      form.addEventListener("submit", function (event) {
+        event.preventDefault();
+        if (!form.reportValidity()) {
+          return;
+        }
+
+        const priority = String(form.querySelector("[data-profile-priority-input]")?.value || "").trim().toLowerCase();
+        if (!priority) {
+          feedback.hidden = false;
+          feedback.textContent = "Select a priority before saving.";
+          return;
+        }
+
+        const formData = new FormData(form);
+        const authSessionKey = "lipPlannerAuthSession";
+        const clientRecordsKey = "lensClientRecords";
+
+        function loadJson(key) {
+          try {
+            return JSON.parse(localStorage.getItem(key) || "null");
+          } catch (error) {
+            return null;
+          }
+        }
+
+        function getStorageIdentity() {
+          const session = loadJson(authSessionKey);
+          return session?.email ? String(session.email).trim().toLowerCase() : "guest";
+        }
+
+        function getRecordsStorageKey() {
+          return `${clientRecordsKey}:${getStorageIdentity()}`;
+        }
+
+        function loadRecords() {
+          const records = loadJson(getRecordsStorageKey());
+          return Array.isArray(records) ? records : [];
+        }
+
+        function writeRecords(records) {
+          localStorage.setItem(getRecordsStorageKey(), JSON.stringify(records));
+        }
+
+        function buildNextCaseRef(records) {
+          const highestNumber = records.reduce(function (highest, record) {
+            const match = String(record.caseRef || "").match(/CL\/(\d+)/);
+            return match ? Math.max(highest, Number(match[1])) : highest;
+          }, 80400);
+
+          return `CL/${highestNumber + 1}`;
+        }
+
+        function mapClientStageToStatusGroup(value) {
+          const normalized = String(value || "").trim().toLowerCase();
+          if (normalized === "in review") {
+            return "in-review";
+          }
+          if (normalized === "coverage placed") {
+            return "coverage-placed";
+          }
+          if (normalized === "closed") {
+            return "closed";
+          }
+          return "prospects";
+        }
+
+        function deriveStatusLabels(statusGroup, type) {
+          if (type === "company") {
+            return ["Business"];
+          }
+          if (type === "household") {
+            return ["Household"];
+          }
+          if (statusGroup === "coverage-placed") {
+            return ["Coverage"];
+          }
+          if (statusGroup === "in-review") {
+            return ["Review"];
+          }
+          if (statusGroup === "closed") {
+            return ["Closed"];
+          }
+          return ["Profile"];
+        }
+
+        function formatHouseholdDisplayName(value) {
+          const trimmed = String(value || "").trim();
+          if (!trimmed) {
+            return "New Household";
+          }
+          return /household$/i.test(trimmed) ? trimmed : `${trimmed} Household`;
+        }
+
+        function formatCompanyDisplayName(value) {
+          return String(value || "").trim() || "New Company Profile";
+        }
+
+        const records = loadRecords();
+        const currentSession = loadJson(authSessionKey);
+        const today = new Date().toISOString().slice(0, 10);
+        const clientStage = String(formData.get("clientStatus") || "Prospect");
+        const statusGroup = mapClientStageToStatusGroup(clientStage);
+        const advisorySource = String(formData.get("acquisitionSource") || "").trim();
+        const advisorySourceOther = String(formData.get("acquisitionSourceOther") || "").trim();
+        const source = advisorySource === "Other" ? (advisorySourceOther || "Other") : (advisorySource || "Advisor Entered");
+        const firstName = String(formData.get("firstName") || "").trim();
+        const preferredName = String(formData.get("preferredName") || "").trim();
+        const lastName = String(formData.get("lastName") || "").trim();
+        const assignmentMode = String(formData.get("profileAssignmentMode") || "").trim();
+        const assignmentTargetId = String(formData.get("profileAssignmentTargetId") || "").trim();
+        const requestedAssignmentName = String(formData.get("profileAssignmentName") || "").trim();
+        const advisorName = String(formData.get("advisorName") || "").trim() || currentSession?.name || "";
+        const createdBy = currentSession?.name || "Advisor";
+        const dateProfileCreated = String(formData.get("dateProfileCreated") || today);
+        const lastUpdatedDate = String(formData.get("lastUpdatedDate") || today);
+        let nextRecords = records.slice();
+        let householdId = "";
+        let householdName = "";
+        let profileGroupType = "";
+
+        if (!assignmentMode) {
+          feedback.hidden = false;
+          feedback.textContent = "Select how this client should be assigned before saving.";
+          return;
+        }
+
+        if (assignmentMode === "existing-household" || assignmentMode === "existing-company") {
+          const expectedType = assignmentMode === "existing-company" ? "companies" : "households";
+          const existingProfile = nextRecords.find(function (record) {
+            return record.id === assignmentTargetId && record.viewType === expectedType;
+          });
+
+          if (!existingProfile) {
+            feedback.hidden = false;
+            feedback.textContent = expectedType === "companies"
+              ? "Select a valid company profile before saving."
+              : "Select a valid household before saving.";
+            return;
+          }
+
+          householdId = existingProfile.id;
+          householdName = existingProfile.displayName;
+          profileGroupType = expectedType === "companies" ? "company" : "household";
+          nextRecords = nextRecords.map(function (record) {
+            if (record.id !== existingProfile.id) {
+              return record;
+            }
+
+            const nextCount = (Number(record.insured || 0) || 0) + 1;
+            return Object.assign({}, record, {
+              insured: String(nextCount),
+              lastReview: lastUpdatedDate,
+              statusGroup: statusGroup,
+              priority: priority,
+              source: source,
+              lastUpdatedDate: lastUpdatedDate
+            });
+          });
+        } else if (assignmentMode === "create-household" || assignmentMode === "create-company") {
+          if (!requestedAssignmentName) {
+            feedback.hidden = false;
+            feedback.textContent = assignmentMode === "create-company"
+              ? "Enter a company profile name before saving."
+              : "Enter a household name before saving.";
+            return;
+          }
+
+          const isCompany = assignmentMode === "create-company";
+          householdName = isCompany
+            ? formatCompanyDisplayName(requestedAssignmentName)
+            : formatHouseholdDisplayName(requestedAssignmentName || lastName || firstName);
+          householdId = `${isCompany ? "co" : "hh"}-${Date.now()}`;
+          profileGroupType = isCompany ? "company" : "household";
+
+          nextRecords.unshift({
+            id: householdId,
+            viewType: isCompany ? "companies" : "households",
+            displayName: householdName,
+            lastName: lastName,
+            summary: isCompany ? "Company profile" : "Household profile",
+            caseRef: buildNextCaseRef(nextRecords),
+            lastReview: lastUpdatedDate,
+            insured: "1",
+            source: source,
+            statusGroup: statusGroup,
+            statusLabels: deriveStatusLabels(statusGroup, isCompany ? "company" : "household"),
+            priority: priority,
+            coverageAmount: 0,
+            coverageGap: 0,
+            advisorName: advisorName,
+            createdBy: createdBy,
+            dateProfileCreated: dateProfileCreated,
+            lastUpdatedDate: lastUpdatedDate,
+            householdId: householdId,
+            dataSource: source
+          });
+        } else {
+          feedback.hidden = false;
+          feedback.textContent = "Choose how this client should be assigned before saving.";
+          return;
+        }
+
+        nextRecords.unshift({
+          id: `cl-${Date.now()}`,
+          viewType: "individuals",
+          displayName: `${preferredName || firstName} ${lastName}`.trim(),
+          firstName: firstName,
+          middleName: String(formData.get("middleName") || "").trim(),
+          lastName: lastName,
+          preferredName: preferredName,
+          summary: String(formData.get("clientNotes") || "").trim() || "New client profile",
+          caseRef: buildNextCaseRef(nextRecords),
+          lastReview: lastUpdatedDate,
+          insured: "Yes",
+          source: source,
+          statusGroup: statusGroup,
+          statusLabels: deriveStatusLabels(statusGroup, "individual"),
+          priority: priority,
+          coverageAmount: 0,
+          coverageGap: 0,
+          householdId: householdId,
+          householdName: householdName,
+          profileGroupType: profileGroupType,
+          dateOfBirth: String(formData.get("dateOfBirth") || ""),
+          age: Number(formData.get("age") || 0),
+          targetRetirementAge: String(formData.get("targetRetirementAge") || "").trim(),
+          insuranceRatingSex: String(formData.get("insuranceRatingSex") || ""),
+          maritalStatus: String(formData.get("maritalStatus") || ""),
+          spouseDateOfBirth: String(formData.get("spouseDateOfBirth") || ""),
+          spouseAge: Number(formData.get("spouseAge") || 0),
+          householdRole: String(formData.get("householdRole") || ""),
+          hasDependents: String(formData.get("hasDependents") || "No"),
+          projectedDependents: String(formData.get("projectedDependents") || "No"),
+          projectedDependentsCount: Number(formData.get("projectedDependentsCount") || 0),
+          sameEducationFunding: String(formData.get("sameEducationFunding") || "Yes"),
+          projectedEducationFundingPerDependent: Number(formData.get("projectedEducationFundingPerDependent") || 0),
+          dependentsCount: Number(formData.get("dependentsCount") || 0),
+          youngestDependentAge: Number(formData.get("youngestDependentAge") || 0),
+          educationFundingPerDependent: Number(formData.get("educationFundingPerDependent") || 0),
+          emailAddress: String(formData.get("emailAddress") || "").trim(),
+          phoneNumber: String(formData.get("phoneNumber") || "").trim(),
+          preferredContactMethod: String(formData.get("preferredContactMethod") || ""),
+          streetAddress: String(formData.get("streetAddress") || "").trim(),
+          city: String(formData.get("city") || "").trim(),
+          state: String(formData.get("state") || "").trim(),
+          zipCode: String(formData.get("zipCode") || "").trim(),
+          country: String(formData.get("country") || "").trim(),
+          occupation: String(formData.get("occupation") || "").trim(),
+          employerName: String(formData.get("employerName") || "").trim(),
+          employmentStatus: String(formData.get("employmentStatus") || ""),
+          advisorName: advisorName,
+          firmName: String(formData.get("firmName") || "").trim(),
+          dateProfileCreated: dateProfileCreated,
+          lastUpdatedDate: lastUpdatedDate,
+          createdBy: createdBy,
+          dataSource: source,
+          planningPriority: "",
+          clientStage: clientStage,
+          clientNotes: String(formData.get("clientNotes") || "").trim()
+        });
+
+        writeRecords(nextRecords);
+        sessionStorage.setItem("lensPendingClientRecords", JSON.stringify([nextRecords[0]]));
+        sessionStorage.setItem("lensClientViewIntent", "individuals");
+        sessionStorage.setItem("lensClientView", "individuals");
+        sessionStorage.setItem("lensClientStatus", "all");
+        sessionStorage.setItem("lensClientItemsShownReset", "true");
+        window.location.href = "clients.html";
+      });
     })();
   </script>
 </body>

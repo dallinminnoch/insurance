@@ -14,7 +14,8 @@
     authUsers: "lipPlannerAuthUsers",
     authSession: "lipPlannerAuthSession",
     workflowNavExpanded: "lipPlannerWorkflowNavExpanded",
-    language: "lensLanguage"
+    language: "lensLanguage",
+    pendingClientRecords: "lensPendingClientRecords"
   };
   const ADMIN_CREDENTIALS = {
     email: "admin@lens.com",
@@ -317,6 +318,7 @@
     initializeClientCreationForm();
     initializeSurvivorshipAdjustments();
     initializeClientDirectory();
+    initializeClientDetailPage();
     initializeClientDirectoryNavLinks();
   });
 
@@ -1353,185 +1355,12 @@
       setFormFeedback(feedback, "");
     });
 
-    form.addEventListener("submit", (event) => {
-      event.preventDefault();
-      setFormFeedback(feedback, "");
-
-      if (!form.reportValidity()) {
-        return;
-      }
-
-      const formData = new FormData(form);
-      const records = getClientRecords();
-      const clientStage = String(formData.get("clientStatus") || "Prospect");
-      const statusGroup = mapClientStageToStatusGroup(clientStage);
-      const advisorySource = String(formData.get("acquisitionSource") || "").trim();
-      const advisorySourceOther = String(formData.get("acquisitionSourceOther") || "").trim();
-      const source = advisorySource === "Other" ? (advisorySourceOther || "Other") : (advisorySource || "Advisor Entered");
-      const coverageAmount = 0;
-      const coverageGap = 0;
-      const priority = normalizePriority(String(formData.get("advisoryPriority") || ""));
-      if (!priority) {
-        setFormFeedback(feedback, "Select a priority before continuing.");
-        return;
-      }
-      const firstName = String(formData.get("firstName") || "").trim();
-      const preferredName = String(formData.get("preferredName") || "").trim();
-      const summary = String(formData.get("clientNotes") || "").trim() || "New client profile";
-      const lastName = String(formData.get("lastName") || "").trim();
-      const assignmentMode = String(formData.get("profileAssignmentMode") || "").trim();
-      const assignmentTargetId = String(formData.get("profileAssignmentTargetId") || "").trim();
-      const assignmentTargetType = String(formData.get("profileAssignmentTargetType") || "").trim();
-      const requestedAssignmentName = String(formData.get("profileAssignmentName") || "").trim();
-      const advisorName = String(formData.get("advisorName") || "").trim() || currentSession?.name || "";
-      const createdBy = currentSession?.name || "Advisor";
-      const dateProfileCreated = String(formData.get("dateProfileCreated") || today);
-      const lastUpdatedDate = String(formData.get("lastUpdatedDate") || today);
-      let householdId = "";
-      let householdName = "";
-      let profileGroupType = "";
-      let nextRecords = [...records];
-
-      if (!assignmentMode) {
-        setFormFeedback(feedback, "Select how this client should be assigned before continuing.");
-        return;
-      }
-
-      if (assignmentMode === "existing-household" || assignmentMode === "existing-company") {
-        const expectedType = assignmentMode === "existing-company" ? "companies" : "households";
-        const existingProfile = nextRecords.find((record) => record.id === assignmentTargetId && record.viewType === expectedType);
-        if (!existingProfile) {
-          setFormFeedback(feedback, expectedType === "companies" ? "Select a valid company profile before saving." : "Select a valid household before saving.");
-          return;
-        }
-
-        householdId = existingProfile.id;
-        householdName = existingProfile.displayName;
-        profileGroupType = expectedType === "companies" ? "company" : "household";
-        nextRecords = nextRecords.map((record) => {
-          if (record.id !== existingProfile.id) {
-            return record;
-          }
-
-          const currentCount = Number(record.insured || 0);
-          const nextCount = Number.isFinite(currentCount) ? currentCount + 1 : 1;
-          return {
-            ...record,
-            insured: String(nextCount),
-            lastReview: lastUpdatedDate,
-            statusGroup,
-            priority,
-            source,
-            lastUpdatedDate
-          };
-        });
-      } else if (assignmentMode === "create-household" || assignmentMode === "create-company") {
-        if (!requestedAssignmentName) {
-          setFormFeedback(feedback, assignmentMode === "create-company"
-            ? "Enter a company profile name before saving."
-            : "Enter a household name before saving.");
-          return;
-        }
-
-        const isCompany = assignmentMode === "create-company";
-        householdName = isCompany ? formatCompanyDisplayName(requestedAssignmentName) : formatHouseholdDisplayName(requestedAssignmentName || lastName || firstName);
-        householdId = `${isCompany ? "co" : "hh"}-${Date.now()}`;
-        profileGroupType = isCompany ? "company" : "household";
-        const groupRecord = {
-          id: householdId,
-          viewType: isCompany ? "companies" : "households",
-          displayName: householdName,
-          lastName,
-          summary: isCompany ? "Company profile" : "Household profile",
-          caseRef: buildNextCaseRef(nextRecords),
-          lastReview: lastUpdatedDate,
-          insured: "1",
-          source,
-          statusGroup,
-          statusLabels: deriveStatusLabels(statusGroup, isCompany ? "company" : "household"),
-          priority,
-          coverageAmount,
-          coverageGap,
-          advisorName,
-          createdBy,
-          dateProfileCreated,
-          lastUpdatedDate,
-          householdId,
-          dataSource: source
-        };
-        nextRecords.unshift(groupRecord);
-      } else {
-        setFormFeedback(feedback, "Choose how this client should be assigned before saving.");
-        return;
-      }
-
-      const record = {
-        id: `cl-${Date.now()}`,
-        viewType: "individuals",
-        displayName: `${preferredName || firstName} ${lastName}`.trim(),
-        firstName,
-        middleName: String(formData.get("middleName") || "").trim(),
-        lastName,
-        preferredName,
-        summary,
-        caseRef: buildNextCaseRef(nextRecords),
-        lastReview: lastUpdatedDate,
-        insured: "Yes",
-        source,
-        statusGroup,
-        statusLabels: deriveStatusLabels(statusGroup, "individual"),
-        priority,
-        coverageAmount,
-        coverageGap,
-        householdId,
-        householdName,
-        profileGroupType,
-        dateOfBirth: String(formData.get("dateOfBirth") || ""),
-        age: Number(formData.get("age") || 0),
-        targetRetirementAge: String(formData.get("targetRetirementAge") || "").trim(),
-        insuranceRatingSex: String(formData.get("insuranceRatingSex") || ""),
-        maritalStatus: String(formData.get("maritalStatus") || ""),
-        spouseDateOfBirth: String(formData.get("spouseDateOfBirth") || ""),
-        spouseAge: Number(formData.get("spouseAge") || 0),
-        householdRole: String(formData.get("householdRole") || ""),
-        hasDependents: String(formData.get("hasDependents") || "No"),
-        projectedDependents: String(formData.get("projectedDependents") || "No"),
-        projectedDependentsCount: Number(formData.get("projectedDependentsCount") || 0),
-        sameEducationFunding: String(formData.get("sameEducationFunding") || "Yes"),
-        projectedEducationFundingPerDependent: Number(formData.get("projectedEducationFundingPerDependent") || 0),
-        dependentsCount: Number(formData.get("dependentsCount") || 0),
-        youngestDependentAge: Number(formData.get("youngestDependentAge") || 0),
-        educationFundingPerDependent: Number(formData.get("educationFundingPerDependent") || 0),
-        emailAddress: String(formData.get("emailAddress") || "").trim(),
-        phoneNumber: String(formData.get("phoneNumber") || "").trim(),
-        preferredContactMethod: String(formData.get("preferredContactMethod") || ""),
-        streetAddress: String(formData.get("streetAddress") || "").trim(),
-        city: String(formData.get("city") || "").trim(),
-        state: String(formData.get("state") || "").trim(),
-        zipCode: String(formData.get("zipCode") || "").trim(),
-        country: String(formData.get("country") || "").trim(),
-        occupation: String(formData.get("occupation") || "").trim(),
-        employerName: String(formData.get("employerName") || "").trim(),
-        employmentStatus: String(formData.get("employmentStatus") || ""),
-        advisorName,
-        firmName: String(formData.get("firmName") || "").trim(),
-        dateProfileCreated,
-        lastUpdatedDate,
-        createdBy,
-        dataSource: source,
-        planningPriority: "",
-        clientStage,
-        clientNotes: String(formData.get("clientNotes") || "").trim()
-      };
-
-      nextRecords.unshift(record);
-      writeClientRecords(nextRecords);
-      sessionStorage.setItem(STORAGE_KEYS.clientViewIntent, "individuals");
-      sessionStorage.setItem(STORAGE_KEYS.clientView, "individuals");
-      sessionStorage.setItem(STORAGE_KEYS.clientStatus, "all");
-      sessionStorage.setItem(STORAGE_KEYS.clientItemsShownReset, "true");
-      window.location.href = "clients.html";
-    });
+    if (form.dataset.localClientSave !== "true") {
+      form.addEventListener("submit", (event) => {
+        event.preventDefault();
+        saveClientCreationForm(form, feedback);
+      });
+    }
   }
 
   function initializeClientDirectory() {
@@ -1559,6 +1388,7 @@
     }
 
     ensureClientRecords();
+    mergePendingClientRecords();
     let allRecords = getClientRecords();
     const selectedRecordIds = new Set();
     let activeLetter = "all";
@@ -1662,9 +1492,9 @@
         const matchesLetter = activeLetter === "all" || getLastInitial(record.lastName) === activeLetter;
         const matchesStatus = activeStatus === "all" || record.statusGroup === activeStatus;
         const matchesSearch = !query
-          || record.displayName.toLowerCase().includes(query)
-          || record.summary.toLowerCase().includes(query)
-          || record.caseRef.toLowerCase().includes(query);
+          || String(record.displayName || "").toLowerCase().includes(query)
+          || String(record.summary || "").toLowerCase().includes(query)
+          || String(record.caseRef || "").toLowerCase().includes(query);
 
         return matchesView && matchesLetter && matchesStatus && matchesSearch;
       });
@@ -1754,6 +1584,39 @@
 
           updateClientPriority(recordId, priority);
           renderDirectory();
+        });
+      });
+
+      rowsHost.querySelectorAll("[data-client-open]").forEach((row) => {
+        row.addEventListener("click", (event) => {
+          if (event.target.closest("[data-client-checkbox]") || event.target.closest("[data-priority-dropdown]")) {
+            return;
+          }
+
+          const recordId = row.dataset.clientOpen;
+          if (!recordId) {
+            return;
+          }
+
+          window.location.href = `client-detail.html?id=${encodeURIComponent(recordId)}`;
+        });
+
+        row.addEventListener("keydown", (event) => {
+          if (event.key !== "Enter" && event.key !== " ") {
+            return;
+          }
+
+          if (event.target.closest("[data-client-checkbox]") || event.target.closest("[data-priority-dropdown]")) {
+            return;
+          }
+
+          event.preventDefault();
+          const recordId = row.dataset.clientOpen;
+          if (!recordId) {
+            return;
+          }
+
+          window.location.href = `client-detail.html?id=${encodeURIComponent(recordId)}`;
         });
       });
 
@@ -1944,6 +1807,112 @@
     });
   }
 
+  function initializeClientDetailPage() {
+    const host = document.querySelector("[data-client-detail-host]");
+    const title = document.querySelector("[data-client-detail-title]");
+    const subtitle = document.querySelector("[data-client-detail-subtitle]");
+
+    if (!host || !title || !subtitle) {
+      return;
+    }
+
+    const params = new URLSearchParams(window.location.search);
+    const recordId = String(params.get("id") || "").trim();
+    const record = getClientRecords().find((item) => item.id === recordId);
+
+    if (!record) {
+      title.textContent = "Client Not Found";
+      subtitle.textContent = "The requested client record is not available in this advisor workspace.";
+      host.innerHTML = `
+        <section class="client-detail-card">
+          <p class="client-detail-empty">No saved client matched this record id.</p>
+        </section>
+      `;
+      return;
+    }
+
+    title.textContent = record.displayName || "Client Detail";
+    subtitle.textContent = `${getClientStatusDisplay(record.statusGroup)} | ${record.caseRef || "Case ref pending"}`;
+
+    const sections = [
+      {
+        title: "Overview",
+        fields: [
+          ["Client", record.displayName],
+          ["Case Ref", record.caseRef],
+          ["Client Status", getClientStatusDisplay(record.statusGroup)],
+          ["Priority", getPriorityDisplay(record.priority)],
+          ["Source", record.source],
+          ["Last Review", formatDateForDirectory(record.lastReview)],
+          ["Coverage Amount", formatCurrencyCompact(record.coverageAmount)],
+          ["Coverage Gap", formatCurrencyCompact(record.coverageGap)]
+        ]
+      },
+      {
+        title: "Profile Information",
+        fields: [
+          ["First Name", record.firstName],
+          ["Middle Name", record.middleName],
+          ["Last Name", record.lastName],
+          ["Preferred Name", record.preferredName],
+          ["Date of Birth", formatDateForDirectory(record.dateOfBirth)],
+          ["Age", record.age],
+          ["Insurance Rating Sex", record.insuranceRatingSex],
+          ["Marital Status", record.maritalStatus],
+          ["Spouse/Partner Date of Birth", formatDateForDirectory(record.spouseDateOfBirth)],
+          ["Spouse/Partner Age", record.spouseAge]
+        ]
+      },
+      {
+        title: "Contact",
+        fields: [
+          ["Email Address", record.emailAddress],
+          ["Phone Number", record.phoneNumber],
+          ["Preferred Contact Method", record.preferredContactMethod],
+          ["Street Address", record.streetAddress],
+          ["City", record.city],
+          ["State", record.state],
+          ["ZIP Code", record.zipCode],
+          ["Country", record.country]
+        ]
+      },
+      {
+        title: "Household and Advisory",
+        fields: [
+          ["Household / Company Role", record.householdRole],
+          ["Assignment Name", record.householdName],
+          ["Assignment Type", record.profileGroupType],
+          ["Dependents / Children", record.hasDependents],
+          ["Amount of Dependents / Children", record.dependentsCount],
+          ["Age of Youngest Dependent / Child", record.youngestDependentAge],
+          ["Education Funding (Per Dependent)", record.educationFundingPerDependent ? formatCurrencyCompact(record.educationFundingPerDependent) : ""],
+          ["Projected Dependents / Children", record.projectedDependents],
+          ["Projected Dependents Count", record.projectedDependentsCount],
+          ["Projected Education Funding", record.projectedEducationFundingPerDependent ? formatCurrencyCompact(record.projectedEducationFundingPerDependent) : ""],
+          ["Advisor Name", record.advisorName],
+          ["Firm Name", record.firmName],
+          ["Client Notes", record.clientNotes]
+        ]
+      }
+    ];
+
+    host.innerHTML = sections.map((section) => `
+      <section class="client-detail-card">
+        <div class="client-detail-card-header">
+          <h2>${escapeHtml(section.title)}</h2>
+        </div>
+        <div class="client-detail-grid">
+          ${section.fields.map(([label, value]) => `
+            <div class="client-detail-field">
+              <span class="client-detail-label">${escapeHtml(label)}</span>
+              <span class="client-detail-value">${escapeHtml(formatClientDetailValue(value))}</span>
+            </div>
+          `).join("")}
+        </div>
+      </section>
+    `).join("");
+  }
+
   function initializeSurvivorshipAdjustments() {
     const survivorWorkingSelects = document.querySelectorAll("select[name='survivorContinuesWorking']");
 
@@ -2023,15 +1992,62 @@
     return loadJson(getClientRecordsStorageKey()) || [];
   }
 
+  function mergePendingClientRecords() {
+    const pendingRecords = loadJsonSession(STORAGE_KEYS.pendingClientRecords);
+    if (!Array.isArray(pendingRecords) || !pendingRecords.length) {
+      return;
+    }
+
+    const existingRecords = getClientRecords();
+    const existingIds = new Set(existingRecords.map((record) => record.id));
+    const mergedRecords = [
+      ...pendingRecords.filter((record) => record && !existingIds.has(record.id)),
+      ...existingRecords
+    ];
+
+    writeClientRecords(mergedRecords);
+    sessionStorage.removeItem(STORAGE_KEYS.pendingClientRecords);
+  }
+
   function writeClientRecords(records) {
     localStorage.setItem(getClientRecordsStorageKey(), JSON.stringify(normalizeClientRecords(records)));
   }
 
   function normalizeClientRecords(records) {
-    return records.map((record) => ({
-      ...record,
-      priority: normalizePriority(record.priority)
-    }));
+    return records
+      .filter((record) => record && typeof record === "object")
+      .map((record, index) => {
+        const preferredName = String(record.preferredName || "").trim();
+        const firstName = String(record.firstName || "").trim();
+        const lastName = String(record.lastName || "").trim();
+        const displayName = String(record.displayName || "").trim()
+          || `${preferredName || firstName} ${lastName}`.trim()
+          || `Client ${index + 1}`;
+        const viewType = ["individuals", "households", "companies"].includes(String(record.viewType || ""))
+          ? String(record.viewType)
+          : "individuals";
+        const statusGroup = ["prospects", "in-review", "coverage-placed", "closed"].includes(String(record.statusGroup || ""))
+          ? String(record.statusGroup)
+          : "prospects";
+
+        return {
+          ...record,
+          id: String(record.id || `cl-normalized-${index}`),
+          viewType,
+          displayName,
+          firstName,
+          lastName,
+          summary: String(record.summary || record.clientNotes || "New client profile"),
+          caseRef: String(record.caseRef || `CL/${80401 + index}`),
+          lastReview: String(record.lastReview || record.lastUpdatedDate || record.dateProfileCreated || formatDateInputValue(new Date())),
+          insured: String(record.insured || (viewType === "individuals" ? "Yes" : "1")),
+          source: String(record.source || record.dataSource || "Advisor Entered"),
+          statusGroup,
+          priority: normalizePriority(record.priority),
+          coverageAmount: Number(record.coverageAmount || 0),
+          coverageGap: Number(record.coverageGap || 0)
+        };
+      });
   }
 
   function getClientRecordsStorageKey() {
@@ -2216,15 +2232,14 @@
   }
 
   function renderClientRow(record, isSelected) {
-    const avatarClass = getAvatarClass(record.lastName);
     const clientStatus = getClientStatusDisplay(record.statusGroup);
     const priority = normalizePriority(record.priority);
 
     return `
-      <div class="client-table" role="row">
+      <div class="client-table client-table-clickable" role="row" tabindex="0" data-client-open="${record.id}">
         <div class="client-table-cell client-table-cell-check"><input type="checkbox" aria-label="Select ${record.displayName}" data-client-checkbox="${record.id}" ${isSelected ? "checked" : ""}></div>
         <div class="client-table-cell client-table-cell-client">
-          <span class="client-avatar ${avatarClass}">${getInitials(record.displayName)}</span>
+          <span class="client-avatar" style="background: ${getAvatarBackground(record.age, record.dateOfBirth)};">${getInitials(record.displayName)}</span>
           <div>
             <strong>${record.displayName}</strong>
             <span>${record.summary}</span>
@@ -2485,16 +2500,51 @@
       .join("") || "CL";
   }
 
-  function getAvatarClass(lastName) {
-    const classes = [
-      "client-avatar-amber",
-      "client-avatar-slate",
-      "client-avatar-green",
-      "client-avatar-blue",
-      "client-avatar-rose"
-    ];
-    const seed = String(lastName || "A").charCodeAt(0);
-    return classes[seed % classes.length];
+  function getAvatarAge(ageValue, dateOfBirthValue) {
+    const directAge = Number(String(ageValue || "").replace(/[^\d.]/g, ""));
+    if (Number.isFinite(directAge) && directAge >= 0) {
+      return Math.max(0, Math.min(100, directAge));
+    }
+
+    const birthDateValue = String(dateOfBirthValue || "").trim();
+    if (!birthDateValue) {
+      return null;
+    }
+
+    const calculatedAge = calculateAgeFromDate(birthDateValue);
+    return Number.isFinite(calculatedAge) ? Math.max(0, Math.min(100, calculatedAge)) : null;
+  }
+
+  function interpolateNumber(start, end, progress) {
+    return start + ((end - start) * progress);
+  }
+
+  function getAvatarHue(ageValue, dateOfBirthValue) {
+    const age = getAvatarAge(ageValue, dateOfBirthValue);
+    if (age === null) {
+      return 210;
+    }
+
+    if (age <= 18) {
+      return interpolateNumber(48, 60, age / 18);
+    }
+
+    if (age <= 30) {
+      return interpolateNumber(60, 210, (age - 18) / 12);
+    }
+
+    if (age <= 65) {
+      return interpolateNumber(210, 280, (age - 30) / 35);
+    }
+
+    return interpolateNumber(280, 360, (age - 65) / 35);
+  }
+
+  function getAvatarBackground(ageValue, dateOfBirthValue) {
+    const hue = getAvatarHue(ageValue, dateOfBirthValue);
+    const highlightHue = hue;
+    const shadowHue = (hue + 22) % 360;
+    return `linear-gradient(135deg, hsl(${highlightHue} 72% 66%), hsl(${shadowHue} 68% 44%))`;
   }
 
   function populateForm(form, values) {
@@ -2512,6 +2562,19 @@
 
   function loadJson(key) {
     const raw = localStorage.getItem(key);
+    if (!raw) {
+      return null;
+    }
+
+    try {
+      return JSON.parse(raw);
+    } catch (error) {
+      return null;
+    }
+  }
+
+  function loadJsonSession(key) {
+    const raw = sessionStorage.getItem(key);
     if (!raw) {
       return null;
     }
@@ -2577,6 +2640,191 @@
     return parts.length ? parts.join(" | ") : "Family profile pending";
   }
 
+  function saveClientCreationForm(form, feedback) {
+    const currentSession = getCurrentSession();
+    const today = formatDateInputValue(new Date());
+
+    setFormFeedback(feedback, "");
+
+    if (!form.reportValidity()) {
+      return false;
+    }
+
+    const formData = new FormData(form);
+    const records = getClientRecords();
+    const clientStage = String(formData.get("clientStatus") || "Prospect");
+    const statusGroup = mapClientStageToStatusGroup(clientStage);
+    const advisorySource = String(formData.get("acquisitionSource") || "").trim();
+    const advisorySourceOther = String(formData.get("acquisitionSourceOther") || "").trim();
+    const source = advisorySource === "Other" ? (advisorySourceOther || "Other") : (advisorySource || "Advisor Entered");
+    const coverageAmount = 0;
+    const coverageGap = 0;
+    const priority = normalizePriority(String(formData.get("advisoryPriority") || ""));
+    if (!priority) {
+      setFormFeedback(feedback, "Select a priority before continuing.");
+      return false;
+    }
+    const firstName = String(formData.get("firstName") || "").trim();
+    const preferredName = String(formData.get("preferredName") || "").trim();
+    const summary = String(formData.get("clientNotes") || "").trim() || "New client profile";
+    const lastName = String(formData.get("lastName") || "").trim();
+    const assignmentMode = String(formData.get("profileAssignmentMode") || "").trim();
+    const assignmentTargetId = String(formData.get("profileAssignmentTargetId") || "").trim();
+    const requestedAssignmentName = String(formData.get("profileAssignmentName") || "").trim();
+    const advisorName = String(formData.get("advisorName") || "").trim() || currentSession?.name || "";
+    const createdBy = currentSession?.name || "Advisor";
+    const dateProfileCreated = String(formData.get("dateProfileCreated") || today);
+    const lastUpdatedDate = String(formData.get("lastUpdatedDate") || today);
+    let householdId = "";
+    let householdName = "";
+    let profileGroupType = "";
+    let nextRecords = [...records];
+
+    if (!assignmentMode) {
+      setFormFeedback(feedback, "Select how this client should be assigned before continuing.");
+      return false;
+    }
+
+    if (assignmentMode === "existing-household" || assignmentMode === "existing-company") {
+      const expectedType = assignmentMode === "existing-company" ? "companies" : "households";
+      const existingProfile = nextRecords.find((record) => record.id === assignmentTargetId && record.viewType === expectedType);
+      if (!existingProfile) {
+        setFormFeedback(feedback, expectedType === "companies" ? "Select a valid company profile before saving." : "Select a valid household before saving.");
+        return false;
+      }
+
+      householdId = existingProfile.id;
+      householdName = existingProfile.displayName;
+      profileGroupType = expectedType === "companies" ? "company" : "household";
+      nextRecords = nextRecords.map((record) => {
+        if (record.id !== existingProfile.id) {
+          return record;
+        }
+
+        const currentCount = Number(record.insured || 0);
+        const nextCount = Number.isFinite(currentCount) ? currentCount + 1 : 1;
+        return {
+          ...record,
+          insured: String(nextCount),
+          lastReview: lastUpdatedDate,
+          statusGroup,
+          priority,
+          source,
+          lastUpdatedDate
+        };
+      });
+    } else if (assignmentMode === "create-household" || assignmentMode === "create-company") {
+      if (!requestedAssignmentName) {
+        setFormFeedback(feedback, assignmentMode === "create-company"
+          ? "Enter a company profile name before saving."
+          : "Enter a household name before saving.");
+        return false;
+      }
+
+      const isCompany = assignmentMode === "create-company";
+      householdName = isCompany ? formatCompanyDisplayName(requestedAssignmentName) : formatHouseholdDisplayName(requestedAssignmentName || lastName || firstName);
+      householdId = `${isCompany ? "co" : "hh"}-${Date.now()}`;
+      profileGroupType = isCompany ? "company" : "household";
+      const groupRecord = {
+        id: householdId,
+        viewType: isCompany ? "companies" : "households",
+        displayName: householdName,
+        lastName,
+        summary: isCompany ? "Company profile" : "Household profile",
+        caseRef: buildNextCaseRef(nextRecords),
+        lastReview: lastUpdatedDate,
+        insured: "1",
+        source,
+        statusGroup,
+        statusLabels: deriveStatusLabels(statusGroup, isCompany ? "company" : "household"),
+        priority,
+        coverageAmount,
+        coverageGap,
+        advisorName,
+        createdBy,
+        dateProfileCreated,
+        lastUpdatedDate,
+        householdId,
+        dataSource: source
+      };
+      nextRecords.unshift(groupRecord);
+    } else {
+      setFormFeedback(feedback, "Choose how this client should be assigned before saving.");
+      return false;
+    }
+
+    const record = {
+      id: `cl-${Date.now()}`,
+      viewType: "individuals",
+      displayName: `${preferredName || firstName} ${lastName}`.trim(),
+      firstName,
+      middleName: String(formData.get("middleName") || "").trim(),
+      lastName,
+      preferredName,
+      summary,
+      caseRef: buildNextCaseRef(nextRecords),
+      lastReview: lastUpdatedDate,
+      insured: "Yes",
+      source,
+      statusGroup,
+      statusLabels: deriveStatusLabels(statusGroup, "individual"),
+      priority,
+      coverageAmount,
+      coverageGap,
+      householdId,
+      householdName,
+      profileGroupType,
+      dateOfBirth: String(formData.get("dateOfBirth") || ""),
+      age: Number(formData.get("age") || 0),
+      targetRetirementAge: String(formData.get("targetRetirementAge") || "").trim(),
+      insuranceRatingSex: String(formData.get("insuranceRatingSex") || ""),
+      maritalStatus: String(formData.get("maritalStatus") || ""),
+      spouseDateOfBirth: String(formData.get("spouseDateOfBirth") || ""),
+      spouseAge: Number(formData.get("spouseAge") || 0),
+      householdRole: String(formData.get("householdRole") || ""),
+      hasDependents: String(formData.get("hasDependents") || "No"),
+      projectedDependents: String(formData.get("projectedDependents") || "No"),
+      projectedDependentsCount: Number(formData.get("projectedDependentsCount") || 0),
+      sameEducationFunding: String(formData.get("sameEducationFunding") || "Yes"),
+      projectedEducationFundingPerDependent: Number(formData.get("projectedEducationFundingPerDependent") || 0),
+      dependentsCount: Number(formData.get("dependentsCount") || 0),
+      youngestDependentAge: Number(formData.get("youngestDependentAge") || 0),
+      educationFundingPerDependent: Number(formData.get("educationFundingPerDependent") || 0),
+      emailAddress: String(formData.get("emailAddress") || "").trim(),
+      phoneNumber: String(formData.get("phoneNumber") || "").trim(),
+      preferredContactMethod: String(formData.get("preferredContactMethod") || ""),
+      streetAddress: String(formData.get("streetAddress") || "").trim(),
+      city: String(formData.get("city") || "").trim(),
+      state: String(formData.get("state") || "").trim(),
+      zipCode: String(formData.get("zipCode") || "").trim(),
+      country: String(formData.get("country") || "").trim(),
+      occupation: String(formData.get("occupation") || "").trim(),
+      employerName: String(formData.get("employerName") || "").trim(),
+      employmentStatus: String(formData.get("employmentStatus") || ""),
+      advisorName,
+      firmName: String(formData.get("firmName") || "").trim(),
+      dateProfileCreated,
+      lastUpdatedDate,
+      createdBy,
+      dataSource: source,
+      planningPriority: "",
+      clientStage,
+      clientNotes: String(formData.get("clientNotes") || "").trim()
+    };
+
+    nextRecords.unshift(record);
+    writeClientRecords(nextRecords);
+    sessionStorage.setItem(STORAGE_KEYS.pendingClientRecords, JSON.stringify([record]));
+    sessionStorage.setItem(STORAGE_KEYS.clientViewIntent, "individuals");
+    sessionStorage.setItem(STORAGE_KEYS.clientView, "individuals");
+    sessionStorage.setItem(STORAGE_KEYS.clientStatus, "all");
+    sessionStorage.setItem(STORAGE_KEYS.clientItemsShownReset, "true");
+    window.location.href = "clients.html";
+    return true;
+  }
+
+  window.saveLensClientCreationForm = saveClientCreationForm;
+
   function formatCurrency(value) {
     const number = Number(value);
     if (!number) {
@@ -2588,5 +2836,18 @@
       currency: "USD",
       maximumFractionDigits: 0
     }).format(number);
+  }
+
+  function formatClientDetailValue(value) {
+    if (value === null || value === undefined) {
+      return "Not provided";
+    }
+
+    if (typeof value === "number") {
+      return value ? String(value) : "Not provided";
+    }
+
+    const normalized = String(value).trim();
+    return normalized || "Not provided";
   }
 })();

@@ -236,5 +236,529 @@
       });
     })();
   </script>
+  <script>
+    (function () {
+      const rowsHost = document.getElementById("client-table-rows");
+      const emptyState = document.getElementById("client-empty-state");
+      const letterButtons = Array.from(document.querySelectorAll("[data-client-letter]"));
+      const viewButtons = Array.from(document.querySelectorAll("[data-client-view]"));
+      const statusButtons = Array.from(document.querySelectorAll("[data-client-status]"));
+      const searchField = document.querySelector(".client-table-search input");
+      const paginationHost = document.getElementById("client-pagination-numbers");
+      const prevPageButton = document.getElementById("client-prev-page");
+      const nextPageButton = document.getElementById("client-next-page");
+      const itemsDropdown = document.querySelector("[data-items-dropdown]");
+      const itemsTrigger = document.querySelector("[data-items-trigger]");
+      const itemsOptions = Array.from(document.querySelectorAll("[data-items-option]"));
+
+      if (!rowsHost) {
+        return;
+      }
+
+      const STORAGE_KEYS = {
+        authSession: "lipPlannerAuthSession",
+        clientRecords: "lensClientRecords",
+        pendingClientRecords: "lensPendingClientRecords"
+      };
+
+      let activeLetter = "all";
+      let activeView = "individuals";
+      let activeStatus = "all";
+      let itemsShown = 15;
+      let currentPage = 1;
+      let records = [];
+
+      function loadJson(source, key) {
+        try {
+          return JSON.parse(source.getItem(key) || "null");
+        } catch (error) {
+          return null;
+        }
+      }
+
+      function getStorageIdentity() {
+        const session = loadJson(localStorage, STORAGE_KEYS.authSession);
+        return session?.email ? String(session.email).trim().toLowerCase() : "guest";
+      }
+
+      function getRecordsStorageKey() {
+        return `${STORAGE_KEYS.clientRecords}:${getStorageIdentity()}`;
+      }
+
+      function normalizePriority(value) {
+        const normalized = String(value || "").trim().toLowerCase();
+        return ["low", "medium", "high"].includes(normalized) ? normalized : "";
+      }
+
+      function getPriorityDisplay(value) {
+        if (value === "high") {
+          return "High";
+        }
+        if (value === "medium") {
+          return "Medium";
+        }
+        if (value === "low") {
+          return "Low";
+        }
+        return "Select Priority";
+      }
+
+      function getClientStatusDisplay(value) {
+        if (value === "in-review") {
+          return "In Review";
+        }
+        if (value === "coverage-placed") {
+          return "Coverage Placed";
+        }
+        if (value === "closed") {
+          return "Closed";
+        }
+        return "Prospects";
+      }
+
+      function getInitials(name) {
+        return String(name || "")
+          .split(" ")
+          .filter(Boolean)
+          .slice(0, 2)
+          .map(function (part) { return part.charAt(0).toUpperCase(); })
+          .join("") || "CL";
+      }
+
+      function getAvatarAge(ageValue, dateOfBirthValue) {
+        const directAge = Number(String(ageValue || "").replace(/[^\d.]/g, ""));
+        if (Number.isFinite(directAge) && directAge >= 0) {
+          return Math.max(0, Math.min(100, directAge));
+        }
+
+        const birthDateValue = String(dateOfBirthValue || "").trim();
+        if (!birthDateValue) {
+          return null;
+        }
+
+        const today = new Date();
+        const birthDate = new Date(`${birthDateValue}T00:00:00`);
+        if (Number.isNaN(birthDate.getTime())) {
+          return null;
+        }
+
+        let age = today.getFullYear() - birthDate.getFullYear();
+        const monthDifference = today.getMonth() - birthDate.getMonth();
+        if (monthDifference < 0 || (monthDifference === 0 && today.getDate() < birthDate.getDate())) {
+          age -= 1;
+        }
+
+        return Number.isFinite(age) ? Math.max(0, Math.min(100, age)) : null;
+      }
+
+      function interpolateNumber(start, end, progress) {
+        return start + ((end - start) * progress);
+      }
+
+      function getAvatarHue(ageValue, dateOfBirthValue) {
+        const age = getAvatarAge(ageValue, dateOfBirthValue);
+        if (age === null) {
+          return 210;
+        }
+
+        if (age <= 18) {
+          return interpolateNumber(48, 60, age / 18);
+        }
+
+        if (age <= 30) {
+          return interpolateNumber(60, 210, (age - 18) / 12);
+        }
+
+        if (age <= 65) {
+          return interpolateNumber(210, 280, (age - 30) / 35);
+        }
+
+        return interpolateNumber(280, 360, (age - 65) / 35);
+      }
+
+      function getAvatarBackground(ageValue, dateOfBirthValue) {
+        const hue = getAvatarHue(ageValue, dateOfBirthValue);
+        const highlightHue = hue;
+        const shadowHue = (hue + 22) % 360;
+        return `linear-gradient(135deg, hsl(${highlightHue} 72% 66%), hsl(${shadowHue} 68% 44%))`;
+      }
+
+      function formatCurrencyCompact(value) {
+        const amount = Number(value || 0);
+        return new Intl.NumberFormat("en-US", {
+          style: "currency",
+          currency: "USD",
+          notation: amount >= 1000000 ? "compact" : "standard",
+          maximumFractionDigits: amount >= 1000000 ? 2 : 0
+        }).format(amount);
+      }
+
+      function formatDateForDirectory(value) {
+        if (!value) {
+          return "--";
+        }
+
+        const date = new Date(`${value}T00:00:00`);
+        if (Number.isNaN(date.getTime())) {
+          return value;
+        }
+
+        return `${String(date.getMonth() + 1).padStart(2, "0")}/${String(date.getDate()).padStart(2, "0")}/${date.getFullYear()}`;
+      }
+
+      function normalizeRecord(record, index) {
+        const preferredName = String(record.preferredName || "").trim();
+        const firstName = String(record.firstName || "").trim();
+        const lastName = String(record.lastName || "").trim();
+        const displayName = String(record.displayName || "").trim()
+          || `${preferredName || firstName} ${lastName}`.trim()
+          || `Client ${index + 1}`;
+
+        return {
+          ...record,
+          id: String(record.id || `cl-local-${index}`),
+          viewType: ["individuals", "households", "companies"].includes(String(record.viewType || "")) ? String(record.viewType) : "individuals",
+          displayName: displayName,
+          lastName: lastName,
+          summary: String(record.summary || record.clientNotes || "New client profile"),
+          caseRef: String(record.caseRef || ""),
+          lastReview: String(record.lastReview || record.lastUpdatedDate || record.dateProfileCreated || ""),
+          insured: String(record.insured || "Yes"),
+          source: String(record.source || record.dataSource || "Advisor Entered"),
+          statusGroup: ["prospects", "in-review", "coverage-placed", "closed"].includes(String(record.statusGroup || "")) ? String(record.statusGroup) : "prospects",
+          priority: normalizePriority(record.priority),
+          coverageAmount: Number(record.coverageAmount || 0),
+          coverageGap: Number(record.coverageGap || 0)
+        };
+      }
+
+      function loadRecords() {
+        const storageKey = getRecordsStorageKey();
+        const persisted = loadJson(localStorage, storageKey);
+        const pending = loadJson(sessionStorage, STORAGE_KEYS.pendingClientRecords);
+        const normalizedPersisted = Array.isArray(persisted) ? persisted.map(normalizeRecord) : [];
+        const normalizedPending = Array.isArray(pending) ? pending.map(normalizeRecord) : [];
+        const persistedIds = new Set(normalizedPersisted.map(function (record) { return record.id; }));
+        const merged = normalizedPending
+          .filter(function (record) { return !persistedIds.has(record.id); })
+          .concat(normalizedPersisted);
+
+        localStorage.setItem(storageKey, JSON.stringify(merged));
+        sessionStorage.removeItem(STORAGE_KEYS.pendingClientRecords);
+        return merged;
+      }
+
+      function persistRecords(nextRecords) {
+        localStorage.setItem(getRecordsStorageKey(), JSON.stringify(nextRecords));
+        records = nextRecords.map(normalizeRecord);
+      }
+
+      function buildStatusCounts(sourceRecords) {
+        return sourceRecords
+          .filter(function (record) { return record.viewType === activeView; })
+          .reduce(function (counts, record) {
+            counts.all += 1;
+            counts[record.statusGroup] = (counts[record.statusGroup] || 0) + 1;
+            return counts;
+          }, { all: 0, prospects: 0, "in-review": 0, "coverage-placed": 0, closed: 0 });
+      }
+
+      function getLastInitial(lastName) {
+        return String(lastName || "").trim().charAt(0).toUpperCase();
+      }
+
+      function getFilteredRecords() {
+        const query = String(searchField?.value || "").trim().toLowerCase();
+        return records.filter(function (record) {
+          const matchesView = record.viewType === activeView;
+          const matchesLetter = activeLetter === "all" || getLastInitial(record.lastName) === activeLetter;
+          const matchesStatus = activeStatus === "all" || record.statusGroup === activeStatus;
+          const matchesSearch = !query
+            || String(record.displayName || "").toLowerCase().includes(query)
+            || String(record.summary || "").toLowerCase().includes(query)
+            || String(record.caseRef || "").toLowerCase().includes(query);
+
+          return matchesView && matchesLetter && matchesStatus && matchesSearch;
+        });
+      }
+
+      function syncStatusButtons() {
+        const counts = buildStatusCounts(records);
+        statusButtons.forEach(function (button) {
+          button.classList.toggle("is-active", button.dataset.clientStatus === activeStatus);
+          const counter = button.querySelector("[data-status-count]");
+          if (counter) {
+            counter.textContent = String(counts[button.dataset.clientStatus] || 0);
+          }
+        });
+      }
+
+      function syncViewButtons() {
+        viewButtons.forEach(function (button) {
+          button.classList.toggle("is-active", button.dataset.clientView === activeView);
+        });
+      }
+
+      function syncLetterButtons() {
+        letterButtons.forEach(function (button) {
+          button.classList.toggle("is-active", button.dataset.clientLetter === activeLetter);
+        });
+      }
+
+      function syncItemsShown() {
+        if (itemsTrigger) {
+          itemsTrigger.textContent = `Items Shown (${itemsShown})`;
+        }
+        itemsOptions.forEach(function (button) {
+          button.classList.toggle("is-active", Number(button.dataset.itemsOption) === itemsShown);
+        });
+      }
+
+      function renderPagination(totalPages) {
+        if (!paginationHost || !prevPageButton || !nextPageButton) {
+          return;
+        }
+
+        prevPageButton.disabled = currentPage <= 1;
+        nextPageButton.disabled = currentPage >= totalPages;
+        paginationHost.innerHTML = "";
+
+        for (let page = 1; page <= totalPages; page += 1) {
+          const button = document.createElement("button");
+          button.type = "button";
+          button.className = "client-page-number";
+          button.textContent = String(page);
+          if (page === currentPage) {
+            button.classList.add("is-active");
+          }
+          button.addEventListener("click", function () {
+            currentPage = page;
+            renderDirectory();
+          });
+          paginationHost.appendChild(button);
+        }
+      }
+
+      function renderRow(record) {
+        const priority = normalizePriority(record.priority);
+        return `
+          <div class="client-table client-table-clickable" role="row" tabindex="0" data-client-open="${record.id}">
+            <div class="client-table-cell client-table-cell-check"><input type="checkbox" aria-label="Select ${record.displayName}"></div>
+            <div class="client-table-cell client-table-cell-client">
+              <span class="client-avatar" style="background: ${getAvatarBackground(record.age, record.dateOfBirth)};">${getInitials(record.displayName)}</span>
+              <div>
+                <strong>${record.displayName}</strong>
+                <span>${record.summary}</span>
+              </div>
+            </div>
+            <div class="client-table-cell">${record.caseRef || "--"}</div>
+            <div class="client-table-cell client-table-cell-last-review">${formatDateForDirectory(record.lastReview)}</div>
+            <div class="client-table-cell client-table-cell-insured-value">${record.insured}</div>
+            <div class="client-table-cell client-table-cell-source-value">${record.source}</div>
+            <div class="client-table-cell client-table-cell-status-value">${getClientStatusDisplay(record.statusGroup)}</div>
+            <div class="client-table-cell client-table-cell-coverage-amount-value">${formatCurrencyCompact(record.coverageAmount)}</div>
+            <div class="client-table-cell client-table-cell-value client-table-cell-priority-value">
+              <div class="client-priority-dropdown" data-priority-dropdown="${record.id}">
+                <button class="client-priority-button ${priority ? `client-priority-button-${priority}` : "client-priority-button-unset"}" type="button" data-priority-trigger aria-expanded="false">
+                  ${getPriorityDisplay(priority)}
+                </button>
+                <div class="client-priority-menu">
+                  <button class="client-priority-option client-priority-option-low ${priority === "low" ? "is-active" : ""}" type="button" data-priority-record="${record.id}" data-priority-option="low">Low</button>
+                  <button class="client-priority-option client-priority-option-medium ${priority === "medium" ? "is-active" : ""}" type="button" data-priority-record="${record.id}" data-priority-option="medium">Medium</button>
+                  <button class="client-priority-option client-priority-option-high ${priority === "high" ? "is-active" : ""}" type="button" data-priority-record="${record.id}" data-priority-option="high">High</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      function closePriorityDropdowns() {
+        rowsHost.querySelectorAll("[data-priority-dropdown].is-open").forEach(function (dropdown) {
+          dropdown.classList.remove("is-open");
+          dropdown.querySelector("[data-priority-trigger]")?.setAttribute("aria-expanded", "false");
+          dropdown.closest(".client-table")?.classList.remove("is-priority-open");
+        });
+      }
+
+      function updateRecordPriority(recordId, priority) {
+        const nextRecords = loadRecords().map(function (record, index) {
+          const normalized = normalizeRecord(record, index);
+          if (normalized.id !== recordId) {
+            return normalized;
+          }
+
+          return {
+            ...normalized,
+            priority: normalizePriority(priority)
+          };
+        });
+
+        persistRecords(nextRecords);
+      }
+
+      function bindPriorityDropdowns() {
+        rowsHost.querySelectorAll("[data-priority-trigger]").forEach(function (button) {
+          button.addEventListener("click", function (event) {
+            event.stopPropagation();
+            const dropdown = button.closest("[data-priority-dropdown]");
+            const row = button.closest(".client-table");
+            if (!dropdown) {
+              return;
+            }
+
+            const willOpen = !dropdown.classList.contains("is-open");
+            closePriorityDropdowns();
+
+            if (!willOpen) {
+              return;
+            }
+
+            dropdown.classList.add("is-open");
+            button.setAttribute("aria-expanded", "true");
+            row?.classList.add("is-priority-open");
+          });
+        });
+
+        rowsHost.querySelectorAll("[data-priority-option]").forEach(function (option) {
+          option.addEventListener("click", function (event) {
+            event.stopPropagation();
+            const recordId = option.dataset.priorityRecord;
+            const priority = normalizePriority(option.dataset.priorityOption);
+            if (!recordId || !priority) {
+              return;
+            }
+
+            updateRecordPriority(recordId, priority);
+            renderDirectory();
+          });
+        });
+      }
+
+      function bindRowClicks() {
+        rowsHost.querySelectorAll("[data-client-open]").forEach(function (row) {
+          row.addEventListener("click", function (event) {
+            if (event.target.closest("input") || event.target.closest("[data-priority-dropdown]")) {
+              return;
+            }
+            window.location.href = `client-detail.html?id=${encodeURIComponent(row.dataset.clientOpen)}`;
+          });
+
+          row.addEventListener("keydown", function (event) {
+            if (event.key !== "Enter" && event.key !== " ") {
+              return;
+            }
+            if (event.target.closest("input") || event.target.closest("[data-priority-dropdown]")) {
+              return;
+            }
+            event.preventDefault();
+            window.location.href = `client-detail.html?id=${encodeURIComponent(row.dataset.clientOpen)}`;
+          });
+        });
+      }
+
+      function renderDirectory() {
+        records = loadRecords();
+        const filtered = getFilteredRecords();
+        const totalPages = Math.max(1, Math.ceil(filtered.length / itemsShown));
+        currentPage = Math.min(currentPage, totalPages);
+        const startIndex = (currentPage - 1) * itemsShown;
+        const visibleRecords = filtered.slice(startIndex, startIndex + itemsShown);
+
+        rowsHost.innerHTML = visibleRecords.map(renderRow).join("");
+        if (emptyState) {
+          emptyState.hidden = visibleRecords.length > 0;
+        }
+
+        bindPriorityDropdowns();
+        bindRowClicks();
+        syncStatusButtons();
+        syncViewButtons();
+        syncLetterButtons();
+        syncItemsShown();
+        renderPagination(totalPages);
+      }
+
+      letterButtons.forEach(function (button) {
+        button.addEventListener("click", function () {
+          activeLetter = button.dataset.clientLetter || "all";
+          currentPage = 1;
+          renderDirectory();
+        });
+      });
+
+      viewButtons.forEach(function (button) {
+        button.addEventListener("click", function () {
+          activeView = button.dataset.clientView || "individuals";
+          currentPage = 1;
+          renderDirectory();
+        });
+      });
+
+      statusButtons.forEach(function (button) {
+        button.addEventListener("click", function () {
+          activeStatus = button.dataset.clientStatus || "all";
+          currentPage = 1;
+          renderDirectory();
+        });
+      });
+
+      searchField?.addEventListener("input", function () {
+        currentPage = 1;
+        renderDirectory();
+      });
+
+      itemsOptions.forEach(function (button) {
+        button.addEventListener("click", function () {
+          itemsShown = Number(button.dataset.itemsOption) || 15;
+          currentPage = 1;
+          renderDirectory();
+          if (itemsDropdown) {
+            itemsDropdown.classList.remove("is-open");
+          }
+          if (itemsTrigger) {
+            itemsTrigger.setAttribute("aria-expanded", "false");
+            itemsTrigger.blur();
+          }
+        });
+      });
+
+      itemsTrigger?.addEventListener("click", function (event) {
+        event.stopPropagation();
+        const isOpen = itemsDropdown?.classList.toggle("is-open");
+        itemsTrigger.setAttribute("aria-expanded", String(Boolean(isOpen)));
+      });
+
+      prevPageButton?.addEventListener("click", function () {
+        if (currentPage > 1) {
+          currentPage -= 1;
+          renderDirectory();
+        }
+      });
+
+      nextPageButton?.addEventListener("click", function () {
+        const totalPages = Math.max(1, Math.ceil(getFilteredRecords().length / itemsShown));
+        if (currentPage < totalPages) {
+          currentPage += 1;
+          renderDirectory();
+        }
+      });
+
+      document.addEventListener("click", function (event) {
+        if (!event.target.closest("[data-items-dropdown]")) {
+          itemsDropdown?.classList.remove("is-open");
+          itemsTrigger?.setAttribute("aria-expanded", "false");
+        }
+
+        if (event.target.closest("[data-priority-dropdown]")) {
+          return;
+        }
+
+        closePriorityDropdowns();
+      });
+
+      renderDirectory();
+    })();
+  </script>
 </body>
 </html>

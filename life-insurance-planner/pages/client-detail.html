@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Client Detail | Advisor Planning Suite</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@600&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../styles.css">
+</head>
+<body class="home-page prospect-page profile-creation-page">
+  <header class="site-header">
+    <div class="site-header-inner">
+      <a class="site-brand" href="../index.html">
+        <span class="site-brand-mark">LENS</span>
+      </a>
+      <div class="site-header-actions">
+        <form class="site-search has-icon" role="search">
+          <input type="search" placeholder="Search" data-i18n-placeholder="search.placeholder">
+        </form>
+        <nav class="site-nav" aria-label="Main navigation">
+          <div class="site-dropdown">
+            <button class="site-nav-link site-dropdown-toggle is-active" type="button" aria-expanded="true" data-i18n="nav.records">Records</button>
+            <div class="site-dropdown-menu">
+              <a class="site-dropdown-link is-active" href="clients.html" data-i18n="nav.clients" data-client-directory-nav>Clients</a>
+            </div>
+          </div>
+          <a class="site-nav-link" href="resources.html" data-i18n="nav.resources">Resources</a>
+          <div class="site-dropdown">
+            <button class="site-nav-link site-dropdown-toggle" type="button" aria-expanded="false" data-i18n="nav.financialProducts">Financial Products</button>
+            <div class="site-dropdown-menu">
+              <a class="site-dropdown-link" href="lens.html">LENS Analysis</a>
+              <a class="site-dropdown-link" href="strategy-builder.html">Strategy Builder</a>
+              <a class="site-dropdown-link" href="policy-web.html">Policy Web</a>
+            </div>
+          </div>
+          <div class="language-slot" data-language-slot>
+            <div class="language-dropdown">
+              <button class="language-trigger" type="button" aria-label="Language">
+                <img class="language-icon-image" src="../Images/Untitled design.png" alt="" aria-hidden="true">
+              </button>
+            </div>
+          </div>
+          <div class="account-slot" data-account-slot>
+            <div class="account-dropdown">
+              <a class="account-profile account-dropdown-toggle account-profile-signed-out" href="sign-in.html">
+                <span class="account-icon" aria-hidden="true">
+                  <span class="account-icon-head"></span>
+                  <span class="account-icon-body"></span>
+                </span>
+                <span class="sr-only">Open sign in menu</span>
+              </a>
+            </div>
+          </div>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <main class="home-shell app-home-shell prospect-shell">
+    <section class="prospect-stage">
+      <section class="prospect-empty-panel client-detail-panel">
+        <div class="prospect-panel-header client-detail-header">
+          <a class="prospect-return-button" href="clients.html">Return to Client Directory</a>
+          <div>
+            <h1 data-client-detail-title>Client Detail</h1>
+            <p data-client-detail-subtitle>Loading client record...</p>
+          </div>
+        </div>
+        <div class="client-detail-sections" data-client-detail-host></div>
+      </section>
+    </section>
+  </main>
+
+  <script src="../data.js"></script>
+  <script src="../calculations.js"></script>
+  <script src="../charts.js"></script>
+  <script src="../app.js"></script>
+  <script>
+    (function () {
+      const host = document.querySelector("[data-client-detail-host]");
+      const title = document.querySelector("[data-client-detail-title]");
+      const subtitle = document.querySelector("[data-client-detail-subtitle]");
+
+      if (!host || !title || !subtitle) {
+        return;
+      }
+
+      const STORAGE_KEYS = {
+        authSession: "lipPlannerAuthSession",
+        clientRecords: "lensClientRecords"
+      };
+
+      function loadJson(source, key) {
+        try {
+          return JSON.parse(source.getItem(key) || "null");
+        } catch (error) {
+          return null;
+        }
+      }
+
+      function getStorageIdentity() {
+        const session = loadJson(localStorage, STORAGE_KEYS.authSession);
+        return session?.email ? String(session.email).trim().toLowerCase() : "guest";
+      }
+
+      function getRecordsStorageKey() {
+        return `${STORAGE_KEYS.clientRecords}:${getStorageIdentity()}`;
+      }
+
+      function escapeHtml(value) {
+        return String(value)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#39;");
+      }
+
+      function normalizePriority(value) {
+        const normalized = String(value || "").trim().toLowerCase();
+        return ["low", "medium", "high"].includes(normalized) ? normalized : "";
+      }
+
+      function getPriorityDisplay(value) {
+        if (value === "high") {
+          return "High";
+        }
+        if (value === "medium") {
+          return "Medium";
+        }
+        if (value === "low") {
+          return "Low";
+        }
+        return "Not provided";
+      }
+
+      function getClientStatusDisplay(value) {
+        if (value === "in-review") {
+          return "In Review";
+        }
+        if (value === "coverage-placed") {
+          return "Coverage Placed";
+        }
+        if (value === "closed") {
+          return "Closed";
+        }
+        return "Prospect";
+      }
+
+      function formatDate(value) {
+        if (!value) {
+          return "Not provided";
+        }
+
+        const date = new Date(`${value}T00:00:00`);
+        if (Number.isNaN(date.getTime())) {
+          return String(value);
+        }
+
+        return `${String(date.getMonth() + 1).padStart(2, "0")}/${String(date.getDate()).padStart(2, "0")}/${date.getFullYear()}`;
+      }
+
+      function formatCurrency(value) {
+        const number = Number(String(value || "").replace(/,/g, ""));
+        if (!number) {
+          return "Not provided";
+        }
+
+        return new Intl.NumberFormat("en-US", {
+          style: "currency",
+          currency: "USD",
+          maximumFractionDigits: 0
+        }).format(number);
+      }
+
+      function formatValue(value) {
+        if (value === null || value === undefined) {
+          return "Not provided";
+        }
+
+        const normalized = String(value).trim();
+        return normalized || "Not provided";
+      }
+
+      function getRecord() {
+        const params = new URLSearchParams(window.location.search);
+        const recordId = String(params.get("id") || "").trim();
+        const records = loadJson(localStorage, getRecordsStorageKey());
+        if (!recordId || !Array.isArray(records)) {
+          return null;
+        }
+
+        return records.find(function (item) {
+          return String(item?.id || "").trim() === recordId;
+        }) || null;
+      }
+
+      function renderSection(sectionTitle, fields) {
+        return `
+          <section class="client-detail-card">
+            <div class="client-detail-card-header">
+              <h2>${escapeHtml(sectionTitle)}</h2>
+            </div>
+            <div class="client-detail-grid">
+              ${fields.map(function (field) {
+                return `
+                  <div class="client-detail-field">
+                    <span class="client-detail-label">${escapeHtml(field.label)}</span>
+                    <span class="client-detail-value">${escapeHtml(field.value)}</span>
+                  </div>
+                `;
+              }).join("")}
+            </div>
+          </section>
+        `;
+      }
+
+      const record = getRecord();
+
+      if (!record) {
+        title.textContent = "Client Not Found";
+        subtitle.textContent = "The requested client record is not available in this advisor workspace.";
+        host.innerHTML = `
+          <section class="client-detail-card">
+            <p class="client-detail-empty">No saved client matched this record id.</p>
+          </section>
+        `;
+        return;
+      }
+
+      title.textContent = formatValue(record.displayName);
+      subtitle.textContent = `${getClientStatusDisplay(record.statusGroup)} | ${formatValue(record.caseRef)}`;
+
+      const sections = [
+        {
+          title: "Overview",
+          fields: [
+            { label: "Client", value: formatValue(record.displayName) },
+            { label: "Case Ref", value: formatValue(record.caseRef) },
+            { label: "Client Status", value: getClientStatusDisplay(record.statusGroup) },
+            { label: "Priority", value: getPriorityDisplay(normalizePriority(record.priority)) },
+            { label: "Source", value: formatValue(record.source) },
+            { label: "Last Review", value: formatDate(record.lastReview || record.lastUpdatedDate || record.dateProfileCreated) },
+            { label: "Coverage Amount", value: formatCurrency(record.coverageAmount) },
+            { label: "Coverage Gap", value: formatCurrency(record.coverageGap) }
+          ]
+        },
+        {
+          title: "Profile Information",
+          fields: [
+            { label: "First Name", value: formatValue(record.firstName) },
+            { label: "Middle Name", value: formatValue(record.middleName) },
+            { label: "Last Name", value: formatValue(record.lastName) },
+            { label: "Preferred Name", value: formatValue(record.preferredName) },
+            { label: "Date of Birth", value: formatDate(record.dateOfBirth) },
+            { label: "Age", value: formatValue(record.age) },
+            { label: "Insurance Rating Sex", value: formatValue(record.insuranceRatingSex) },
+            { label: "Marital Status", value: formatValue(record.maritalStatus) },
+            { label: "Spouse/Partner Date of Birth", value: formatDate(record.spouseDateOfBirth) },
+            { label: "Spouse/Partner Age", value: formatValue(record.spouseAge) }
+          ]
+        },
+        {
+          title: "Contact",
+          fields: [
+            { label: "Email Address", value: formatValue(record.emailAddress) },
+            { label: "Phone Number", value: formatValue(record.phoneNumber) },
+            { label: "Preferred Contact Method", value: formatValue(record.preferredContactMethod) },
+            { label: "Street Address", value: formatValue(record.streetAddress) },
+            { label: "City", value: formatValue(record.city) },
+            { label: "State", value: formatValue(record.state) },
+            { label: "ZIP Code", value: formatValue(record.zipCode) },
+            { label: "Country", value: formatValue(record.country) }
+          ]
+        },
+        {
+          title: "Household and Advisory",
+          fields: [
+            { label: "Household / Company Role", value: formatValue(record.householdRole) },
+            { label: "Assignment Name", value: formatValue(record.householdName) },
+            { label: "Assignment Type", value: formatValue(record.profileGroupType) },
+            { label: "Dependents / Children", value: formatValue(record.hasDependents) },
+            { label: "Amount of Dependents / Children", value: formatValue(record.dependentsCount) },
+            { label: "Age of Youngest Dependent / Child", value: formatValue(record.youngestDependentAge) },
+            { label: "Education Funding (Per Dependent)", value: formatCurrency(record.educationFundingPerDependent) },
+            { label: "Projected Dependents / Children", value: formatValue(record.projectedDependents) },
+            { label: "Projected Dependents Count", value: formatValue(record.projectedDependentsCount) },
+            { label: "Projected Education Funding", value: formatCurrency(record.projectedEducationFundingPerDependent) },
+            { label: "Advisor Name", value: formatValue(record.advisorName) },
+            { label: "Firm Name", value: formatValue(record.firmName) },
+            { label: "Client Notes", value: formatValue(record.clientNotes) }
+          ]
+        }
+      ];
+
+      host.innerHTML = sections.map(function (section) {
+        return renderSection(section.title, section.fields);
+      }).join("");
+    })();
+  </script>
+</body>
+</html>
