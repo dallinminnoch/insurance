@@ -2428,8 +2428,8 @@ select option:disabled {
 }
 
 .client-add-modal-option {
-  justify-content: space-between;
-  gap: 0.75rem;
+  position: relative;
+  padding-right: 2.1rem;
 }
 
 .client-add-modal-option-label {
@@ -2438,11 +2438,15 @@ select option:disabled {
 }
 
 .client-add-modal-help {
+  position: absolute;
+  right: 0.9rem;
+  top: 50%;
+  transform: translateY(-50%);
   flex: 0 0 auto;
   width: 1.15rem;
   height: 1.15rem;
   font-size: 0.72rem;
-  margin-left: 0.1rem;
+  margin-left: 0;
 }
 
 .client-add-modal-secondary:hover,
