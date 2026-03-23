@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -9,7 +9,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@600&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../styles.css">
 </head>
-<body class="home-page prospect-page profile-creation-page">
+<body class="home-page prospect-page profile-creation-page client-detail-page">
   <header class="site-header">
     <div class="site-header-inner">
       <a class="site-brand" href="../index.html">
@@ -61,13 +61,6 @@
   <main class="home-shell app-home-shell prospect-shell">
     <section class="prospect-stage">
       <section class="prospect-empty-panel client-detail-panel">
-        <div class="prospect-panel-header client-detail-header">
-          <a class="prospect-return-button" href="clients.html">Return to Client Directory</a>
-          <div>
-            <h1 data-client-detail-title>Client Detail</h1>
-            <p data-client-detail-subtitle>Loading client record...</p>
-          </div>
-        </div>
         <div class="client-detail-sections" data-client-detail-host></div>
       </section>
     </section>
@@ -80,10 +73,8 @@
   <script>
     (function () {
       const host = document.querySelector("[data-client-detail-host]");
-      const title = document.querySelector("[data-client-detail-title]");
-      const subtitle = document.querySelector("[data-client-detail-subtitle]");
 
-      if (!host || !title || !subtitle) {
+      if (!host) {
         return;
       }
 
@@ -184,6 +175,65 @@
         return normalized || "Not provided";
       }
 
+      function formatTitleCaseValue(value) {
+        const normalized = formatValue(value);
+        if (normalized === "Not provided") {
+          return normalized;
+        }
+        return normalized
+          .split(/[\s/-]+/)
+          .map(function (part) {
+            return part ? part.charAt(0).toUpperCase() + part.slice(1).toLowerCase() : part;
+          })
+          .join(" ");
+      }
+
+      function getInitials(value) {
+        const words = String(value || "").trim().split(/\s+/).filter(Boolean);
+        if (!words.length) {
+          return "CL";
+        }
+        return words.slice(0, 2).map(function (word) {
+          return word.charAt(0).toUpperCase();
+        }).join("");
+      }
+
+      function getAccountMilestones(record) {
+        const hasProfile = Boolean(String(record.id || "").trim());
+        const hasPreliminary = Boolean(record.preliminaryUnderwritingCompleted);
+        const hasPmi = Boolean(record.pmiCompleted);
+        const hasAnalysis = Boolean(record.analysisCompleted) || record.statusGroup === "coverage-placed" || record.statusGroup === "closed";
+        const hasCoveragePlaced = record.statusGroup === "coverage-placed" || record.statusGroup === "closed";
+
+        return [
+          { label: "Profile", complete: hasProfile, color: "#2f6b52" },
+          { label: "Prelim UW", complete: hasPreliminary, color: "#3b82f6" },
+          { label: "PMI", complete: hasPmi, color: "#6366f1" },
+          { label: "Analysis", complete: hasAnalysis, color: "#8b5cf6" },
+          { label: "Coverage", complete: hasCoveragePlaced, color: "#dc2626" }
+        ];
+      }
+
+      function calculateProfileCompletion(record) {
+        const milestones = getAccountMilestones(record);
+        const completed = milestones.filter(function (milestone) {
+          return milestone.complete;
+        }).length;
+        return Math.round((completed / milestones.length) * 100);
+      }
+
+      function buildDonutGradient(milestones) {
+        const inactiveColor = "rgba(213, 221, 232, 0.58)";
+        const segmentSize = 100 / milestones.length;
+
+        return milestones.map(function (milestone, index) {
+          const start = (segmentSize * index).toFixed(2);
+          const end = (segmentSize * (index + 1)).toFixed(2);
+          const color = milestone.complete ? milestone.color : inactiveColor;
+          return `${color} ${start}% ${end}%`;
+        }).join(", ");
+      }
+
       function getRecord() {
         const params = new URLSearchParams(window.location.search);
         const recordId = String(params.get("id") || "").trim();
@@ -217,11 +267,232 @@
         `;
       }
 
+      function renderSummaryCard(title, items) {
+        return `
+          <section class="client-detail-card client-detail-card-compact">
+            <div class="client-detail-card-header">
+              <h2>${escapeHtml(title)}</h2>
+            </div>
+            <div class="client-summary-list">
+              ${items.map(function (item) {
+                return `
+                  <div class="client-summary-item">
+                    <span class="client-summary-label">${escapeHtml(item.label)}</span>
+                    <span class="client-summary-value">${escapeHtml(item.value)}</span>
+                  </div>
+                `;
+              }).join("")}
+            </div>
+          </section>
+        `;
+      }
+
+      function renderChecklistCard(title, items) {
+        return `
+          <section class="client-detail-card client-detail-card-compact">
+            <div class="client-detail-card-header">
+              <h2>${escapeHtml(title)}</h2>
+            </div>
+            <div class="client-checklist">
+              ${items.map(function (item) {
+                return `
+                  <div class="client-checklist-item ${item.complete ? "is-complete" : "is-incomplete"}">
+                    <span class="client-checklist-mark" aria-hidden="true">${item.complete ? "✓" : "○"}</span>
+                    <div class="client-checklist-copy">
+                      <strong>${escapeHtml(item.label)}</strong>
+                      <span>${escapeHtml(item.detail)}</span>
+                    </div>
+                  </div>
+                `;
+              }).join("")}
+            </div>
+          </section>
+        `;
+      }
+
+      function renderStatCard(title, value, meta) {
+        return `
+          <section class="client-detail-card client-detail-stat-card">
+            <div class="client-detail-stat-header">
+              <span>${escapeHtml(title)}</span>
+              <strong>${escapeHtml(value)}</strong>
+            </div>
+            <p>${escapeHtml(meta)}</p>
+          </section>
+        `;
+      }
+
+      function renderProfile(record) {
+        const status = getClientStatusDisplay(record.statusGroup);
+        const priority = getPriorityDisplay(normalizePriority(record.priority));
+        const householdName = formatValue(record.householdName);
+        const subtitleParts = [status, formatValue(record.caseRef)];
+        const householdDisplay = householdName === "Not provided" ? "No household linked" : householdName;
+        const milestones = getAccountMilestones(record);
+        const completion = calculateProfileCompletion(record);
+        const donutGradient = buildDonutGradient(milestones);
+        const preliminaryStatus = record.preliminaryUnderwritingCompleted
+          ? `Saved ${formatDate(record.preliminaryUnderwriting?.savedAt)}`
+          : "Not linked to this profile";
+        const pmiStatus = record.pmiCompleted
+          ? `Saved ${formatDate(record.protectionModeling?.savedAt)}`
+          : "Not linked to this profile";
+
+        return `
+          <div class="client-profile-shell">
+            <aside class="client-profile-sidebar">
+              <a class="client-profile-backlink" href="clients.html">
+                <span>Return to Client Directory</span>
+              </a>
+              <section class="client-profile-sidebar-card">
+                <div class="client-profile-avatar-wrap">
+                  <div class="client-profile-donut-map">
+                    <div class="client-detail-avatar client-detail-avatar-progress" style="--profile-completion:${completion}%; --profile-donut:${donutGradient};">
+                      <div class="client-detail-avatar-core">${escapeHtml(getInitials(record.displayName))}</div>
+                    </div>
+                    <div class="client-profile-callout client-profile-callout-profile ${milestones[0].complete ? "is-complete" : "is-pending"}">
+                      <span class="client-profile-callout-line" aria-hidden="true"></span>
+                      <span class="client-profile-callout-dot" style="--milestone-color:${milestones[0].color};" aria-hidden="true"></span>
+                      <span class="client-profile-callout-label">Profile Created</span>
+                    </div>
+                    <div class="client-profile-callout client-profile-callout-prelim ${milestones[1].complete ? "is-complete" : "is-pending"}">
+                      <span class="client-profile-callout-line" aria-hidden="true"></span>
+                      <span class="client-profile-callout-dot" style="--milestone-color:${milestones[1].color};" aria-hidden="true"></span>
+                      <span class="client-profile-callout-label">Preliminary Underwriting</span>
+                    </div>
+                    <div class="client-profile-callout client-profile-callout-pmi ${milestones[2].complete ? "is-complete" : "is-pending"}">
+                      <span class="client-profile-callout-line" aria-hidden="true"></span>
+                      <span class="client-profile-callout-dot" style="--milestone-color:${milestones[2].color};" aria-hidden="true"></span>
+                      <span class="client-profile-callout-label">Protection Modeling Inputs</span>
+                    </div>
+                    <div class="client-profile-callout client-profile-callout-analysis ${milestones[3].complete ? "is-complete" : "is-pending"}">
+                      <span class="client-profile-callout-line" aria-hidden="true"></span>
+                      <span class="client-profile-callout-dot" style="--milestone-color:${milestones[3].color};" aria-hidden="true"></span>
+                      <span class="client-profile-callout-label">Analysis Complete</span>
+                    </div>
+                    <div class="client-profile-callout client-profile-callout-coverage ${milestones[4].complete ? "is-complete" : "is-pending"}">
+                      <span class="client-profile-callout-line" aria-hidden="true"></span>
+                      <span class="client-profile-callout-dot" style="--milestone-color:${milestones[4].color};" aria-hidden="true"></span>
+                      <span class="client-profile-callout-label">Coverage Placed</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="client-profile-sidebar-copy">
+                  <h2>${escapeHtml(formatValue(record.displayName))}</h2>
+                  <p>${escapeHtml([
+                    formatValue(record.age),
+                    formatValue(record.insuranceRatingSex),
+                    formatValue(record.city),
+                    formatValue(record.state)
+                  ].filter(function (value) { return value !== "Not provided"; }).join(" â€¢ ") || subtitleParts.join(" | "))}</p>
+                  <p class="client-profile-completion-copy">${escapeHtml(`${completion}% account complete`)}</p>
+                </div>
+                <div class="client-profile-contact-list">
+                  <div class="client-profile-contact-item">
+                    <span class="client-profile-contact-label"><span class="client-profile-contact-icon" aria-hidden="true"><svg viewBox="0 0 16 16" fill="none"><path d="M5.1 2.9 3.9 4.1a1.25 1.25 0 0 0-.29 1.4c.63 1.42 1.57 2.76 2.82 4.01 1.25 1.25 2.59 2.19 4.01 2.82a1.25 1.25 0 0 0 1.4-.29l1.2-1.2a.88.88 0 0 0-.08-1.31L11.6 8.47a.9.9 0 0 0-1.02-.08l-.7.42a.6.6 0 0 1-.63.03 7.2 7.2 0 0 1-1.38-1.12 7.2 7.2 0 0 1-1.12-1.38.6.6 0 0 1 .03-.63l.42-.7a.9.9 0 0 0-.08-1.02L6.35 2.97a.88.88 0 0 0-1.25-.07Z" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span>Phone</span></span>
+                    <strong>${escapeHtml(formatValue(record.phoneNumber))}</strong>
+                  </div>
+                  <div class="client-profile-contact-item">
+                    <span class="client-profile-contact-label"><span class="client-profile-contact-icon" aria-hidden="true"><svg viewBox="0 0 16 16" fill="none"><rect x="2.4" y="3.4" width="11.2" height="9.2" rx="1.7" stroke="currentColor" stroke-width="1.2"/><path d="M3.4 4.8 8 8.1l4.6-3.3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span>Email</span></span>
+                    <strong>${escapeHtml(formatValue(record.emailAddress))}</strong>
+                  </div>
+                  <div class="client-profile-contact-item">
+                    <span class="client-profile-contact-label"><span class="client-profile-contact-icon" aria-hidden="true"><svg viewBox="0 0 16 16" fill="none"><circle cx="8" cy="5.2" r="2.15" stroke="currentColor" stroke-width="1.2"/><path d="M4.15 12.45a3.85 3.85 0 0 1 7.7 0" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg></span><span>Advisor</span></span>
+                    <strong>${escapeHtml(formatValue(record.advisorName))}</strong>
+                  </div>
+                  <div class="client-profile-contact-item">
+                    <span class="client-profile-contact-label"><span class="client-profile-contact-icon" aria-hidden="true"><svg viewBox="0 0 16 16" fill="none"><path d="M6.15 2.55 5 13.45M10.95 2.55 9.8 13.45M2.95 6.15h10.1M2.2 9.85H12.3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg></span><span>Case Ref</span></span>
+                    <strong>${escapeHtml(formatValue(record.caseRef))}</strong>
+                  </div>
+                </div>
+              </section>
+              ${renderSummaryCard("Household Insight", [
+                { label: "Household Name", value: householdDisplay },
+                { label: "Household Role", value: formatValue(record.householdRole) },
+                { label: "Marital Status", value: formatValue(record.maritalStatus) },
+                { label: "Assignment Type", value: formatTitleCaseValue(record.profileGroupType) },
+                { label: "Preferred Contact", value: formatValue(record.preferredContactMethod) },
+                { label: "Firm Name", value: formatValue(record.firmName) }
+              ])}
+            </aside>
+
+            <section class="client-profile-main">
+              <nav class="client-profile-tabs" aria-label="Client detail tabs">
+                <button class="client-profile-tab is-active" type="button">Overview</button>
+                <button class="client-profile-tab" type="button">Planning</button>
+                <button class="client-profile-tab" type="button">Household</button>
+                <button class="client-profile-tab" type="button">Notes</button>
+              </nav>
+
+              <section class="client-profile-banner">
+                <p>Case ${escapeHtml(formatValue(record.caseRef))} is currently marked as ${escapeHtml(status)}. Household assignment is ${escapeHtml(householdDisplay)}.</p>
+              </section>
+
+              <div class="client-profile-stats">
+                ${renderStatCard("Coverage Amount", formatCurrency(record.coverageAmount), `Last review ${formatDate(record.lastReview || record.lastUpdatedDate || record.dateProfileCreated)}`)}
+                ${renderStatCard("Coverage Gap", formatCurrency(record.coverageGap), `Source ${formatValue(record.source)}`)}
+                ${renderStatCard("Dependents / Children", formatValue(record.dependentsCount), `${formatValue(record.hasDependents)} dependents status`)}
+              </div>
+
+              <div class="client-profile-dashboard">
+                <div class="client-profile-dashboard-main">
+                  ${renderSection("Profile Snapshot", [
+                    { label: "First Name", value: formatValue(record.firstName) },
+                    { label: "Middle Name", value: formatValue(record.middleName) },
+                    { label: "Last Name", value: formatValue(record.lastName) },
+                    { label: "Preferred Name", value: formatValue(record.preferredName) },
+                    { label: "Date of Birth", value: formatDate(record.dateOfBirth) },
+                    { label: "Age", value: formatValue(record.age) },
+                    { label: "Insurance Rating Sex", value: formatValue(record.insuranceRatingSex) },
+                    { label: "Spouse/Partner Date of Birth", value: formatDate(record.spouseDateOfBirth) },
+                    { label: "Spouse/Partner Age", value: formatValue(record.spouseAge) }
+                  ])}
+                  ${renderSection("Contact and Address", [
+                    { label: "Phone Number", value: formatValue(record.phoneNumber) },
+                    { label: "Email Address", value: formatValue(record.emailAddress) },
+                    { label: "Preferred Contact Method", value: formatValue(record.preferredContactMethod) },
+                    { label: "Street Address", value: formatValue(record.streetAddress) },
+                    { label: "City", value: formatValue(record.city) },
+                    { label: "State", value: formatValue(record.state) },
+                    { label: "ZIP Code", value: formatValue(record.zipCode) },
+                    { label: "Country", value: formatValue(record.country) }
+                  ])}
+                </div>
+                <div class="client-profile-dashboard-side">
+                  ${renderSummaryCard("Household and Advisory", [
+                    { label: "Assignment Name", value: householdDisplay },
+                    { label: "Household / Company Role", value: formatValue(record.householdRole) },
+                    { label: "Assignment Type", value: formatValue(record.profileGroupType) },
+                    { label: "Advisor Name", value: formatValue(record.advisorName) },
+                    { label: "Source", value: formatValue(record.source) },
+                    { label: "Priority", value: priority }
+                  ])}
+                  ${renderChecklistCard("Completion Checklist", [
+                    { label: "Preliminary Underwriting", complete: Boolean(record.preliminaryUnderwritingCompleted), detail: preliminaryStatus },
+                    { label: "PMI Form", complete: Boolean(record.pmiCompleted), detail: pmiStatus }
+                  ])}
+                  ${renderSummaryCard("Dependents and Education", [
+                    { label: "Dependents / Children", value: formatValue(record.hasDependents) },
+                    { label: "Amount of Dependents / Children", value: formatValue(record.dependentsCount) },
+                    { label: "Youngest Dependent Age", value: formatValue(record.youngestDependentAge) },
+                    { label: "Education Funding", value: formatCurrency(record.educationFundingPerDependent) },
+                    { label: "Projected Dependents", value: formatValue(record.projectedDependents) },
+                    { label: "Projected Education Funding", value: formatCurrency(record.projectedEducationFundingPerDependent) }
+                  ])}
+                  ${renderSummaryCard("Notes", [
+                    { label: "Client Notes", value: formatValue(record.clientNotes) },
+                    { label: "Last Review", value: formatDate(record.lastReview || record.lastUpdatedDate || record.dateProfileCreated) }
+                  ])}
+                </div>
+              </div>
+            </section>
+          </div>
+        `;
+      }
+
       const record = getRecord();
 
       if (!record) {
-        title.textContent = "Client Not Found";
-        subtitle.textContent = "The requested client record is not available in this advisor workspace.";
         host.innerHTML = `
           <section class="client-detail-card">
             <p class="client-detail-empty">No saved client matched this record id.</p>
@@ -230,74 +501,7 @@
         return;
       }
 
-      title.textContent = formatValue(record.displayName);
-      subtitle.textContent = `${getClientStatusDisplay(record.statusGroup)} | ${formatValue(record.caseRef)}`;
-
-      const sections = [
-        {
-          title: "Overview",
-          fields: [
-            { label: "Client", value: formatValue(record.displayName) },
-            { label: "Case Ref", value: formatValue(record.caseRef) },
-            { label: "Client Status", value: getClientStatusDisplay(record.statusGroup) },
-            { label: "Priority", value: getPriorityDisplay(normalizePriority(record.priority)) },
-            { label: "Source", value: formatValue(record.source) },
-            { label: "Last Review", value: formatDate(record.lastReview || record.lastUpdatedDate || record.dateProfileCreated) },
-            { label: "Coverage Amount", value: formatCurrency(record.coverageAmount) },
-            { label: "Coverage Gap", value: formatCurrency(record.coverageGap) }
-          ]
-        },
-        {
-          title: "Profile Information",
-          fields: [
-            { label: "First Name", value: formatValue(record.firstName) },
-            { label: "Middle Name", value: formatValue(record.middleName) },
-            { label: "Last Name", value: formatValue(record.lastName) },
-            { label: "Preferred Name", value: formatValue(record.preferredName) },
-            { label: "Date of Birth", value: formatDate(record.dateOfBirth) },
-            { label: "Age", value: formatValue(record.age) },
-            { label: "Insurance Rating Sex", value: formatValue(record.insuranceRatingSex) },
-            { label: "Marital Status", value: formatValue(record.maritalStatus) },
-            { label: "Spouse/Partner Date of Birth", value: formatDate(record.spouseDateOfBirth) },
-            { label: "Spouse/Partner Age", value: formatValue(record.spouseAge) }
-          ]
-        },
-        {
-          title: "Contact",
-          fields: [
-            { label: "Email Address", value: formatValue(record.emailAddress) },
-            { label: "Phone Number", value: formatValue(record.phoneNumber) },
-            { label: "Preferred Contact Method", value: formatValue(record.preferredContactMethod) },
-            { label: "Street Address", value: formatValue(record.streetAddress) },
-            { label: "City", value: formatValue(record.city) },
-            { label: "State", value: formatValue(record.state) },
-            { label: "ZIP Code", value: formatValue(record.zipCode) },
-            { label: "Country", value: formatValue(record.country) }
-          ]
-        },
-        {
-          title: "Household and Advisory",
-          fields: [
-            { label: "Household / Company Role", value: formatValue(record.householdRole) },
-            { label: "Assignment Name", value: formatValue(record.householdName) },
-            { label: "Assignment Type", value: formatValue(record.profileGroupType) },
-            { label: "Dependents / Children", value: formatValue(record.hasDependents) },
-            { label: "Amount of Dependents / Children", value: formatValue(record.dependentsCount) },
-            { label: "Age of Youngest Dependent / Child", value: formatValue(record.youngestDependentAge) },
-            { label: "Education Funding (Per Dependent)", value: formatCurrency(record.educationFundingPerDependent) },
-            { label: "Projected Dependents / Children", value: formatValue(record.projectedDependents) },
-            { label: "Projected Dependents Count", value: formatValue(record.projectedDependentsCount) },
-            { label: "Projected Education Funding", value: formatCurrency(record.projectedEducationFundingPerDependent) },
-            { label: "Advisor Name", value: formatValue(record.advisorName) },
-            { label: "Firm Name", value: formatValue(record.firmName) },
-            { label: "Client Notes", value: formatValue(record.clientNotes) }
-          ]
-        }
-      ];
-
-      host.innerHTML = sections.map(function (section) {
-        return renderSection(section.title, section.fields);
-      }).join("");
+      host.innerHTML = renderProfile(record);
     })();
   </script>
 </body>

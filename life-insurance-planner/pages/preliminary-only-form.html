@@ -534,6 +534,7 @@
       const linkModalClose = document.querySelectorAll("[data-preliminary-link-close]");
       const caseRefField = document.querySelector("[data-preliminary-case-ref]");
       const saveButton = document.querySelector("[data-preliminary-save-button]");
+      const form = document.getElementById("preliminary-underwriting-form");
 
       if (caseRefField) {
         caseRefField.addEventListener("input", () => {
@@ -640,6 +641,25 @@
       linkModal?.querySelector(".profile-search-modal-backdrop")?.addEventListener("click", closeLinkModal);
 
       saveButton?.addEventListener("click", () => {
+        const normalizedCaseRef = String(caseRefField?.value || "").trim().toUpperCase();
+        if (!form || !normalizedCaseRef) {
+          window.alert("Link this preliminary underwriting form to a client profile before saving.");
+          caseRefField?.focus();
+          return;
+        }
+
+        if (window.saveLensLinkedWorkflowSection && window.serializeLensFormSnapshot) {
+          window.saveLensLinkedWorkflowSection(
+            normalizedCaseRef,
+            "preliminaryUnderwriting",
+            window.serializeLensFormSnapshot(form),
+            {
+              variant: "preliminary-only",
+              page: "preliminary-only-form"
+            }
+          );
+        }
+
         window.location.href = "clients.html";
       });
 

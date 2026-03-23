@@ -15,7 +15,8 @@
     authSession: "lipPlannerAuthSession",
     workflowNavExpanded: "lipPlannerWorkflowNavExpanded",
     language: "lensLanguage",
-    pendingClientRecords: "lensPendingClientRecords"
+    pendingClientRecords: "lensPendingClientRecords",
+    linkedCaseRef: "lensLinkedCaseRef"
   };
   const ADMIN_CREDENTIALS = {
     email: "admin@lens.com",
@@ -301,25 +302,39 @@
   };
 
   document.addEventListener("DOMContentLoaded", () => {
-    initializeHomepage();
-    initializeAuthPage();
-    initializeAdminPortal();
-    initializeLanguageSelector();
-    applyTranslations();
-    initializeAccountProfile();
-    initializeReturnHomeButton();
-    initializeWorkflowNav();
-    initializeProfileForm();
-    initializeEstimatePage();
-    initializeRecommendationSelection();
-    initializeStrategySelection();
-    initializeSummaryPage();
-    initializeNotesSync();
-    initializeClientCreationForm();
-    initializeSurvivorshipAdjustments();
-    initializeClientDirectory();
-    initializeClientDetailPage();
-    initializeClientDirectoryNavLinks();
+    function safeInitialize(label, initializer) {
+      try {
+        initializer();
+      } catch (error) {
+        console.error(`[LENS init] ${label} failed`, error);
+      }
+    }
+
+    if (document.body?.dataset?.step) {
+      document.body.classList.remove("is-modal-open");
+      document.body.style.overflowY = "auto";
+    }
+
+    safeInitialize("homepage", initializeHomepage);
+    safeInitialize("auth-page", initializeAuthPage);
+    safeInitialize("admin-portal", initializeAdminPortal);
+    safeInitialize("workflow-nav", initializeWorkflowNav);
+    safeInitialize("return-home", initializeReturnHomeButton);
+    safeInitialize("language-selector", initializeLanguageSelector);
+    safeInitialize("translations", applyTranslations);
+    safeInitialize("account-profile", initializeAccountProfile);
+    safeInitialize("profile-form", initializeProfileForm);
+    safeInitialize("estimate-page", initializeEstimatePage);
+    safeInitialize("recommendation-selection", initializeRecommendationSelection);
+    safeInitialize("strategy-selection", initializeStrategySelection);
+    safeInitialize("summary-page", initializeSummaryPage);
+    safeInitialize("notes-sync", initializeNotesSync);
+    safeInitialize("client-creation-form", initializeClientCreationForm);
+    safeInitialize("survivorship-adjustments", initializeSurvivorshipAdjustments);
+    safeInitialize("client-directory", initializeClientDirectory);
+    safeInitialize("client-detail-page", initializeClientDetailPage);
+    safeInitialize("client-directory-nav-links", initializeClientDirectoryNavLinks);
+    safeInitialize("workflow-nav-fallback", ensureWorkflowNavVisible);
   });
 
   function initializeLanguageSelector() {
@@ -807,6 +822,30 @@
     `;
 
     initializeWorkflowNavState(navHost);
+  }
+
+  function ensureWorkflowNavVisible() {
+    const navHost = document.getElementById("workflow-nav");
+    const currentStep = document.body.dataset.step;
+
+    if (!navHost || !currentStep || navHost.children.length) {
+      return;
+    }
+
+    const steps = getActiveSteps(currentStep);
+    const currentIndex = steps.findIndex((step) => step.id === currentStep);
+    if (currentIndex < 0) {
+      return;
+    }
+
+    navHost.className = "workflow-nav is-persisted-expanded";
+    navHost.innerHTML = `
+      <header class="workflow-header">
+        <div class="step-track" style="--step-count:${steps.length}">
+          ${steps.map((step, index) => renderStep(step, index, currentIndex)).join("")}
+        </div>
+      </header>
+    `;
   }
 
   function initializeWorkflowNavState(navHost) {
@@ -2072,6 +2111,111 @@
     return `CL/${highestNumber + 1}`;
   }
 
+  function normalizeCaseRef(value) {
+    return String(value || "").trim().toUpperCase();
+  }
+
+  function setLinkedCaseRef(caseRef) {
+    const normalized = normalizeCaseRef(caseRef);
+    if (!normalized) {
+      sessionStorage.removeItem(STORAGE_KEYS.linkedCaseRef);
+      return "";
+    }
+
+    sessionStorage.setItem(STORAGE_KEYS.linkedCaseRef, normalized);
+    return normalized;
+  }
+
+  function getLinkedCaseRef() {
+    return normalizeCaseRef(sessionStorage.getItem(STORAGE_KEYS.linkedCaseRef));
+  }
+
+  function serializeFormSnapshot(form) {
+    const formData = new FormData(form);
+    const snapshot = {};
+
+    for (const [key, value] of formData.entries()) {
+      const normalizedValue = typeof value === "string" ? value.trim() : value;
+
+      if (Object.prototype.hasOwnProperty.call(snapshot, key)) {
+        if (Array.isArray(snapshot[key])) {
+          snapshot[key].push(normalizedValue);
+        } else {
+          snapshot[key] = [snapshot[key], normalizedValue];
+        }
+        continue;
+      }
+
+      snapshot[key] = normalizedValue;
+    }
+
+    return snapshot;
+  }
+
+  function updateClientRecordByCaseRef(caseRef, updater) {
+    const normalizedCaseRef = normalizeCaseRef(caseRef);
+    if (!normalizedCaseRef || typeof updater !== "function") {
+      return null;
+    }
+
+    const records = getClientRecords();
+    const recordIndex = records.findIndex((record) => normalizeCaseRef(record.caseRef) === normalizedCaseRef);
+
+    if (recordIndex < 0) {
+      return null;
+    }
+
+    const currentRecord = records[recordIndex];
+    const updatedRecord = updater({
+      ...currentRecord
+    });
+
+    if (!updatedRecord || typeof updatedRecord !== "object") {
+      return null;
+    }
+
+    const nextRecords = [...records];
+    nextRecords[recordIndex] = updatedRecord;
+    writeClientRecords(nextRecords);
+    return nextRecords[recordIndex];
+  }
+
+  function saveLinkedWorkflowSection(caseRef, sectionName, payload, meta) {
+    const normalizedCaseRef = setLinkedCaseRef(caseRef);
+    if (!normalizedCaseRef || !sectionName) {
+      return null;
+    }
+
+    const today = formatDateInputValue(new Date());
+    const sectionPayload = {
+      completed: true,
+      linkedCaseRef: normalizedCaseRef,
+      savedAt: today,
+      ...(meta && typeof meta === "object" ? meta : {}),
+      data: payload && typeof payload === "object" ? payload : {}
+    };
+
+    return updateClientRecordByCaseRef(normalizedCaseRef, (record) => {
+      const nextRecord = {
+        ...record,
+        lastUpdatedDate: today,
+        lastReview: today
+      };
+
+      if (sectionName === "preliminaryUnderwriting") {
+        nextRecord.preliminaryUnderwriting = sectionPayload;
+        nextRecord.preliminaryUnderwritingCompleted = true;
+      }
+
+      if (sectionName === "protectionModeling") {
+        nextRecord.protectionModeling = sectionPayload;
+        nextRecord.pmiCompleted = true;
+      }
+
+      return nextRecord;
+    });
+  }
+
   function formatDateInputValue(value) {
     const date = value instanceof Date ? value : new Date(value);
     if (Number.isNaN(date.getTime())) {
@@ -2242,7 +2386,7 @@
           <span class="client-avatar" style="background: ${getAvatarBackground(record.age, record.dateOfBirth)};">${getInitials(record.displayName)}</span>
           <div>
             <strong>${record.displayName}</strong>
-            <span>${record.summary}</span>
+            <span>${getClientDirectorySubtitle(record)}</span>
           </div>
         </div>
         <div class="client-table-cell">${record.caseRef}</div>
@@ -2547,6 +2691,19 @@
     return `linear-gradient(135deg, hsl(${highlightHue} 72% 66%), hsl(${shadowHue} 68% 44%))`;
   }
 
+  function getClientDirectorySubtitle(record) {
+    const assignmentName = String(record.householdName || "").trim();
+    if (assignmentName) {
+      return assignmentName;
+    }
+
+    if (record.viewType === "households" || record.viewType === "companies") {
+      return String(record.summary || "").trim() || "Profile";
+    }
+
+    return "No household linked";
+  }
+
   function populateForm(form, values) {
     if (!values) {
       return;
@@ -2815,6 +2972,7 @@
     nextRecords.unshift(record);
     writeClientRecords(nextRecords);
     sessionStorage.setItem(STORAGE_KEYS.pendingClientRecords, JSON.stringify([record]));
+    setLinkedCaseRef(record.caseRef);
     sessionStorage.setItem(STORAGE_KEYS.clientViewIntent, "individuals");
     sessionStorage.setItem(STORAGE_KEYS.clientView, "individuals");
     sessionStorage.setItem(STORAGE_KEYS.clientStatus, "all");
@@ -2824,6 +2982,10 @@
   }
 
   window.saveLensClientCreationForm = saveClientCreationForm;
+  window.getLensLinkedCaseRef = getLinkedCaseRef;
+  window.setLensLinkedCaseRef = setLinkedCaseRef;
+  window.serializeLensFormSnapshot = serializeFormSnapshot;
+  window.saveLensLinkedWorkflowSection = saveLinkedWorkflowSection;
 
   function formatCurrency(value) {
     const number = Number(value);

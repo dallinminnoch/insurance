@@ -505,5 +505,32 @@
       syncSelectedTreatments();
     })();
   </script>
+  <script>
+    (function () {
+      const form = document.getElementById("preliminary-underwriting-form");
+      const continueButton = document.querySelector(".btn-prelim-continue-primary");
+
+      if (!form || !continueButton) {
+        return;
+      }
+
+      continueButton.addEventListener("click", () => {
+        const linkedCaseRef = window.getLensLinkedCaseRef?.() || "";
+        if (!linkedCaseRef || !window.saveLensLinkedWorkflowSection || !window.serializeLensFormSnapshot) {
+          return;
+        }
+
+        window.saveLensLinkedWorkflowSection(
+          linkedCaseRef,
+          "preliminaryUnderwriting",
+          window.serializeLensFormSnapshot(form),
+          {
+            variant: "preliminary-flow",
+            page: "preliminary-underwriting"
+          }
+        );
+      });
+    })();
+  </script>
 </body>
 </html>

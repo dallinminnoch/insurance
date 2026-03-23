@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -500,11 +500,7 @@
   </main>
 
   <div class="floating-calculator" id="protection-calculator" hidden aria-hidden="true">
-    <div class="floating-calculator-header" data-calculator-drag-handle>
-      <div class="floating-calculator-title">
-        <span>Calculator</span>
-      </div>
-      <button class="floating-calculator-close" type="button" aria-label="Close calculator">×</button>
+    <div class="floating-calculator-header" data-calculator-drag-handle><button class="floating-calculator-close" type="button" aria-label="Close calculator">×</button>
     </div>
     <div class="floating-calculator-body">
       <input
@@ -517,25 +513,25 @@
       >
       <div class="floating-calculator-pad" aria-label="Calculator buttons">
         <button type="button" data-calculator-action="clear">C</button>
-        <button type="button" data-calculator-action="backspace">⌫</button>
-        <button type="button" data-calculator-value="(">(</button>
-        <button type="button" data-calculator-value=")">)</button>
+        <button type="button" data-calculator-action="parens">()</button>
+        <button type="button" data-calculator-action="percent">%</button>
+        <button type="button" data-calculator-value="/">/</button>
         <button type="button" data-calculator-value="7">7</button>
         <button type="button" data-calculator-value="8">8</button>
         <button type="button" data-calculator-value="9">9</button>
-        <button type="button" data-calculator-value="/">÷</button>
+        <button type="button" data-calculator-value="*">*</button>
         <button type="button" data-calculator-value="4">4</button>
         <button type="button" data-calculator-value="5">5</button>
         <button type="button" data-calculator-value="6">6</button>
-        <button type="button" data-calculator-value="*">×</button>
+        <button type="button" data-calculator-value="-">-</button>
         <button type="button" data-calculator-value="1">1</button>
         <button type="button" data-calculator-value="2">2</button>
         <button type="button" data-calculator-value="3">3</button>
-        <button type="button" data-calculator-value="-">−</button>
+        <button type="button" data-calculator-value="+">+</button>
+        <button type="button" data-calculator-action="sign">+/-</button>
         <button type="button" data-calculator-value="0">0</button>
         <button type="button" data-calculator-value=".">.</button>
         <button type="button" data-calculator-action="equals" class="floating-calculator-equals">=</button>
-        <button type="button" data-calculator-value="+">+</button>
       </div>
     </div>
   </div>
@@ -544,6 +540,7 @@
   <script src="../calculations.js"></script>
   <script src="../charts.js"></script>
   <script src="../app.js"></script>
+  <script src="../pmi-calculator.js"></script>
   <script>
     (function () {
       const form = document.getElementById("protection-modeling-form");
@@ -675,6 +672,10 @@
   </script>
   <script>
     (function () {
+      if (window.initializePmiCalculator) {
+        window.initializePmiCalculator();
+        return;
+      }
       const toggleButton = document.querySelector("[data-calculator-toggle]");
       const calculator = document.getElementById("protection-calculator");
       const closeButton = calculator ? calculator.querySelector(".floating-calculator-close") : null;
@@ -701,7 +702,7 @@
       }
 
       function evaluateDisplay() {
-        const expression = sanitizeExpression(display.value).replace(/[×]/g, "*").replace(/[÷]/g, "/");
+        const expression = sanitizeExpression(display.value).replace(/[Ã—]/g, "*").replace(/[Ã·]/g, "/");
 
         if (!expression.trim()) {
           return;
@@ -995,7 +996,15 @@
 
       saveExitButton.addEventListener("click", () => {
         clampCostToFundPercent();
-        localStorage.setItem(storageKey, JSON.stringify(serializeForm()));
+        const draft = serializeForm();
+        localStorage.setItem(storageKey, JSON.stringify(draft));
+        const linkedCaseRef = window.getLensLinkedCaseRef?.() || "";
+        if (linkedCaseRef && window.saveLensLinkedWorkflowSection) {
+          window.saveLensLinkedWorkflowSection(linkedCaseRef, "protectionModeling", draft, {
+            variant: form.dataset.pmiDraftKey || "simplified-advisor",
+            page: "simplified-pmi-advisor"
+          });
+        }
         window.location.href = "clients.html";
       });
 

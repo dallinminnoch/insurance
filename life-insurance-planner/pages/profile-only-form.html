@@ -1198,6 +1198,7 @@
 
         writeRecords(nextRecords);
         sessionStorage.setItem("lensPendingClientRecords", JSON.stringify([nextRecords[0]]));
+        sessionStorage.setItem("lensLinkedCaseRef", String(nextRecords[0].caseRef || "").trim().toUpperCase());
         sessionStorage.setItem("lensClientViewIntent", "individuals");
         sessionStorage.setItem("lensClientView", "individuals");
         sessionStorage.setItem("lensClientStatus", "all");

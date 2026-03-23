@@ -383,6 +383,19 @@
         return `linear-gradient(135deg, hsl(${highlightHue} 72% 66%), hsl(${shadowHue} 68% 44%))`;
       }
 
+      function getClientDirectorySubtitle(record) {
+        const assignmentName = String(record.householdName || "").trim();
+        if (assignmentName) {
+          return assignmentName;
+        }
+
+        if (record.viewType === "households" || record.viewType === "companies") {
+          return String(record.summary || "").trim() || "Profile";
+        }
+
+        return "No household linked";
+      }
+
       function formatCurrencyCompact(value) {
         const amount = Number(value || 0);
         return new Intl.NumberFormat("en-US", {
@@ -548,7 +561,7 @@
               <span class="client-avatar" style="background: ${getAvatarBackground(record.age, record.dateOfBirth)};">${getInitials(record.displayName)}</span>
               <div>
                 <strong>${record.displayName}</strong>
-                <span>${record.summary}</span>
+                <span>${getClientDirectorySubtitle(record)}</span>
               </div>
             </div>
             <div class="client-table-cell">${record.caseRef || "--"}</div>

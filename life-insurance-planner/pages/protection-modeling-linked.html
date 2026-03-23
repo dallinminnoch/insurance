@@ -146,10 +146,12 @@
       const pinShell = document.querySelector("[data-pin-shell]");
       const pinInputs = Array.from(document.querySelectorAll("[data-pin-input]"));
       const confidentialContinue = document.querySelector("[data-confidential-continue]");
+      const advisorContinue = document.querySelector('.entry-mode-button[href="next-step.html"]');
 
       if (caseRefField) {
         caseRefField.addEventListener("input", () => {
           caseRefField.value = caseRefField.value.toUpperCase();
+          window.setLensLinkedCaseRef?.(caseRefField.value);
         });
       }
 
@@ -230,6 +232,7 @@
           button.addEventListener("click", () => {
             if (caseRefField) {
               caseRefField.value = String(record.caseRef || "").trim();
+              window.setLensLinkedCaseRef?.(caseRefField.value);
             }
             closeLinkModal();
           });
@@ -250,6 +253,9 @@
       });
 
       linkModal?.querySelector(".profile-search-modal-backdrop")?.addEventListener("click", closeLinkModal);
+      advisorContinue?.addEventListener("click", () => {
+        window.setLensLinkedCaseRef?.(caseRefField?.value || "");
+      });
 
       if (!confidentialTrigger || !pinShell || !pinInputs.length || !confidentialContinue) {
         renderLinkResults();
@@ -283,7 +289,10 @@
         if (confidentialContinue.getAttribute("aria-disabled") === "true") {
           event.preventDefault();
           enablePinShell();
+          return;
         }
+
+        window.setLensLinkedCaseRef?.(caseRefField?.value || "");
       });
 
       pinInputs.forEach((input, index) => {
