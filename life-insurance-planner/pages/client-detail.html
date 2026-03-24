@@ -203,14 +203,16 @@
         const hasPreliminary = Boolean(record.preliminaryUnderwritingCompleted);
         const hasPmi = Boolean(record.pmiCompleted);
         const hasAnalysis = Boolean(record.analysisCompleted) || record.statusGroup === "coverage-placed" || record.statusGroup === "closed";
-        const hasCoveragePlaced = record.statusGroup === "coverage-placed" || record.statusGroup === "closed";
+        const hasCoveragePlaced = (Array.isArray(record.coveragePolicies) && record.coveragePolicies.length > 0)
+          || record.statusGroup === "coverage-placed"
+          || record.statusGroup === "closed";
 
         return [
-          { label: "Profile", complete: hasProfile, color: "#2f6b52" },
-          { label: "Prelim UW", complete: hasPreliminary, color: "#3b82f6" },
-          { label: "PMI", complete: hasPmi, color: "#6366f1" },
-          { label: "Analysis", complete: hasAnalysis, color: "#8b5cf6" },
-          { label: "Coverage", complete: hasCoveragePlaced, color: "#dc2626" }
+          { label: "Profile Created", complete: hasProfile, color: "#2f5d46" },
+          { label: "Preliminary Underwriting", complete: hasPreliminary, color: "#9a7b5f" },
+          { label: "PMI", complete: hasPmi, color: "#7c5cff" },
+          { label: "Analysis Complete", complete: hasAnalysis, color: "#1f2937" },
+          { label: "Coverage Placed", complete: hasCoveragePlaced, color: "#d97f6f" }
         ];
       }
 
@@ -223,15 +225,140 @@
       }
 
       function buildDonutGradient(milestones) {
-        const inactiveColor = "rgba(213, 221, 232, 0.58)";
+        const inactiveColors = {
+          "#2f5d46": "rgba(47, 93, 70, 0.24)",
+          "#9a7b5f": "rgba(154, 123, 95, 0.42)",
+          "#7c5cff": "rgba(124, 92, 255, 0.26)",
+          "#1f2937": "rgba(31, 41, 55, 0.2)",
+          "#d97f6f": "rgba(217, 127, 111, 0.42)"
+        };
         const segmentSize = 100 / milestones.length;
+        const separator = 0.6;
+        const separatorColor = "#f8fbf9";
 
         return milestones.map(function (milestone, index) {
           const start = (segmentSize * index).toFixed(2);
           const end = (segmentSize * (index + 1)).toFixed(2);
-          const color = milestone.complete ? milestone.color : inactiveColor;
-          return `${color} ${start}% ${end}%`;
+          const innerStart = (segmentSize * index + separator).toFixed(2);
+          const innerEnd = (segmentSize * (index + 1) - separator).toFixed(2);
+          const color = milestone.complete ? milestone.color : (inactiveColors[milestone.color] || "rgba(148, 163, 184, 0.2)");
+          return `${separatorColor} ${start}% ${innerStart}%, ${color} ${innerStart}% ${innerEnd}%, ${separatorColor} ${innerEnd}% ${end}%`;
         }).join(", ");
+      }
+
+      function polarToCartesian(centerX, centerY, radius, angleInDegrees) {
+        const angleInRadians = (angleInDegrees - 90) * Math.PI / 180;
+        return {
+          x: centerX + (radius * Math.cos(angleInRadians)),
+          y: centerY + (radius * Math.sin(angleInRadians))
+        };
+      }
+
+      function describeArc(centerX, centerY, radius, startAngle, endAngle) {
+        const start = polarToCartesian(centerX, centerY, radius, endAngle);
+        const end = polarToCartesian(centerX, centerY, radius, startAngle);
+        const largeArcFlag = endAngle - startAngle <= 180 ? "0" : "1";
+        return `M ${start.x} ${start.y} A ${radius} ${radius} 0 ${largeArcFlag} 0 ${end.x} ${end.y}`;
+      }
+
+      function describeAnnularSector(centerX, centerY, outerRadius, innerRadius, startAngle, endAngle) {
+        const outerStart = polarToCartesian(centerX, centerY, outerRadius, startAngle);
+        const outerEnd = polarToCartesian(centerX, centerY, outerRadius, endAngle);
+        const innerEnd = polarToCartesian(centerX, centerY, innerRadius, endAngle);
+        const innerStart = polarToCartesian(centerX, centerY, innerRadius, startAngle);
+        const largeArcFlag = endAngle - startAngle <= 180 ? "0" : "1";
+
+        return [
+          `M ${outerStart.x} ${outerStart.y}`,
+          `A ${outerRadius} ${outerRadius} 0 ${largeArcFlag} 1 ${outerEnd.x} ${outerEnd.y}`,
+          `L ${innerEnd.x} ${innerEnd.y}`,
+          `A ${innerRadius} ${innerRadius} 0 ${largeArcFlag} 0 ${innerStart.x} ${innerStart.y}`,
+          "Z"
+        ].join(" ");
+      }
+
+      function buildDonutSvg(milestones) {
+        const center = 80;
+        const outerRadius = 68;
+        const innerRadius = 46;
+        const strokeWidth = 1.4;
+        const segmentSize = 72;
+        const gap = 4;
+        const startRotation = -81;
+        const hollowFillColor = "#f8fbf9";
+        const completedFillColors = {
+          "#2f5d46": "#b8c9be",
+          "#9a7b5f": "#d6c2b2",
+          "#7c5cff": "#d6ccff",
+          "#1f2937": "#c7ced8",
+          "#d97f6f": "#f0c4bd"
+        };
+
+        function buildSegmentGroup(milestone, index, pathMarkup, hoverX, hoverY, suffix) {
+          return `
+            <g
+              class="client-detail-donut-segment-group ${milestone.complete ? "is-complete" : "is-pending"}"
+              data-segment-id="segment-${index}${suffix ? `-${suffix}` : ""}"
+              data-segment-key="segment-${index}"
+              data-milestone-label="${escapeHtml(milestone.label)}"
+              data-hover-x="${hoverX}"
+              data-hover-y="${hoverY}"
+            >
+              ${pathMarkup}
+            </g>
+          `;
+        }
+
+        const segments = milestones.map(function (milestone, index) {
+          const startBase = startRotation + (index * segmentSize);
+          const endBase = startRotation + ((index + 1) * segmentSize);
+          const outerStart = startBase + (gap * 0.9);
+          const outerEnd = endBase - (gap * 0.9);
+          const innerStart = startBase + (gap * 0.18);
+          const innerEnd = endBase - (gap * 0.18);
+          const centerAngle = (startBase + endBase) / 2;
+          const hoverRadians = (centerAngle - 90) * Math.PI / 180;
+          const hoverX = (Math.cos(hoverRadians) * 8).toFixed(2);
+          const hoverY = (Math.sin(hoverRadians) * 8).toFixed(2);
+          const outerStartPoint = polarToCartesian(center, center, outerRadius, outerStart);
+          const outerEndPoint = polarToCartesian(center, center, outerRadius, outerEnd);
+          const innerEndPoint = polarToCartesian(center, center, innerRadius, innerEnd);
+          const innerStartPoint = polarToCartesian(center, center, innerRadius, innerStart);
+          const largeArcFlag = outerEnd - outerStart <= 180 ? "0" : "1";
+          const bodyPath = [
+            `M ${outerStartPoint.x} ${outerStartPoint.y}`,
+            `A ${outerRadius} ${outerRadius} 0 ${largeArcFlag} 1 ${outerEndPoint.x} ${outerEndPoint.y}`,
+            `L ${innerEndPoint.x} ${innerEndPoint.y}`,
+            `A ${innerRadius} ${innerRadius} 0 ${largeArcFlag} 0 ${innerStartPoint.x} ${innerStartPoint.y}`,
+            "Z"
+          ].join(" ");
+          const fillColor = milestone.complete
+            ? (completedFillColors[milestone.color] || "#d8e0e8")
+            : hollowFillColor;
+
+          return buildSegmentGroup(
+            milestone,
+            index,
+            `
+              <path
+                class="client-detail-donut-slice"
+                d="${bodyPath}"
+                fill="${fillColor}"
+                stroke="${milestone.color}"
+                stroke-width="${strokeWidth}"
+              />
+            `,
+            hoverX,
+            hoverY,
+            ""
+          );
+        }).join("");
+
+        return `
+          <svg class="client-detail-donut-svg" viewBox="0 0 160 160" aria-hidden="true" focusable="false">
+            ${segments}
+          </svg>
+        `;
       }
 
       function getRecord() {
@@ -310,14 +437,81 @@
         `;
       }
 
-      function renderStatCard(title, value, meta) {
+      function renderCoverageCard(record) {
+        const policies = Array.isArray(record.coveragePolicies) ? record.coveragePolicies : [];
+        const title = policies.length ? "Coverage Placed" : "Add Coverage";
+        const actionLabel = policies.length ? "Add Another Policy" : "Add Policy";
+        const recordId = encodeURIComponent(String(record.id || "").trim());
+
         return `
-          <section class="client-detail-card client-detail-stat-card">
+          <section class="client-detail-card client-detail-card-compact">
+            <div class="client-detail-card-header client-detail-card-header-coverage">
+              <h2>${escapeHtml(title)}</h2>
+              <a class="client-coverage-add-button" href="add-coverage.html?id=${recordId}">${escapeHtml(actionLabel)}</a>
+            </div>
+            ${policies.length ? `
+              <div class="client-coverage-policy-list">
+                ${policies.map(function (policy, index) {
+                  return `
+                    <article
+                      class="client-coverage-policy-item"
+                      data-coverage-policy-card
+                      data-policy-index="${index}"
+                      tabindex="0"
+                      role="button"
+                      aria-label="Open ${escapeHtml(formatValue(policy.policyCarrier))} policy details"
+                    >
+                      <div class="client-coverage-policy-topline">
+                        <strong>${escapeHtml(formatValue(policy.policyCarrier))}</strong>
+                        <span>${escapeHtml(formatCurrency(policy.faceAmount))}</span>
+                      </div>
+                      <div class="client-coverage-policy-meta">
+                        <span>${escapeHtml(formatValue(policy.policyType))}</span>
+                        <span>${escapeHtml(formatValue(policy.insuredName))}</span>
+                      </div>
+                      <div class="client-coverage-policy-meta">
+                        <span>Policy ${escapeHtml(formatValue(policy.policyNumber || `#${index + 1}`))}</span>
+                        <span>Effective ${escapeHtml(formatDate(policy.effectiveDate))}</span>
+                      </div>
+                    </article>
+                  `;
+                }).join("")}
+              </div>
+            ` : `
+              <p class="client-coverage-empty">No policies saved to this profile yet.</p>
+            `}
+          </section>
+        `;
+      }
+
+      function renderStatCard(title, value, meta, options) {
+        const isEditable = Boolean(options?.editable);
+        const fieldName = String(options?.fieldName || "").trim();
+        const rawValue = String(options?.rawValue || "").trim();
+        const showMeta = String(meta || "").trim().length > 0;
+
+        return `
+          <section class="client-detail-card client-detail-stat-card${isEditable ? " is-editable" : ""}">
             <div class="client-detail-stat-header">
               <span>${escapeHtml(title)}</span>
-              <strong>${escapeHtml(value)}</strong>
+              ${isEditable ? `
+                <div class="client-detail-stat-display">
+                  <strong data-stat-display="${escapeHtml(fieldName)}">${escapeHtml(value)}</strong>
+                  <button
+                    class="client-detail-stat-edit-button"
+                    type="button"
+                    data-stat-edit-toggle="${escapeHtml(fieldName)}"
+                    aria-label="Edit ${escapeHtml(title)}"
+                  >
+                    <svg viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                      <path d="M3.1 11.8 11.2 3.7a1.3 1.3 0 0 1 1.84 1.84l-8.1 8.1-2.38.54.54-2.38Z" stroke="currentColor" stroke-width="1.15" stroke-linecap="round" stroke-linejoin="round"/>
+                      <path d="M10.35 4.55 12.2 6.4" stroke="currentColor" stroke-width="1.15" stroke-linecap="round"/>
+                    </svg>
+                  </button>
+                </div>
+              ` : `<strong>${escapeHtml(value)}</strong>`}
             </div>
-            <p>${escapeHtml(meta)}</p>
+            ${showMeta ? `<p>${escapeHtml(meta)}</p>` : ""}
           </section>
         `;
       }
@@ -330,7 +524,6 @@
         const householdDisplay = householdName === "Not provided" ? "No household linked" : householdName;
         const milestones = getAccountMilestones(record);
         const completion = calculateProfileCompletion(record);
-        const donutGradient = buildDonutGradient(milestones);
         const preliminaryStatus = record.preliminaryUnderwritingCompleted
           ? `Saved ${formatDate(record.preliminaryUnderwriting?.savedAt)}`
           : "Not linked to this profile";
@@ -347,45 +540,22 @@
               <section class="client-profile-sidebar-card">
                 <div class="client-profile-avatar-wrap">
                   <div class="client-profile-donut-map">
-                    <div class="client-detail-avatar client-detail-avatar-progress" style="--profile-completion:${completion}%; --profile-donut:${donutGradient};">
+                    <div class="client-detail-avatar client-detail-avatar-progress">
+                      ${buildDonutSvg(milestones)}
                       <div class="client-detail-avatar-core">${escapeHtml(getInitials(record.displayName))}</div>
                     </div>
-                    <div class="client-profile-callout client-profile-callout-profile ${milestones[0].complete ? "is-complete" : "is-pending"}">
-                      <span class="client-profile-callout-line" aria-hidden="true"></span>
-                      <span class="client-profile-callout-dot" style="--milestone-color:${milestones[0].color};" aria-hidden="true"></span>
-                      <span class="client-profile-callout-label">Profile Created</span>
-                    </div>
-                    <div class="client-profile-callout client-profile-callout-prelim ${milestones[1].complete ? "is-complete" : "is-pending"}">
-                      <span class="client-profile-callout-line" aria-hidden="true"></span>
-                      <span class="client-profile-callout-dot" style="--milestone-color:${milestones[1].color};" aria-hidden="true"></span>
-                      <span class="client-profile-callout-label">Preliminary Underwriting</span>
-                    </div>
-                    <div class="client-profile-callout client-profile-callout-pmi ${milestones[2].complete ? "is-complete" : "is-pending"}">
-                      <span class="client-profile-callout-line" aria-hidden="true"></span>
-                      <span class="client-profile-callout-dot" style="--milestone-color:${milestones[2].color};" aria-hidden="true"></span>
-                      <span class="client-profile-callout-label">Protection Modeling Inputs</span>
-                    </div>
-                    <div class="client-profile-callout client-profile-callout-analysis ${milestones[3].complete ? "is-complete" : "is-pending"}">
-                      <span class="client-profile-callout-line" aria-hidden="true"></span>
-                      <span class="client-profile-callout-dot" style="--milestone-color:${milestones[3].color};" aria-hidden="true"></span>
-                      <span class="client-profile-callout-label">Analysis Complete</span>
-                    </div>
-                    <div class="client-profile-callout client-profile-callout-coverage ${milestones[4].complete ? "is-complete" : "is-pending"}">
-                      <span class="client-profile-callout-line" aria-hidden="true"></span>
-                      <span class="client-profile-callout-dot" style="--milestone-color:${milestones[4].color};" aria-hidden="true"></span>
-                      <span class="client-profile-callout-label">Coverage Placed</span>
-                    </div>
+                    <div class="client-profile-donut-tooltip" data-donut-tooltip hidden></div>
                   </div>
                 </div>
                 <div class="client-profile-sidebar-copy">
+                  <p class="client-profile-completion-copy">${escapeHtml(`${completion}% account complete`)}</p>
                   <h2>${escapeHtml(formatValue(record.displayName))}</h2>
                   <p>${escapeHtml([
                     formatValue(record.age),
                     formatValue(record.insuranceRatingSex),
                     formatValue(record.city),
                     formatValue(record.state)
-                  ].filter(function (value) { return value !== "Not provided"; }).join(" â€¢ ") || subtitleParts.join(" | "))}</p>
-                  <p class="client-profile-completion-copy">${escapeHtml(`${completion}% account complete`)}</p>
+                  ].filter(function (value) { return value !== "Not provided"; }).join(" | ") || subtitleParts.join(" | "))}</p>
                 </div>
                 <div class="client-profile-contact-list">
                   <div class="client-profile-contact-item">
@@ -406,86 +576,161 @@
                   </div>
                 </div>
               </section>
-              ${renderSummaryCard("Household Insight", [
-                { label: "Household Name", value: householdDisplay },
-                { label: "Household Role", value: formatValue(record.householdRole) },
-                { label: "Marital Status", value: formatValue(record.maritalStatus) },
-                { label: "Assignment Type", value: formatTitleCaseValue(record.profileGroupType) },
-                { label: "Preferred Contact", value: formatValue(record.preferredContactMethod) },
-                { label: "Firm Name", value: formatValue(record.firmName) }
+              ${renderSummaryCard("Profile Snapshot", [
+                { label: "First Name", value: formatValue(record.firstName) },
+                { label: "Middle Name", value: formatValue(record.middleName) },
+                { label: "Last Name", value: formatValue(record.lastName) },
+                { label: "Preferred Name", value: formatValue(record.preferredName) },
+                { label: "Date of Birth", value: formatDate(record.dateOfBirth) },
+                { label: "Age", value: formatValue(record.age) },
+                { label: "Insurance Rating Sex", value: formatValue(record.insuranceRatingSex) },
+                { label: "Spouse/Partner Date of Birth", value: formatDate(record.spouseDateOfBirth) },
+                { label: "Spouse/Partner Age", value: formatValue(record.spouseAge) }
               ])}
             </aside>
 
             <section class="client-profile-main">
               <nav class="client-profile-tabs" aria-label="Client detail tabs">
-                <button class="client-profile-tab is-active" type="button">Overview</button>
-                <button class="client-profile-tab" type="button">Planning</button>
-                <button class="client-profile-tab" type="button">Household</button>
-                <button class="client-profile-tab" type="button">Notes</button>
+                <button class="client-profile-tab is-active" type="button" data-client-tab="overview" aria-selected="true">Overview</button>
+                <button class="client-profile-tab" type="button" data-client-tab="planning" aria-selected="false">Planning</button>
+                <button class="client-profile-tab" type="button" data-client-tab="household" aria-selected="false">Household</button>
+                <button class="client-profile-tab" type="button" data-client-tab="notes" aria-selected="false">Notes</button>
               </nav>
 
-              <section class="client-profile-banner">
-                <p>Case ${escapeHtml(formatValue(record.caseRef))} is currently marked as ${escapeHtml(status)}. Household assignment is ${escapeHtml(householdDisplay)}.</p>
-              </section>
+              <div class="client-profile-tab-panels">
+                <section class="client-profile-tab-panel is-active" data-client-panel="overview">
+                  <section class="client-profile-banner">
+                    <p>Case ${escapeHtml(formatValue(record.caseRef))} is currently marked as ${escapeHtml(status)}. Household assignment is ${escapeHtml(householdDisplay)}.</p>
+                  </section>
 
-              <div class="client-profile-stats">
-                ${renderStatCard("Coverage Amount", formatCurrency(record.coverageAmount), `Last review ${formatDate(record.lastReview || record.lastUpdatedDate || record.dateProfileCreated)}`)}
-                ${renderStatCard("Coverage Gap", formatCurrency(record.coverageGap), `Source ${formatValue(record.source)}`)}
-                ${renderStatCard("Dependents / Children", formatValue(record.dependentsCount), `${formatValue(record.hasDependents)} dependents status`)}
+                  <div class="client-profile-stats">
+                    ${renderStatCard("Coverage Amount", formatCoverageCardCurrency(record.coverageAmount), "", {
+                      editable: true,
+                      fieldName: "coverageAmount",
+                      rawValue: formatValue(record.coverageAmount) === "Not provided" ? "0" : String(record.coverageAmount || "0")
+                    })}
+                    ${renderStatCard("Coverage Gap", formatCoverageCardCurrency(record.coverageGap), "", {
+                      editable: true,
+                      fieldName: "coverageGap",
+                      rawValue: formatValue(record.coverageGap) === "Not provided" ? "0" : String(record.coverageGap || "0")
+                    })}
+                  </div>
+
+                  <div class="client-profile-dashboard">
+                    <div class="client-profile-dashboard-main">
+                      ${renderSection("Contact and Address", [
+                        { label: "Phone Number", value: formatValue(record.phoneNumber) },
+                        { label: "Email Address", value: formatValue(record.emailAddress) },
+                        { label: "Preferred Contact Method", value: formatValue(record.preferredContactMethod) },
+                        { label: "Street Address", value: formatValue(record.streetAddress) },
+                        { label: "City", value: formatValue(record.city) },
+                        { label: "State", value: formatValue(record.state) },
+                        { label: "ZIP Code", value: formatValue(record.zipCode) },
+                        { label: "Country", value: formatValue(record.country) }
+                      ])}
+                    </div>
+                    <div class="client-profile-dashboard-side">
+                      ${renderCoverageCard(record)}
+                      ${renderChecklistCard("Completion Checklist", [
+                        { label: "Preliminary Underwriting", complete: Boolean(record.preliminaryUnderwritingCompleted), detail: preliminaryStatus },
+                        { label: "PMI Form", complete: Boolean(record.pmiCompleted), detail: pmiStatus }
+                      ])}
+                    </div>
+                  </div>
+                </section>
+
+                <section class="client-profile-tab-panel" data-client-panel="planning" hidden>
+                  <div class="client-profile-dashboard">
+                    <div class="client-profile-dashboard-main">
+                      ${renderSummaryCard("Dependents and Education", [
+                        { label: "Dependents / Children", value: formatValue(record.hasDependents) },
+                        { label: "Amount of Dependents / Children", value: formatValue(record.dependentsCount) },
+                        { label: "Youngest Dependent Age", value: formatValue(record.youngestDependentAge) },
+                        { label: "Education Funding", value: formatCurrency(record.educationFundingPerDependent) },
+                        { label: "Projected Dependents", value: formatValue(record.projectedDependents) },
+                        { label: "Projected Education Funding", value: formatCurrency(record.projectedEducationFundingPerDependent) }
+                      ])}
+                    </div>
+                    <div class="client-profile-dashboard-side">
+                      ${renderChecklistCard("Completion Checklist", [
+                        { label: "Preliminary Underwriting", complete: Boolean(record.preliminaryUnderwritingCompleted), detail: preliminaryStatus },
+                        { label: "PMI Form", complete: Boolean(record.pmiCompleted), detail: pmiStatus }
+                      ])}
+                    </div>
+                  </div>
+                </section>
+
+                <section class="client-profile-tab-panel" data-client-panel="household" hidden>
+                  <div class="client-profile-dashboard">
+                    <div class="client-profile-dashboard-main">
+                      ${renderSummaryCard("Household Insight", [
+                        { label: "Household Name", value: householdDisplay },
+                        { label: "Household Role", value: formatValue(record.householdRole) },
+                        { label: "Marital Status", value: formatValue(record.maritalStatus) },
+                        { label: "Assignment Type", value: formatTitleCaseValue(record.profileGroupType) },
+                        { label: "Preferred Contact", value: formatValue(record.preferredContactMethod) },
+                        { label: "Firm Name", value: formatValue(record.firmName) }
+                      ])}
+                    </div>
+                    <div class="client-profile-dashboard-side">
+                      ${renderSummaryCard("Household and Advisory", [
+                        { label: "Assignment Name", value: householdDisplay },
+                        { label: "Household / Company Role", value: formatValue(record.householdRole) },
+                        { label: "Assignment Type", value: formatValue(record.profileGroupType) },
+                        { label: "Advisor Name", value: formatValue(record.advisorName) },
+                        { label: "Source", value: formatValue(record.source) },
+                        { label: "Priority", value: priority }
+                      ])}
+                    </div>
+                  </div>
+                </section>
+
+                <section class="client-profile-tab-panel" data-client-panel="notes" hidden>
+                  <div class="client-profile-dashboard">
+                    <div class="client-profile-dashboard-main">
+                      ${renderSummaryCard("Notes", [
+                        { label: "Client Notes", value: formatValue(record.clientNotes) },
+                        { label: "Last Review", value: formatDate(record.lastReview || record.lastUpdatedDate || record.dateProfileCreated) }
+                      ])}
+                    </div>
+                  </div>
+                </section>
               </div>
 
-              <div class="client-profile-dashboard">
-                <div class="client-profile-dashboard-main">
-                  ${renderSection("Profile Snapshot", [
-                    { label: "First Name", value: formatValue(record.firstName) },
-                    { label: "Middle Name", value: formatValue(record.middleName) },
-                    { label: "Last Name", value: formatValue(record.lastName) },
-                    { label: "Preferred Name", value: formatValue(record.preferredName) },
-                    { label: "Date of Birth", value: formatDate(record.dateOfBirth) },
-                    { label: "Age", value: formatValue(record.age) },
-                    { label: "Insurance Rating Sex", value: formatValue(record.insuranceRatingSex) },
-                    { label: "Spouse/Partner Date of Birth", value: formatDate(record.spouseDateOfBirth) },
-                    { label: "Spouse/Partner Age", value: formatValue(record.spouseAge) }
-                  ])}
-                  ${renderSection("Contact and Address", [
-                    { label: "Phone Number", value: formatValue(record.phoneNumber) },
-                    { label: "Email Address", value: formatValue(record.emailAddress) },
-                    { label: "Preferred Contact Method", value: formatValue(record.preferredContactMethod) },
-                    { label: "Street Address", value: formatValue(record.streetAddress) },
-                    { label: "City", value: formatValue(record.city) },
-                    { label: "State", value: formatValue(record.state) },
-                    { label: "ZIP Code", value: formatValue(record.zipCode) },
-                    { label: "Country", value: formatValue(record.country) }
-                  ])}
-                </div>
-                <div class="client-profile-dashboard-side">
-                  ${renderSummaryCard("Household and Advisory", [
-                    { label: "Assignment Name", value: householdDisplay },
-                    { label: "Household / Company Role", value: formatValue(record.householdRole) },
-                    { label: "Assignment Type", value: formatValue(record.profileGroupType) },
-                    { label: "Advisor Name", value: formatValue(record.advisorName) },
-                    { label: "Source", value: formatValue(record.source) },
-                    { label: "Priority", value: priority }
-                  ])}
-                  ${renderChecklistCard("Completion Checklist", [
-                    { label: "Preliminary Underwriting", complete: Boolean(record.preliminaryUnderwritingCompleted), detail: preliminaryStatus },
-                    { label: "PMI Form", complete: Boolean(record.pmiCompleted), detail: pmiStatus }
-                  ])}
-                  ${renderSummaryCard("Dependents and Education", [
-                    { label: "Dependents / Children", value: formatValue(record.hasDependents) },
-                    { label: "Amount of Dependents / Children", value: formatValue(record.dependentsCount) },
-                    { label: "Youngest Dependent Age", value: formatValue(record.youngestDependentAge) },
-                    { label: "Education Funding", value: formatCurrency(record.educationFundingPerDependent) },
-                    { label: "Projected Dependents", value: formatValue(record.projectedDependents) },
-                    { label: "Projected Education Funding", value: formatCurrency(record.projectedEducationFundingPerDependent) }
-                  ])}
-                  ${renderSummaryCard("Notes", [
-                    { label: "Client Notes", value: formatValue(record.clientNotes) },
-                    { label: "Last Review", value: formatDate(record.lastReview || record.lastUpdatedDate || record.dateProfileCreated) }
-                  ])}
+              <div class="client-detail-stat-modal" data-stat-modal hidden>
+                <div class="client-detail-stat-modal-backdrop" data-stat-modal-close></div>
+                <div class="client-detail-stat-modal-panel" role="dialog" aria-modal="true" aria-labelledby="client-detail-stat-modal-title">
+                  <h2 id="client-detail-stat-modal-title" data-stat-modal-title>Edit Value</h2>
+                  <label class="client-detail-stat-editor-label client-detail-stat-modal-label">
+                    <span data-stat-modal-label>Edit Value</span>
+                    <input
+                      class="client-detail-stat-editor-input"
+                      type="text"
+                      inputmode="decimal"
+                      value="0"
+                      data-stat-modal-input
+                      aria-label="Edit value"
+                    >
+                  </label>
+                  <div class="client-detail-stat-editor-actions">
+                    <button class="client-detail-stat-editor-cancel" type="button" data-stat-modal-cancel>Cancel</button>
+                    <button class="client-detail-stat-editor-save" type="button" data-stat-modal-save>Save</button>
+                  </div>
                 </div>
               </div>
+
             </section>
+          </div>
+          <div class="client-policy-modal" data-policy-modal hidden>
+            <div class="client-policy-modal-backdrop" data-policy-modal-close></div>
+            <div class="client-policy-modal-panel" role="dialog" aria-modal="true" aria-labelledby="client-policy-modal-title">
+              <div class="client-policy-modal-header">
+                <button class="client-policy-edit-button" type="button" data-policy-edit-toggle>Edit</button>
+                <button class="client-policy-modal-close" type="button" data-policy-modal-close aria-label="Close policy details">×</button>
+              </div>
+              <h2 id="client-policy-modal-title" data-policy-modal-title>Policy Details</h2>
+              <div class="client-policy-modal-body" data-policy-modal-body></div>
+            </div>
           </div>
         `;
       }
@@ -502,6 +747,374 @@
       }
 
       host.innerHTML = renderProfile(record);
+
+      function saveRecordField(fieldName, nextValue) {
+        const records = loadJson(localStorage, getRecordsStorageKey());
+        if (!Array.isArray(records)) {
+          return;
+        }
+
+        const recordIndex = records.findIndex(function (item) {
+          return String(item?.id || "").trim() === String(record.id || "").trim();
+        });
+
+        if (recordIndex === -1) {
+          return;
+        }
+
+        records[recordIndex] = {
+          ...records[recordIndex],
+          [fieldName]: nextValue,
+          lastUpdatedDate: new Date().toISOString().slice(0, 10)
+        };
+
+        localStorage.setItem(getRecordsStorageKey(), JSON.stringify(records));
+        record[fieldName] = nextValue;
+      }
+
+      function normalizeCurrencyInput(value) {
+        const normalized = String(value || "").replace(/[^0-9.]/g, "");
+        const firstDot = normalized.indexOf(".");
+
+        if (firstDot === -1) {
+          return normalized;
+        }
+
+        const integerPart = normalized.slice(0, firstDot + 1);
+        const decimalPart = normalized.slice(firstDot + 1).replace(/\./g, "");
+        return integerPart + decimalPart;
+      }
+
+      function clampStatValue(fieldName, value) {
+        const numericValue = Number(String(value || "").replace(/,/g, ""));
+        if (!Number.isFinite(numericValue)) {
+          return "";
+        }
+
+        if (fieldName === "coverageAmount") {
+          return String(Math.min(numericValue, 99999999));
+        }
+
+        return String(numericValue);
+      }
+
+      function formatEditableCurrency(value) {
+        const number = Number(String(value || "").replace(/,/g, ""));
+        if (!number) {
+          return "0";
+        }
+
+        return new Intl.NumberFormat("en-US", {
+          maximumFractionDigits: 2
+        }).format(number);
+      }
+
+      function formatCoverageCardCurrency(value) {
+        const number = Number(String(value || "").replace(/,/g, ""));
+        return new Intl.NumberFormat("en-US", {
+          style: "currency",
+          currency: "USD",
+          maximumFractionDigits: 0
+        }).format(Number.isFinite(number) ? number : 0);
+      }
+
+      const donutMap = host.querySelector(".client-profile-donut-map");
+      const donutRing = host.querySelector(".client-detail-avatar-progress");
+      const donutTooltip = host.querySelector("[data-donut-tooltip]");
+      const donutSegments = host.querySelectorAll(".client-detail-donut-segment-group");
+      const profileTabs = host.querySelectorAll("[data-client-tab]");
+      const profilePanels = host.querySelectorAll("[data-client-panel]");
+      const policyCards = host.querySelectorAll("[data-coverage-policy-card]");
+      const policyModal = host.querySelector("[data-policy-modal]");
+      const policyModalBody = host.querySelector("[data-policy-modal-body]");
+      const policyModalTitle = host.querySelector("[data-policy-modal-title]");
+      const policyModalCloseButtons = host.querySelectorAll("[data-policy-modal-close]");
+      const policyEditToggle = host.querySelector("[data-policy-edit-toggle]");
+      const statModal = host.querySelector("[data-stat-modal]");
+      const statModalTitle = host.querySelector("[data-stat-modal-title]");
+      const statModalLabel = host.querySelector("[data-stat-modal-label]");
+      const statModalInput = host.querySelector("[data-stat-modal-input]");
+      const statModalCancel = host.querySelector("[data-stat-modal-cancel]");
+      const statModalSave = host.querySelector("[data-stat-modal-save]");
+      const statModalClose = host.querySelector("[data-stat-modal-close]");
+      let activeStatField = "";
+      let activeStatTitle = "";
+      let activePolicyIndex = -1;
+
+      profileTabs.forEach(function (tab) {
+        tab.addEventListener("click", function () {
+          const nextPanel = String(tab.dataset.clientTab || "").trim();
+          if (!nextPanel) {
+            return;
+          }
+
+          profileTabs.forEach(function (button) {
+            const isActive = button === tab;
+            button.classList.toggle("is-active", isActive);
+            button.setAttribute("aria-selected", isActive ? "true" : "false");
+          });
+
+          profilePanels.forEach(function (panel) {
+            const isActive = String(panel.dataset.clientPanel || "").trim() === nextPanel;
+            panel.classList.toggle("is-active", isActive);
+            panel.hidden = !isActive;
+          });
+        });
+      });
+
+      function getCoveragePolicies() {
+        return Array.isArray(record.coveragePolicies) ? record.coveragePolicies : [];
+      }
+
+      function renderPolicyModalBody(policy) {
+        return `
+          <div class="client-policy-modal-grid">
+            ${[
+              ["Carrier", formatValue(policy.policyCarrier)],
+              ["Policy Type", formatValue(policy.policyType)],
+              ["Insured Name", formatValue(policy.insuredName)],
+              ["Policy Owner", formatValue(policy.ownerName)],
+              ["Face Amount", formatCurrency(policy.faceAmount)],
+              ["Premium Amount", formatCurrency(policy.premiumAmount)],
+              ["Premium Mode", formatValue(policy.premiumMode)],
+              ["Term Length", formatValue(policy.termLength)],
+              ["Policy Number", formatValue(policy.policyNumber)],
+              ["Effective Date", formatDate(policy.effectiveDate)],
+              ["Underwriting Class", formatValue(policy.underwritingClass)],
+              ["Primary Beneficiary", formatValue(policy.beneficiaryName)]
+            ].map(function (field) {
+              return `
+                <div class="client-policy-modal-field">
+                  <span class="client-policy-modal-label">${escapeHtml(field[0])}</span>
+                  <span class="client-policy-modal-value">${escapeHtml(field[1])}</span>
+                </div>
+              `;
+            }).join("")}
+          </div>
+          <div class="client-policy-modal-field">
+            <span class="client-policy-modal-label">Policy Notes</span>
+            <span class="client-policy-modal-value">${escapeHtml(formatValue(policy.policyNotes))}</span>
+          </div>
+        `;
+      }
+
+      function closePolicyModal() {
+        if (!policyModal) {
+          return;
+        }
+        policyModal.hidden = true;
+        document.body.classList.remove("is-modal-open");
+        activePolicyIndex = -1;
+      }
+
+      function openPolicyModal(index) {
+        const policies = getCoveragePolicies();
+        const policy = policies[index];
+        if (!policyModal || !policyModalBody || !policy || !policyModalTitle) {
+          return;
+        }
+
+        activePolicyIndex = index;
+        policyModalTitle.textContent = formatValue(policy.policyCarrier) === "Not provided"
+          ? "Policy Details"
+          : `${policy.policyCarrier} Policy`;
+        policyModalBody.innerHTML = renderPolicyModalBody(policy);
+        policyModal.hidden = false;
+        document.body.classList.add("is-modal-open");
+      }
+
+      function closeStatEditor() {
+        if (!statModal) {
+          return;
+        }
+        statModal.hidden = true;
+        document.body.classList.remove("is-modal-open");
+        activeStatField = "";
+        activeStatTitle = "";
+      }
+
+      function openStatEditor(fieldName, title) {
+        if (!statModal || !statModalInput || !statModalTitle || !statModalLabel) {
+          return;
+        }
+        activeStatField = fieldName;
+        activeStatTitle = title;
+        statModalTitle.textContent = `Edit ${title}`;
+        statModalLabel.textContent = `Edit ${title}`;
+        statModalInput.value = normalizeCurrencyInput(record[fieldName] || "0");
+        statModal.hidden = false;
+        document.body.classList.add("is-modal-open");
+        statModalInput.focus();
+        statModalInput.select();
+      }
+
+      const statToggles = host.querySelectorAll("[data-stat-edit-toggle]");
+
+      statToggles.forEach(function (toggle) {
+        const fieldName = String(toggle.dataset.statEditToggle || "").trim();
+        const display = host.querySelector(`[data-stat-display="${fieldName}"]`);
+        const title = toggle.closest(".client-detail-stat-card")?.querySelector(".client-detail-stat-header span")?.textContent?.trim() || "Value";
+
+        if (!display || !toggle) {
+          return;
+        }
+
+        toggle.addEventListener("click", function () {
+          openStatEditor(fieldName, title);
+        });
+      });
+
+      if (statModalInput && statModalSave && statModalCancel && statModalClose) {
+        statModalInput.addEventListener("beforeinput", function (event) {
+          if (!event.data) {
+            return;
+          }
+
+          if (!/^[0-9.]$/.test(event.data)) {
+            event.preventDefault();
+          }
+        });
+
+        statModalInput.addEventListener("input", function () {
+          statModalInput.value = normalizeCurrencyInput(statModalInput.value);
+        });
+
+        statModalCancel.addEventListener("click", function () {
+          statModalInput.value = formatEditableCurrency(record[activeStatField] || "0");
+          closeStatEditor();
+        });
+
+        statModalClose.addEventListener("click", function () {
+          closeStatEditor();
+        });
+
+        statModalSave.addEventListener("click", function () {
+          if (!activeStatField) {
+            return;
+          }
+
+          const display = host.querySelector(`[data-stat-display="${activeStatField}"]`);
+          const normalized = normalizeCurrencyInput(statModalInput.value);
+          const clamped = clampStatValue(activeStatField, normalized);
+          saveRecordField(activeStatField, clamped);
+          if (display) {
+            display.textContent = formatCoverageCardCurrency(clamped);
+          }
+          statModalInput.value = formatEditableCurrency(clamped);
+          closeStatEditor();
+        });
+
+        statModalInput.addEventListener("keydown", function (event) {
+          if (event.key === "Escape") {
+            closeStatEditor();
+          }
+
+          if (event.key === "Enter") {
+            event.preventDefault();
+            statModalSave.click();
+          }
+        });
+      }
+
+      policyCards.forEach(function (card) {
+        const index = Number(card.dataset.policyIndex || "-1");
+        if (index < 0) {
+          return;
+        }
+
+        card.addEventListener("click", function () {
+          openPolicyModal(index);
+        });
+
+        card.addEventListener("keydown", function (event) {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            openPolicyModal(index);
+          }
+        });
+      });
+
+      policyModalCloseButtons.forEach(function (button) {
+        button.addEventListener("click", function () {
+          closePolicyModal();
+        });
+      });
+
+      if (policyEditToggle) {
+        policyEditToggle.addEventListener("click", function () {
+          if (activePolicyIndex < 0) {
+            return;
+          }
+          const detailHref = `add-coverage.html?id=${encodeURIComponent(String(record.id || "").trim())}&policyIndex=${activePolicyIndex}`;
+          window.location.href = detailHref;
+        });
+      }
+
+      document.addEventListener("keydown", function (event) {
+        if (event.key === "Escape") {
+          closePolicyModal();
+        }
+      });
+
+      if (donutMap && donutRing && donutTooltip && donutSegments.length) {
+        function hideDonutTooltip() {
+          donutTooltip.hidden = true;
+        }
+
+        function setSegmentTransform(segmentKey, transformValue) {
+          donutSegments.forEach(function (candidate) {
+            if ((candidate.dataset.segmentKey || "") === segmentKey) {
+              candidate.style.transform = transformValue;
+            }
+          });
+        }
+
+        donutSegments.forEach(function (segment) {
+          segment.addEventListener("pointerenter", function () {
+            donutTooltip.textContent = segment.dataset.milestoneLabel || "";
+            donutTooltip.hidden = false;
+            setSegmentTransform(
+              segment.dataset.segmentKey || "",
+              `translate(${segment.dataset.hoverX || 0}px, ${segment.dataset.hoverY || 0}px)`
+            );
+          });
+
+          segment.addEventListener("pointermove", function (event) {
+            const rect = donutMap.getBoundingClientRect();
+            donutTooltip.style.left = `${event.clientX - rect.left}px`;
+            donutTooltip.style.top = `${event.clientY - rect.top - 18}px`;
+          });
+
+          segment.addEventListener("pointerleave", function () {
+            setSegmentTransform(segment.dataset.segmentKey || "", "");
+            hideDonutTooltip();
+          });
+        });
+
+        donutRing.addEventListener("pointerleave", function () {
+          donutSegments.forEach(function (segment) {
+            segment.style.transform = "";
+          });
+          hideDonutTooltip();
+        });
+
+        donutMap.addEventListener("pointermove", function (event) {
+          if (donutTooltip.hidden) {
+            return;
+          }
+          const rect = donutMap.getBoundingClientRect();
+          donutTooltip.style.left = `${event.clientX - rect.left}px`;
+          donutTooltip.style.top = `${event.clientY - rect.top - 18}px`;
+        });
+
+        donutMap.addEventListener("pointerleave", function () {
+          donutSegments.forEach(function (segment) {
+            segment.style.transform = "";
+          });
+          donutTooltip.hidden = false;
+          hideDonutTooltip();
+        });
+      }
     })();
   </script>
 </body>
