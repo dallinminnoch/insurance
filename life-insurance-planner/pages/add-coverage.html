@@ -200,6 +200,10 @@
 
       function getPolicyIndex() {
         const params = new URLSearchParams(window.location.search);
+        const isNewPolicy = String(params.get("newPolicy") || "").trim() === "1";
+        if (isNewPolicy) {
+          return -1;
+        }
         const index = Number(params.get("policyIndex"));
         return Number.isInteger(index) && index >= 0 ? index : -1;
       }
@@ -220,9 +224,15 @@
 
         const currentRecord = records[index];
         const existingPolicies = Array.isArray(currentRecord.coveragePolicies) ? currentRecord.coveragePolicies : [];
+        if (policyIndex < 0 && existingPolicies.length >= 30) {
+          return { error: "A maximum of 30 policies can be saved to one profile." };
+        }
         const today = new Date().toISOString().slice(0, 10);
         const nextPolicies = existingPolicies.slice();
         const existingPolicy = policyIndex >= 0 ? nextPolicies[policyIndex] : null;
+        const currentCoverageAmount = Number(String(currentRecord.coverageAmount || "").replace(/,/g, ""));
+        const existingPolicyFaceAmount = Number(String(existingPolicy?.faceAmount || "").replace(/,/g, ""));
+        const nextPolicyFaceAmount = Number(String(policy.faceAmount || "").replace(/,/g, ""));
         const nextPolicy = {
           id: existingPolicy?.id || `policy-${Date.now()}`,
           savedAt: existingPolicy?.savedAt || today,
@@ -235,22 +245,22 @@
           nextPolicies.push(nextPolicy);
         }
 
-        const nextCoverageAmount = nextPolicies.reduce(function (total, item) {
-          const amount = Number(String(item?.faceAmount || "").replace(/,/g, ""));
-          return total + (Number.isFinite(amount) ? amount : 0);
-        }, 0);
+        const safeCurrentCoverageAmount = Number.isFinite(currentCoverageAmount) ? currentCoverageAmount : 0;
+        const safeExistingPolicyFaceAmount = Number.isFinite(existingPolicyFaceAmount) ? existingPolicyFaceAmount : 0;
+        const safeNextPolicyFaceAmount = Number.isFinite(nextPolicyFaceAmount) ? nextPolicyFaceAmount : 0;
+        const nextCoverageAmount = safeCurrentCoverageAmount + (safeNextPolicyFaceAmount - safeExistingPolicyFaceAmount);
 
         const nextRecord = {
           ...currentRecord,
           coveragePolicies: nextPolicies,
-          coverageAmount: Math.min(nextCoverageAmount, 99999999),
+          coverageAmount: Math.max(0, Math.min(nextCoverageAmount, 99999999)),
           lastUpdatedDate: today,
           lastReview: today
         };
 
         records[index] = nextRecord;
         localStorage.setItem(getRecordsStorageKey(), JSON.stringify(records));
-        return nextRecord;
+        return { record: nextRecord };
       }
 
       function setPremiumMode(nextValue) {
@@ -384,7 +394,11 @@
           policyNotes: String(formData.get("policyNotes") || "").trim()
         };
 
-        savePolicy(String(record.id || "").trim(), policy, policyIndex);
+        const saveResult = savePolicy(String(record.id || "").trim(), policy, policyIndex);
+        if (!saveResult || saveResult.error) {
+          feedback.textContent = saveResult?.error || "Unable to save this policy.";
+          return;
+        }
         window.location.href = detailHref;
       });
     })();

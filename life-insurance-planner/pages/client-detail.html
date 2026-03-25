@@ -224,6 +224,27 @@
         return Math.round((completed / milestones.length) * 100);
       }
 
+      function getProfileRingGroups(record) {
+        const milestones = getAccountMilestones(record);
+        const coverageMilestone = milestones[4];
+        const overallCompletion = calculateProfileCompletion(record) / 100;
+
+        return [
+          {
+            key: "overall",
+            label: "Account Progress",
+            color: "#111111",
+            completion: overallCompletion
+          },
+          {
+            key: "placement",
+            label: "Coverage Placed",
+            color: "#b8d8ff",
+            completion: coverageMilestone.complete ? 1 : 0
+          }
+        ];
+      }
+
       function buildDonutGradient(milestones) {
         const inactiveColors = {
           "#2f5d46": "rgba(47, 93, 70, 0.24)",
@@ -277,24 +298,22 @@
         ].join(" ");
       }
 
-      function buildDonutSvg(milestones) {
+      function buildDonutSvg(record) {
         const center = 80;
-        const outerRadius = 68;
-        const innerRadius = 46;
-        const strokeWidth = 1.4;
-        const segmentSize = 72;
-        const gap = 4;
-        const startRotation = -81;
-        const hollowFillColor = "#f8fbf9";
-        const completedFillColors = {
-          "#2f5d46": "#b8c9be",
-          "#9a7b5f": "#d6c2b2",
-          "#7c5cff": "#d6ccff",
-          "#1f2937": "#c7ced8",
-          "#d97f6f": "#f0c4bd"
-        };
+        const ringSweep = 300;
+        const startAngle = 210;
+        const trackColor = "#e7edf4";
+        const ringGroups = getProfileRingGroups(record);
+        const rings = [
+          { radius: 69, strokeWidth: 24, segmented: true },
+          { radius: 49, strokeWidth: 10, segmented: false }
+        ];
+        const outerTickCount = 52;
+        const outerTickSweep = 1.1;
+        const outerTickStep = ringSweep / outerTickCount;
 
         function buildSegmentGroup(milestone, index, pathMarkup, hoverX, hoverY, suffix) {
+          const ringDelay = suffix === "ticks" ? `${index * 140}ms` : "0ms";
           return `
             <g
               class="client-detail-donut-segment-group ${milestone.complete ? "is-complete" : "is-pending"}"
@@ -303,50 +322,95 @@
               data-milestone-label="${escapeHtml(milestone.label)}"
               data-hover-x="${hoverX}"
               data-hover-y="${hoverY}"
+              style="--ring-delay: ${ringDelay};"
             >
               ${pathMarkup}
             </g>
           `;
         }
 
-        const segments = milestones.map(function (milestone, index) {
-          const startBase = startRotation + (index * segmentSize);
-          const endBase = startRotation + ((index + 1) * segmentSize);
-          const outerStart = startBase + (gap * 0.9);
-          const outerEnd = endBase - (gap * 0.9);
-          const innerStart = startBase + (gap * 0.18);
-          const innerEnd = endBase - (gap * 0.18);
-          const centerAngle = (startBase + endBase) / 2;
+        function buildOuterTickRing(ring, geometry, index) {
+          const completedTicks = Math.round(outerTickCount * ring.completion);
+          const centerAngle = startAngle + (ringSweep / 2);
           const hoverRadians = (centerAngle - 90) * Math.PI / 180;
-          const hoverX = (Math.cos(hoverRadians) * 8).toFixed(2);
-          const hoverY = (Math.sin(hoverRadians) * 8).toFixed(2);
-          const outerStartPoint = polarToCartesian(center, center, outerRadius, outerStart);
-          const outerEndPoint = polarToCartesian(center, center, outerRadius, outerEnd);
-          const innerEndPoint = polarToCartesian(center, center, innerRadius, innerEnd);
-          const innerStartPoint = polarToCartesian(center, center, innerRadius, innerStart);
-          const largeArcFlag = outerEnd - outerStart <= 180 ? "0" : "1";
-          const bodyPath = [
-            `M ${outerStartPoint.x} ${outerStartPoint.y}`,
-            `A ${outerRadius} ${outerRadius} 0 ${largeArcFlag} 1 ${outerEndPoint.x} ${outerEndPoint.y}`,
-            `L ${innerEndPoint.x} ${innerEndPoint.y}`,
-            `A ${innerRadius} ${innerRadius} 0 ${largeArcFlag} 0 ${innerStartPoint.x} ${innerStartPoint.y}`,
-            "Z"
-          ].join(" ");
-          const fillColor = milestone.complete
-            ? (completedFillColors[milestone.color] || "#d8e0e8")
-            : hollowFillColor;
+          const hoverX = (Math.cos(hoverRadians) * 4).toFixed(2);
+          const hoverY = (Math.sin(hoverRadians) * 4).toFixed(2);
+
+          const tickMarkup = Array.from({ length: outerTickCount }, function (_, tickIndex) {
+            const tickStart = startAngle + (tickIndex * outerTickStep);
+            const tickEnd = tickStart + outerTickSweep;
+            const tickPath = describeArc(center, center, geometry.radius, tickStart, tickEnd);
+            const tickColor = tickIndex < completedTicks ? ring.color : trackColor;
+            const tickClass = tickIndex < completedTicks
+              ? "client-detail-donut-ring-tick is-complete"
+              : "client-detail-donut-ring-tick is-track";
+
+            return `
+              <path
+                class="${tickClass}"
+                d="${tickPath}"
+                stroke="${tickColor}"
+                stroke-width="${geometry.strokeWidth}"
+                fill="none"
+                stroke-linecap="butt"
+                style="--tick-delay: ${index * 140 + tickIndex * 16}ms;"
+              />
+            `;
+          }).join("");
 
           return buildSegmentGroup(
-            milestone,
+            {
+              complete: ring.completion >= 1,
+              label: ring.label
+            },
+            index,
+            tickMarkup,
+            hoverX,
+            hoverY,
+            "ticks"
+          );
+        }
+
+        const segments = ringGroups.map(function (ring, index) {
+          const geometry = rings[index];
+          if (geometry.segmented) {
+            return buildOuterTickRing(ring, geometry, index);
+          }
+          const endAngle = startAngle + ringSweep;
+          const progressEndAngle = startAngle + (ringSweep * ring.completion);
+          const centerAngle = startAngle + (ringSweep / 2);
+          const hoverRadians = (centerAngle - 90) * Math.PI / 180;
+          const hoverX = (Math.cos(hoverRadians) * 4).toFixed(2);
+          const hoverY = (Math.sin(hoverRadians) * 4).toFixed(2);
+          const trackPath = describeArc(center, center, geometry.radius, startAngle, endAngle);
+          const progressPath = ring.completion > 0
+            ? describeArc(center, center, geometry.radius, startAngle, progressEndAngle)
+            : "";
+          return buildSegmentGroup(
+            {
+              complete: ring.completion >= 1,
+              label: ring.label
+            },
             index,
             `
               <path
-                class="client-detail-donut-slice"
-                d="${bodyPath}"
-                fill="${fillColor}"
-                stroke="${milestone.color}"
-                stroke-width="${strokeWidth}"
+                class="client-detail-donut-ring-track${ring.key === "placement" ? " is-placement" : ""}"
+                d="${trackPath}"
+                stroke="${trackColor}"
+                stroke-width="${geometry.strokeWidth}"
+                fill="none"
+                pathLength="100"
               />
+              ${progressPath ? `
+                <path
+                  class="client-detail-donut-ring-progress${ring.key === "placement" ? " is-placement" : ""}"
+                  d="${progressPath}"
+                  stroke="${ring.color}"
+                  stroke-width="${geometry.strokeWidth}"
+                  fill="none"
+                  pathLength="100"
+                />
+              ` : ""}
             `,
             hoverX,
             hoverY,
@@ -374,9 +438,10 @@
         }) || null;
       }
 
-      function renderSection(sectionTitle, fields) {
+      function renderSection(sectionTitle, fields, options) {
+        const sectionClassName = String(options?.className || "").trim();
         return `
-          <section class="client-detail-card">
+          <section class="client-detail-card${sectionClassName ? ` ${escapeHtml(sectionClassName)}` : ""}">
             <div class="client-detail-card-header">
               <h2>${escapeHtml(sectionTitle)}</h2>
             </div>
@@ -414,6 +479,44 @@
         `;
       }
 
+      function renderSplitSummaryCard(title, leftItems, rightItems) {
+        return `
+          <section class="client-detail-card client-detail-card-compact client-detail-card-split">
+            <div class="client-detail-card-header">
+              <h2>${escapeHtml(title)}</h2>
+            </div>
+            <div class="client-summary-split">
+              <div class="client-summary-list">
+                ${leftItems.map(function (item) {
+                  return `
+                    <div class="client-summary-item">
+                      <span class="client-summary-label">${escapeHtml(item.label)}</span>
+                      <span class="client-summary-value">${escapeHtml(item.value)}</span>
+                    </div>
+                  `;
+                }).join("")}
+              </div>
+              <div class="client-summary-list client-summary-list-secondary">
+                ${rightItems.map(function (item) {
+                  return `
+                    <div class="client-summary-item">
+                      <span class="client-summary-label">${escapeHtml(item.label)}</span>
+                      <span class="client-summary-value">${escapeHtml(item.value)}</span>
+                    </div>
+                  `;
+                }).join("")}
+              </div>
+            </div>
+          </section>
+        `;
+      }
+
+      function renderBlankCard() {
+        return `
+          <section class="client-detail-card client-detail-card-compact client-detail-card-blank" aria-hidden="true"></section>
+        `;
+      }
+
       function renderChecklistCard(title, items) {
         return `
           <section class="client-detail-card client-detail-card-compact">
@@ -424,7 +527,10 @@
               ${items.map(function (item) {
                 return `
                   <div class="client-checklist-item ${item.complete ? "is-complete" : "is-incomplete"}">
-                    <span class="client-checklist-mark" aria-hidden="true">${item.complete ? "✓" : "○"}</span>
+                    <div class="client-checklist-paper" aria-hidden="true">
+                      <span class="client-checklist-paper-corner"></span>
+                      <span class="client-checklist-paper-icon">${item.complete ? "✓" : "+"}</span>
+                    </div>
                     <div class="client-checklist-copy">
                       <strong>${escapeHtml(item.label)}</strong>
                       <span>${escapeHtml(item.detail)}</span>
@@ -439,19 +545,25 @@
 
       function renderCoverageCard(record) {
         const policies = Array.isArray(record.coveragePolicies) ? record.coveragePolicies : [];
+        const previewPolicies = policies.slice(0, 2);
         const title = policies.length ? "Coverage Placed" : "Add Coverage";
         const actionLabel = policies.length ? "Add Another Policy" : "Add Policy";
         const recordId = encodeURIComponent(String(record.id || "").trim());
+        const canAddPolicy = policies.length < 30;
 
         return `
           <section class="client-detail-card client-detail-card-compact">
             <div class="client-detail-card-header client-detail-card-header-coverage">
               <h2>${escapeHtml(title)}</h2>
-              <a class="client-coverage-add-button" href="add-coverage.html?id=${recordId}">${escapeHtml(actionLabel)}</a>
+              <a
+                class="client-coverage-add-button${canAddPolicy ? "" : " is-disabled"}"
+                ${canAddPolicy ? `href="add-coverage.html?id=${recordId}&newPolicy=1"` : ""}
+                ${canAddPolicy ? "" : `aria-disabled="true" tabindex="-1"`}
+              >${escapeHtml(canAddPolicy ? actionLabel : "Policy Limit Reached")}</a>
             </div>
             ${policies.length ? `
               <div class="client-coverage-policy-list">
-                ${policies.map(function (policy, index) {
+                ${previewPolicies.map(function (policy, index) {
                   return `
                     <article
                       class="client-coverage-policy-item"
@@ -477,6 +589,12 @@
                   `;
                 }).join("")}
               </div>
+              <button
+                class="client-coverage-view-all-button${policies.length > 2 ? " is-active" : ""}"
+                type="button"
+                data-view-all-policies
+                ${policies.length > 2 ? "" : "disabled"}
+              >View All</button>
             ` : `
               <p class="client-coverage-empty">No policies saved to this profile yet.</p>
             `}
@@ -489,13 +607,17 @@
         const fieldName = String(options?.fieldName || "").trim();
         const rawValue = String(options?.rawValue || "").trim();
         const showMeta = String(meta || "").trim().length > 0;
+        const numericRawValue = Number(String(rawValue || "").replace(/,/g, ""));
+        const coverageGapStateClass = fieldName === "coverageGap"
+          ? (Number.isFinite(numericRawValue) && numericRawValue === 0 ? " is-zero" : " has-gap")
+          : "";
 
         return `
           <section class="client-detail-card client-detail-stat-card${isEditable ? " is-editable" : ""}">
             <div class="client-detail-stat-header">
               <span>${escapeHtml(title)}</span>
               ${isEditable ? `
-                <div class="client-detail-stat-display">
+                <div class="client-detail-stat-display${coverageGapStateClass}">
                   <strong data-stat-display="${escapeHtml(fieldName)}">${escapeHtml(value)}</strong>
                   <button
                     class="client-detail-stat-edit-button"
@@ -516,20 +638,48 @@
         `;
       }
 
+      function getCoverageAdequacy(record) {
+        const coverageAmount = Number(String(record.coverageAmount || "").replace(/,/g, ""));
+        const coverageGap = Number(String(record.coverageGap || "").replace(/,/g, ""));
+        const safeCoverageAmount = Number.isFinite(coverageAmount) ? Math.max(0, coverageAmount) : 0;
+        const safeCoverageGap = Number.isFinite(coverageGap) ? Math.max(0, coverageGap) : 0;
+        const totalNeed = safeCoverageAmount + safeCoverageGap;
+
+        if (totalNeed <= 0) {
+          return 0;
+        }
+
+        return Math.max(0, Math.min(100, Math.round((safeCoverageAmount / totalNeed) * 100)));
+      }
+
+      function renderCoverageAdequacyBar(record) {
+        const adequacy = getCoverageAdequacy(record);
+        return `
+          <section class="client-coverage-adequacy" data-coverage-adequacy>
+            <div class="client-coverage-adequacy-header">
+              <span>Coverage Adequacy</span>
+              <strong data-coverage-adequacy-percent>${adequacy}%</strong>
+            </div>
+            <div class="client-coverage-adequacy-track" aria-hidden="true">
+              <div class="client-coverage-adequacy-fill" data-coverage-adequacy-fill style="width: ${adequacy}%;"></div>
+            </div>
+          </section>
+        `;
+      }
+
       function renderProfile(record) {
         const status = getClientStatusDisplay(record.statusGroup);
         const priority = getPriorityDisplay(normalizePriority(record.priority));
         const householdName = formatValue(record.householdName);
         const subtitleParts = [status, formatValue(record.caseRef)];
         const householdDisplay = householdName === "Not provided" ? "No household linked" : householdName;
-        const milestones = getAccountMilestones(record);
         const completion = calculateProfileCompletion(record);
         const preliminaryStatus = record.preliminaryUnderwritingCompleted
           ? `Saved ${formatDate(record.preliminaryUnderwriting?.savedAt)}`
-          : "Not linked to this profile";
+          : "Incomplete";
         const pmiStatus = record.pmiCompleted
           ? `Saved ${formatDate(record.protectionModeling?.savedAt)}`
-          : "Not linked to this profile";
+          : "Incomplete";
 
         return `
           <div class="client-profile-shell">
@@ -541,7 +691,7 @@
                 <div class="client-profile-avatar-wrap">
                   <div class="client-profile-donut-map">
                     <div class="client-detail-avatar client-detail-avatar-progress">
-                      ${buildDonutSvg(milestones)}
+                      ${buildDonutSvg(record)}
                       <div class="client-detail-avatar-core">${escapeHtml(getInitials(record.displayName))}</div>
                     </div>
                     <div class="client-profile-donut-tooltip" data-donut-tooltip hidden></div>
@@ -576,7 +726,7 @@
                   </div>
                 </div>
               </section>
-              ${renderSummaryCard("Profile Snapshot", [
+              ${renderSplitSummaryCard("Profile Snapshot", [
                 { label: "First Name", value: formatValue(record.firstName) },
                 { label: "Middle Name", value: formatValue(record.middleName) },
                 { label: "Last Name", value: formatValue(record.lastName) },
@@ -586,6 +736,12 @@
                 { label: "Insurance Rating Sex", value: formatValue(record.insuranceRatingSex) },
                 { label: "Spouse/Partner Date of Birth", value: formatDate(record.spouseDateOfBirth) },
                 { label: "Spouse/Partner Age", value: formatValue(record.spouseAge) }
+              ], [
+                { label: "Street Address", value: formatValue(record.streetAddress) },
+                { label: "City", value: formatValue(record.city) },
+                { label: "State", value: formatValue(record.state) },
+                { label: "ZIP Code", value: formatValue(record.zipCode) },
+                { label: "Country", value: formatValue(record.country) }
               ])}
             </aside>
 
@@ -615,26 +771,19 @@
                       rawValue: formatValue(record.coverageGap) === "Not provided" ? "0" : String(record.coverageGap || "0")
                     })}
                   </div>
+                  ${renderCoverageAdequacyBar(record)}
 
                   <div class="client-profile-dashboard">
                     <div class="client-profile-dashboard-main">
-                      ${renderSection("Contact and Address", [
-                        { label: "Phone Number", value: formatValue(record.phoneNumber) },
-                        { label: "Email Address", value: formatValue(record.emailAddress) },
-                        { label: "Preferred Contact Method", value: formatValue(record.preferredContactMethod) },
-                        { label: "Street Address", value: formatValue(record.streetAddress) },
-                        { label: "City", value: formatValue(record.city) },
-                        { label: "State", value: formatValue(record.state) },
-                        { label: "ZIP Code", value: formatValue(record.zipCode) },
-                        { label: "Country", value: formatValue(record.country) }
+                      ${renderChecklistCard("Account Completion Checklist", [
+                        { label: "Preliminary Underwriting", complete: Boolean(record.preliminaryUnderwritingCompleted), detail: preliminaryStatus },
+                        { label: "Protection Modeling Inputs", complete: Boolean(record.pmiCompleted), detail: pmiStatus }
                       ])}
+                      ${renderBlankCard()}
                     </div>
                     <div class="client-profile-dashboard-side">
                       ${renderCoverageCard(record)}
-                      ${renderChecklistCard("Completion Checklist", [
-                        { label: "Preliminary Underwriting", complete: Boolean(record.preliminaryUnderwritingCompleted), detail: preliminaryStatus },
-                        { label: "PMI Form", complete: Boolean(record.pmiCompleted), detail: pmiStatus }
-                      ])}
+                      ${renderBlankCard()}
                     </div>
                   </div>
                 </section>
@@ -652,7 +801,7 @@
                       ])}
                     </div>
                     <div class="client-profile-dashboard-side">
-                      ${renderChecklistCard("Completion Checklist", [
+                      ${renderChecklistCard("Account Completion Checklist", [
                         { label: "Preliminary Underwriting", complete: Boolean(record.preliminaryUnderwritingCompleted), detail: preliminaryStatus },
                         { label: "PMI Form", complete: Boolean(record.pmiCompleted), detail: pmiStatus }
                       ])}
@@ -730,6 +879,34 @@
               </div>
               <h2 id="client-policy-modal-title" data-policy-modal-title>Policy Details</h2>
               <div class="client-policy-modal-body" data-policy-modal-body></div>
+              <div class="client-policy-modal-footer">
+                <button class="client-policy-delete-button" type="button" data-policy-delete-toggle aria-label="Delete policy">
+                  <span class="client-policy-delete-icon" aria-hidden="true"></span>
+                  <span>Delete Policy</span>
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="client-policy-modal client-policy-list-modal" data-policy-list-modal hidden>
+            <div class="client-policy-modal-backdrop" data-policy-list-modal-close></div>
+            <div class="client-policy-modal-panel client-policy-list-modal-panel" role="dialog" aria-modal="true" aria-labelledby="client-policy-list-modal-title">
+              <div class="client-policy-modal-header">
+                <div></div>
+                <button class="client-policy-modal-close" type="button" data-policy-list-modal-close aria-label="Close policy list">×</button>
+              </div>
+              <h2 id="client-policy-list-modal-title">All Policies</h2>
+              <div class="client-policy-list-modal-body" data-policy-list-modal-body></div>
+            </div>
+          </div>
+          <div class="client-policy-modal client-policy-delete-modal" data-policy-delete-modal hidden>
+            <div class="client-policy-modal-backdrop" data-policy-delete-modal-close></div>
+            <div class="client-policy-modal-panel client-policy-delete-modal-panel" role="dialog" aria-modal="true" aria-labelledby="client-policy-delete-modal-title">
+              <h2 id="client-policy-delete-modal-title">Delete Policy?</h2>
+              <p class="client-policy-delete-copy">Are you sure you want to delete this policy? This will remove it from the profile and update the total coverage amount.</p>
+              <div class="client-policy-delete-actions">
+                <button class="client-policy-delete-cancel" type="button" data-policy-delete-modal-close>No</button>
+                <button class="client-policy-delete-confirm" type="button" data-policy-delete-confirm>Yes, Delete</button>
+              </div>
             </div>
           </div>
         `;
@@ -825,11 +1002,19 @@
       const profileTabs = host.querySelectorAll("[data-client-tab]");
       const profilePanels = host.querySelectorAll("[data-client-panel]");
       const policyCards = host.querySelectorAll("[data-coverage-policy-card]");
+      const viewAllPoliciesButton = host.querySelector("[data-view-all-policies]");
       const policyModal = host.querySelector("[data-policy-modal]");
       const policyModalBody = host.querySelector("[data-policy-modal-body]");
       const policyModalTitle = host.querySelector("[data-policy-modal-title]");
       const policyModalCloseButtons = host.querySelectorAll("[data-policy-modal-close]");
       const policyEditToggle = host.querySelector("[data-policy-edit-toggle]");
+      const policyDeleteToggle = host.querySelector("[data-policy-delete-toggle]");
+      const policyListModal = host.querySelector("[data-policy-list-modal]");
+      const policyListModalBody = host.querySelector("[data-policy-list-modal-body]");
+      const policyListModalCloseButtons = host.querySelectorAll("[data-policy-list-modal-close]");
+      const policyDeleteModal = host.querySelector("[data-policy-delete-modal]");
+      const policyDeleteModalCloseButtons = host.querySelectorAll("[data-policy-delete-modal-close]");
+      const policyDeleteConfirm = host.querySelector("[data-policy-delete-confirm]");
       const statModal = host.querySelector("[data-stat-modal]");
       const statModalTitle = host.querySelector("[data-stat-modal-title]");
       const statModalLabel = host.querySelector("[data-stat-modal-label]");
@@ -837,9 +1022,73 @@
       const statModalCancel = host.querySelector("[data-stat-modal-cancel]");
       const statModalSave = host.querySelector("[data-stat-modal-save]");
       const statModalClose = host.querySelector("[data-stat-modal-close]");
+      const coverageAdequacyPercent = host.querySelector("[data-coverage-adequacy-percent]");
+      const coverageAdequacyFill = host.querySelector("[data-coverage-adequacy-fill]");
       let activeStatField = "";
       let activeStatTitle = "";
       let activePolicyIndex = -1;
+      let coverageAdequacyAnimationFrame = 0;
+
+      function syncModalLock() {
+        const anyModalOpen = policyModal?.hidden === false || policyListModal?.hidden === false || policyDeleteModal?.hidden === false || statModal?.hidden === false;
+        document.body.classList.toggle("is-modal-open", anyModalOpen);
+      }
+
+      function refreshCoverageAdequacy(animateFromZero) {
+        const adequacy = getCoverageAdequacy(record);
+        if (!coverageAdequacyPercent || !coverageAdequacyFill) {
+          return;
+        }
+
+        if (coverageAdequacyAnimationFrame) {
+          window.cancelAnimationFrame(coverageAdequacyAnimationFrame);
+          coverageAdequacyAnimationFrame = 0;
+        }
+
+        if (!animateFromZero) {
+          coverageAdequacyPercent.textContent = `${adequacy}%`;
+          coverageAdequacyFill.style.width = `${adequacy}%`;
+          return;
+        }
+
+        const duration = 1800;
+        const startValue = 0;
+        const targetValue = adequacy;
+        const startTime = window.performance.now();
+
+        coverageAdequacyPercent.textContent = "0%";
+        coverageAdequacyFill.style.width = "0%";
+
+        function easeOutQuart(progress) {
+          return 1 - Math.pow(1 - progress, 4);
+        }
+
+        function step(now) {
+          const elapsed = now - startTime;
+          const progress = Math.min(elapsed / duration, 1);
+          const easedProgress = easeOutQuart(progress);
+          const currentValue = startValue + ((targetValue - startValue) * easedProgress);
+          const displayValue = progress < 1
+            ? Math.max(0, Math.round(currentValue))
+            : targetValue;
+
+          coverageAdequacyPercent.textContent = `${Math.max(0, displayValue)}%`;
+          coverageAdequacyFill.style.width = `${Math.max(0, displayValue)}%`;
+
+          if (progress < 1) {
+            coverageAdequacyAnimationFrame = window.requestAnimationFrame(step);
+            return;
+          }
+
+          coverageAdequacyPercent.textContent = `${targetValue}%`;
+          coverageAdequacyFill.style.width = `${targetValue}%`;
+          coverageAdequacyAnimationFrame = 0;
+        }
+
+        coverageAdequacyAnimationFrame = window.requestAnimationFrame(step);
+      }
+
+      refreshCoverageAdequacy(true);
 
       profileTabs.forEach(function (tab) {
         tab.addEventListener("click", function () {
@@ -898,13 +1147,45 @@
         `;
       }
 
+      function renderPolicyListModalBody(policies) {
+        return `
+          <div class="client-policy-list-grid">
+            ${policies.map(function (policy, index) {
+              return `
+                <article
+                  class="client-coverage-policy-item"
+                  data-policy-list-card
+                  data-policy-index="${index}"
+                  tabindex="0"
+                  role="button"
+                  aria-label="Open ${escapeHtml(formatValue(policy.policyCarrier))} policy details"
+                >
+                  <div class="client-coverage-policy-topline">
+                    <strong>${escapeHtml(formatValue(policy.policyCarrier))}</strong>
+                    <span>${escapeHtml(formatCurrency(policy.faceAmount))}</span>
+                  </div>
+                  <div class="client-coverage-policy-meta">
+                    <span>${escapeHtml(formatValue(policy.policyType))}</span>
+                    <span>${escapeHtml(formatValue(policy.insuredName))}</span>
+                  </div>
+                  <div class="client-coverage-policy-meta">
+                    <span>Policy ${escapeHtml(formatValue(policy.policyNumber || `#${index + 1}`))}</span>
+                    <span>Effective ${escapeHtml(formatDate(policy.effectiveDate))}</span>
+                  </div>
+                </article>
+              `;
+            }).join("")}
+          </div>
+        `;
+      }
+
       function closePolicyModal() {
         if (!policyModal) {
           return;
         }
         policyModal.hidden = true;
-        document.body.classList.remove("is-modal-open");
         activePolicyIndex = -1;
+        syncModalLock();
       }
 
       function openPolicyModal(index) {
@@ -920,7 +1201,105 @@
           : `${policy.policyCarrier} Policy`;
         policyModalBody.innerHTML = renderPolicyModalBody(policy);
         policyModal.hidden = false;
-        document.body.classList.add("is-modal-open");
+        syncModalLock();
+      }
+
+      function closePolicyListModal() {
+        if (!policyListModal) {
+          return;
+        }
+        policyListModal.hidden = true;
+        syncModalLock();
+      }
+
+      function openPolicyDeleteModal() {
+        if (!policyDeleteModal || activePolicyIndex < 0) {
+          return;
+        }
+        policyDeleteModal.hidden = false;
+        syncModalLock();
+      }
+
+      function closePolicyDeleteModal() {
+        if (!policyDeleteModal) {
+          return;
+        }
+        policyDeleteModal.hidden = true;
+        syncModalLock();
+      }
+
+      function deletePolicy(index) {
+        const records = loadJson(localStorage, getRecordsStorageKey());
+        if (!Array.isArray(records) || index < 0) {
+          return false;
+        }
+
+        const recordIndex = records.findIndex(function (item) {
+          return String(item?.id || "").trim() === String(record.id || "").trim();
+        });
+
+        if (recordIndex === -1) {
+          return false;
+        }
+
+        const currentRecord = records[recordIndex];
+        const policies = Array.isArray(currentRecord.coveragePolicies) ? currentRecord.coveragePolicies.slice() : [];
+        if (index >= policies.length) {
+          return false;
+        }
+
+        policies.splice(index, 1);
+
+        const nextCoverageAmount = policies.reduce(function (total, policy) {
+          const amount = Number(String(policy?.faceAmount || "").replace(/,/g, ""));
+          return total + (Number.isFinite(amount) ? amount : 0);
+        }, 0);
+
+        const today = new Date().toISOString().slice(0, 10);
+        const nextRecord = {
+          ...currentRecord,
+          coveragePolicies: policies,
+          coverageAmount: Math.max(0, Math.min(nextCoverageAmount, 99999999)),
+          lastUpdatedDate: today,
+          lastReview: today
+        };
+
+        records[recordIndex] = nextRecord;
+        localStorage.setItem(getRecordsStorageKey(), JSON.stringify(records));
+        record.coveragePolicies = nextRecord.coveragePolicies;
+        record.coverageAmount = nextRecord.coverageAmount;
+        return true;
+      }
+
+      function openPolicyListModal() {
+        const policies = getCoveragePolicies();
+        if (!policyListModal || !policyListModalBody || !policies.length) {
+          return;
+        }
+
+        policyListModalBody.innerHTML = renderPolicyListModalBody(policies);
+        policyListModal.hidden = false;
+        syncModalLock();
+
+        policyListModalBody.querySelectorAll("[data-policy-list-card]").forEach(function (card) {
+          const index = Number(card.dataset.policyIndex || "-1");
+          if (index < 0) {
+            return;
+          }
+
+          card.addEventListener("click", function () {
+            closePolicyListModal();
+            openPolicyModal(index);
+          });
+
+          card.addEventListener("keydown", function (event) {
+            if (event.key === "Enter" || event.key === " ") {
+              event.preventDefault();
+              closePolicyListModal();
+              openPolicyModal(index);
+            }
+          });
+        });
       }
 
       function closeStatEditor() {
@@ -928,7 +1307,7 @@
           return;
         }
         statModal.hidden = true;
-        document.body.classList.remove("is-modal-open");
+        syncModalLock();
         activeStatField = "";
         activeStatTitle = "";
       }
@@ -943,7 +1322,7 @@
         statModalLabel.textContent = `Edit ${title}`;
         statModalInput.value = normalizeCurrencyInput(record[fieldName] || "0");
         statModal.hidden = false;
-        document.body.classList.add("is-modal-open");
+        syncModalLock();
         statModalInput.focus();
         statModalInput.select();
       }
@@ -999,6 +1378,16 @@
           saveRecordField(activeStatField, clamped);
           if (display) {
             display.textContent = formatCoverageCardCurrency(clamped);
+            const displayShell = display.closest(".client-detail-stat-display");
+            if (displayShell && activeStatField === "coverageGap") {
+              const numericValue = Number(String(clamped || "").replace(/,/g, ""));
+              displayShell.classList.toggle("is-zero", Number.isFinite(numericValue) && numericValue === 0);
+              displayShell.classList.toggle("has-gap", !Number.isFinite(numericValue) || numericValue !== 0);
+            }
+          }
+          if (activeStatField === "coverageAmount" || activeStatField === "coverageGap") {
+            record[activeStatField] = clamped;
+            refreshCoverageAdequacy();
           }
           statModalInput.value = formatEditableCurrency(clamped);
           closeStatEditor();
@@ -1040,6 +1429,27 @@
         });
       });
 
+      policyListModalCloseButtons.forEach(function (button) {
+        button.addEventListener("click", function () {
+          closePolicyListModal();
+        });
+      });
+
+      policyDeleteModalCloseButtons.forEach(function (button) {
+        button.addEventListener("click", function () {
+          closePolicyDeleteModal();
+        });
+      });
+
+      if (viewAllPoliciesButton) {
+        viewAllPoliciesButton.addEventListener("click", function () {
+          if (viewAllPoliciesButton.disabled) {
+            return;
+          }
+          openPolicyListModal();
+        });
+      }
+
       if (policyEditToggle) {
         policyEditToggle.addEventListener("click", function () {
           if (activePolicyIndex < 0) {
@@ -1050,9 +1460,36 @@
         });
       }
 
+      if (policyDeleteToggle) {
+        policyDeleteToggle.addEventListener("click", function () {
+          if (activePolicyIndex < 0) {
+            return;
+          }
+          openPolicyDeleteModal();
+        });
+      }
+
+      if (policyDeleteConfirm) {
+        policyDeleteConfirm.addEventListener("click", function () {
+          if (activePolicyIndex < 0) {
+            return;
+          }
+          const wasDeleted = deletePolicy(activePolicyIndex);
+          if (!wasDeleted) {
+            closePolicyDeleteModal();
+            return;
+          }
+          closePolicyDeleteModal();
+          closePolicyModal();
+          window.location.reload();
+        });
+      }
+
       document.addEventListener("keydown", function (event) {
         if (event.key === "Escape") {
           closePolicyModal();
+          closePolicyListModal();
+          closePolicyDeleteModal();
         }
       });
 
