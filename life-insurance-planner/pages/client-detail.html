@@ -166,6 +166,21 @@
         }).format(number);
       }
 
+      function formatCurrencyTotal(value) {
+        const number = Number(value);
+        const safeNumber = Number.isFinite(number) ? number : 0;
+        return new Intl.NumberFormat("en-US", {
+          style: "currency",
+          currency: "USD",
+          maximumFractionDigits: 0
+        }).format(safeNumber);
+      }
+
+      function parseCurrencyNumber(value) {
+        const number = Number(String(value || "").replace(/[^0-9.-]/g, ""));
+        return Number.isFinite(number) ? number : 0;
+      }
+
       function formatValue(value) {
         if (value === null || value === undefined) {
           return "Not provided";
@@ -351,7 +366,7 @@
                 class="${tickClass}"
                 d="${tickPath}"
                 stroke="${tickColor}"
-                stroke-width="${geometry.strokeWidth}"
+                stroke-width="${geometry.strokeWidth + 0.9}"
                 fill="none"
                 stroke-linecap="butt"
                 style="--tick-delay: ${index * 140 + tickIndex * 16}ms;"
@@ -540,6 +555,83 @@
       function renderBlankCard() {
         return `
           <section class="client-detail-card client-detail-card-compact client-detail-card-blank" aria-hidden="true"></section>
+        `;
+      }
+
+      function renderCoverageBreakdownCard(record) {
+        const policies = Array.isArray(record.coveragePolicies) ? record.coveragePolicies : [];
+        const totalFaceAmount = policies.reduce(function (sum, policy) {
+          return sum + parseCurrencyNumber(policy.faceAmount);
+        }, 0);
+        const totalPremium = policies.reduce(function (sum, policy) {
+          return sum + parseCurrencyNumber(policy.premiumAmount);
+        }, 0);
+        const latestEffectiveDate = policies.reduce(function (latest, policy) {
+          const value = new Date(policy.effectiveDate || "").getTime();
+          return Number.isFinite(value) && value > latest ? value : latest;
+        }, 0);
+        const typeCounts = new Map();
+        const modeCounts = new Map();
+
+        policies.forEach(function (policy) {
+          const policyType = formatValue(policy.policyType);
+          const premiumMode = formatValue(policy.premiumMode);
+
+          if (policyType !== "Not provided") {
+            typeCounts.set(policyType, (typeCounts.get(policyType) || 0) + 1);
+          }
+
+          if (premiumMode !== "Not provided") {
+            modeCounts.set(premiumMode, (modeCounts.get(premiumMode) || 0) + 1);
+          }
+        });
+
+        const typeSummary = Array.from(typeCounts.entries())
+          .sort(function (a, b) { return b[1] - a[1]; })
+          .slice(0, 3)
+          .map(function (entry) { return `${entry[0]} ${entry[1]}`; })
+          .join(" | ") || "Not provided";
+
+        const modeSummary = Array.from(modeCounts.entries())
+          .sort(function (a, b) { return b[1] - a[1]; })
+          .slice(0, 3)
+          .map(function (entry) { return `${entry[0]} ${entry[1]}`; })
+          .join(" | ") || "Not provided";
+
+        return `
+          <section class="client-detail-card client-detail-card-compact client-coverage-breakdown-card">
+            <div class="client-detail-card-header">
+              <h2>Coverage Breakdown Summary</h2>
+            </div>
+            <div class="client-coverage-breakdown-grid">
+              <div class="client-summary-item">
+                <span class="client-summary-label">Policies Placed</span>
+                <span class="client-summary-value">${escapeHtml(String(policies.length))}</span>
+              </div>
+              <div class="client-summary-item">
+                <span class="client-summary-label">Total Face Amount</span>
+                <span class="client-summary-value">${escapeHtml(formatCurrencyTotal(totalFaceAmount))}</span>
+              </div>
+              <div class="client-summary-item">
+                <span class="client-summary-label">Total Premium</span>
+                <span class="client-summary-value">${escapeHtml(formatCurrencyTotal(totalPremium))}</span>
+              </div>
+              <div class="client-summary-item">
+                <span class="client-summary-label">Latest Effective</span>
+                <span class="client-summary-value">${escapeHtml(latestEffectiveDate ? formatDate(new Date(latestEffectiveDate).toISOString().slice(0, 10)) : "Not provided")}</span>
+              </div>
+            </div>
+            <div class="client-coverage-breakdown-lines">
+              <div class="client-coverage-breakdown-line">
+                <span>Policy Types</span>
+                <strong>${escapeHtml(typeSummary)}</strong>
+              </div>
+              <div class="client-coverage-breakdown-line">
+                <span>Premium Modes</span>
+                <strong>${escapeHtml(modeSummary)}</strong>
+              </div>
+            </div>
+          </section>
         `;
       }
 
@@ -843,7 +935,7 @@
                         { label: "Protection Modeling Inputs", complete: Boolean(record.pmiCompleted), detail: pmiStatus },
                         { label: "Complete Analysis", complete: hasAnalysisCompleted, detail: analysisStatus }
                       ])}
-                      ${renderBlankCard()}
+                      ${renderCoverageBreakdownCard(record)}
                     </div>
                     <div class="client-profile-dashboard-side">
                       ${renderCoverageCard(record)}
