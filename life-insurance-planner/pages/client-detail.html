@@ -226,21 +226,22 @@
 
       function getProfileRingGroups(record) {
         const milestones = getAccountMilestones(record);
-        const coverageMilestone = milestones[4];
         const overallCompletion = calculateProfileCompletion(record) / 100;
 
         return [
           {
             key: "overall",
-            label: "Account Progress",
+            label: milestones.map(function (milestone) {
+              return milestone.label;
+            }).join(" | "),
             color: "#111111",
             completion: overallCompletion
           },
           {
-            key: "placement",
-            label: "Coverage Placed",
+            key: "accent",
+            label: "Profile Accent",
             color: "#b8d8ff",
-            completion: coverageMilestone.complete ? 1 : 0
+            completion: 1
           }
         ];
       }
@@ -305,11 +306,11 @@
         const trackColor = "#e7edf4";
         const ringGroups = getProfileRingGroups(record);
         const rings = [
-          { radius: 69, strokeWidth: 24, segmented: true },
-          { radius: 49, strokeWidth: 10, segmented: false }
+          { radius: 69, strokeWidth: 14, segmented: true },
+          { radius: 38.5, strokeWidth: 2.6, segmented: false }
         ];
-        const outerTickCount = 52;
-        const outerTickSweep = 1.1;
+        const outerTickCount = 78;
+        const outerTickSweep = 0.62;
         const outerTickStep = ringSweep / outerTickCount;
 
         function buildSegmentGroup(milestone, index, pathMarkup, hoverX, hoverY, suffix) {
@@ -376,15 +377,16 @@
           if (geometry.segmented) {
             return buildOuterTickRing(ring, geometry, index);
           }
-          const endAngle = startAngle + ringSweep;
-          const progressEndAngle = startAngle + (ringSweep * ring.completion);
-          const centerAngle = startAngle + (ringSweep / 2);
+          const ringStartAngle = ring.key === "accent" ? startAngle - 120 : startAngle;
+          const endAngle = ringStartAngle + ringSweep;
+          const progressEndAngle = ringStartAngle + (ringSweep * ring.completion);
+          const centerAngle = ringStartAngle + (ringSweep / 2);
           const hoverRadians = (centerAngle - 90) * Math.PI / 180;
           const hoverX = (Math.cos(hoverRadians) * 4).toFixed(2);
           const hoverY = (Math.sin(hoverRadians) * 4).toFixed(2);
-          const trackPath = describeArc(center, center, geometry.radius, startAngle, endAngle);
+          const trackPath = describeArc(center, center, geometry.radius, ringStartAngle, endAngle);
           const progressPath = ring.completion > 0
-            ? describeArc(center, center, geometry.radius, startAngle, progressEndAngle)
+            ? describeArc(center, center, geometry.radius, ringStartAngle, progressEndAngle)
             : "";
           return buildSegmentGroup(
             {
@@ -394,7 +396,7 @@
             index,
             `
               <path
-                class="client-detail-donut-ring-track${ring.key === "placement" ? " is-placement" : ""}"
+                class="client-detail-donut-ring-track${ring.key === "accent" ? " is-placement" : ""}"
                 d="${trackPath}"
                 stroke="${trackColor}"
                 stroke-width="${geometry.strokeWidth}"
@@ -403,13 +405,23 @@
               />
               ${progressPath ? `
                 <path
-                  class="client-detail-donut-ring-progress${ring.key === "placement" ? " is-placement" : ""}"
+                  class="client-detail-donut-ring-progress${ring.key === "accent" ? " is-placement" : ""}"
                   d="${progressPath}"
-                  stroke="${ring.color}"
+                  stroke="${ring.key === "accent" ? "url(#client-detail-placement-gradient)" : ring.color}"
                   stroke-width="${geometry.strokeWidth}"
                   fill="none"
                   pathLength="100"
                 />
+                ${ring.key === "accent" ? `
+                  <path
+                    class="client-detail-donut-ring-progress-gloss is-placement"
+                    d="${progressPath}"
+                    stroke="url(#client-detail-placement-gloss)"
+                    stroke-width="${Math.max(1.5, geometry.strokeWidth * 0.42)}"
+                    fill="none"
+                    pathLength="100"
+                  />
+                ` : ""}
               ` : ""}
             `,
             hoverX,
@@ -420,6 +432,20 @@
 
         return `
           <svg class="client-detail-donut-svg" viewBox="0 0 160 160" aria-hidden="true" focusable="false">
+            <defs>
+              <linearGradient id="client-detail-placement-gradient" x1="24" y1="24" x2="136" y2="136" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stop-color="#4120e8"></stop>
+                <stop offset="22%" stop-color="#6a3dff"></stop>
+                <stop offset="48%" stop-color="#2f8f5b"></stop>
+                <stop offset="70%" stop-color="#8dd4a8"></stop>
+                <stop offset="100%" stop-color="#0d3fe6"></stop>
+              </linearGradient>
+              <linearGradient id="client-detail-placement-gloss" x1="36" y1="32" x2="124" y2="128" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stop-color="#ffffff" stop-opacity="0.38"></stop>
+                <stop offset="30%" stop-color="#ffffff" stop-opacity="0.14"></stop>
+                <stop offset="100%" stop-color="#ffffff" stop-opacity="0"></stop>
+              </linearGradient>
+            </defs>
             ${segments}
           </svg>
         `;
@@ -518,23 +544,32 @@
       }
 
       function renderChecklistCard(title, items) {
+        const incompleteItems = items.filter(function (item) { return !item.complete; });
+        const completedCount = items.length - incompleteItems.length;
+        const nextItem = incompleteItems[0] || null;
+        const nextActionTitle = nextItem ? nextItem.label : "All core steps complete";
+        const nextActionDetail = nextItem ? nextItem.detail : "This account has all required core items completed.";
+
         return `
-          <section class="client-detail-card client-detail-card-compact">
+          <section class="client-detail-card client-detail-card-compact client-detail-card-checklist">
             <div class="client-detail-card-header">
               <h2>${escapeHtml(title)}</h2>
             </div>
-            <div class="client-checklist">
+            <div class="client-checklist-next ${nextItem ? "is-incomplete" : "is-complete"}">
+              <span class="client-checklist-next-label">Next Action</span>
+              <strong>${escapeHtml(nextActionTitle)}</strong>
+              <span>${escapeHtml(nextActionDetail)}</span>
+            </div>
+            <div class="client-checklist-progress">${completedCount} of ${items.length} complete</div>
+            <div class="client-checklist-list">
               ${items.map(function (item) {
                 return `
-                  <div class="client-checklist-item ${item.complete ? "is-complete" : "is-incomplete"}">
-                    <div class="client-checklist-paper" aria-hidden="true">
-                      <span class="client-checklist-paper-corner"></span>
-                      <span class="client-checklist-paper-icon">${item.complete ? "✓" : "+"}</span>
-                    </div>
-                    <div class="client-checklist-copy">
+                  <div class="client-checklist-row ${item.complete ? "is-complete" : "is-incomplete"}">
+                    <div class="client-checklist-row-copy">
                       <strong>${escapeHtml(item.label)}</strong>
                       <span>${escapeHtml(item.detail)}</span>
                     </div>
+                    <span class="client-checklist-status">${item.complete ? "Complete" : "Incomplete"}</span>
                   </div>
                 `;
               }).join("")}
@@ -552,7 +587,7 @@
         const canAddPolicy = policies.length < 30;
 
         return `
-          <section class="client-detail-card client-detail-card-compact">
+          <section class="client-detail-card client-detail-card-compact client-coverage-card">
             <div class="client-detail-card-header client-detail-card-header-coverage">
               <h2>${escapeHtml(title)}</h2>
               <a
@@ -561,8 +596,9 @@
                 ${canAddPolicy ? "" : `aria-disabled="true" tabindex="-1"`}
               >${escapeHtml(canAddPolicy ? actionLabel : "Policy Limit Reached")}</a>
             </div>
-            ${policies.length ? `
-              <div class="client-coverage-policy-list">
+            <div class="client-coverage-card-body">
+              ${policies.length ? `
+                <div class="client-coverage-policy-list">
                 ${previewPolicies.map(function (policy, index) {
                   return `
                     <article
@@ -588,16 +624,19 @@
                     </article>
                   `;
                 }).join("")}
-              </div>
-              <button
-                class="client-coverage-view-all-button${policies.length > 2 ? " is-active" : ""}"
-                type="button"
-                data-view-all-policies
-                ${policies.length > 2 ? "" : "disabled"}
-              >View All</button>
-            ` : `
-              <p class="client-coverage-empty">No policies saved to this profile yet.</p>
-            `}
+                </div>
+              ` : `
+                <div class="client-coverage-policy-list is-empty">
+                  <p class="client-coverage-empty">No policies saved to this profile yet.</p>
+                </div>
+              `}
+            </div>
+            <button
+              class="client-coverage-view-all-button${policies.length > 2 ? " is-active" : ""}"
+              type="button"
+              data-view-all-policies
+              ${policies.length > 2 ? "" : "disabled"}
+            >View All</button>
           </section>
         `;
       }
@@ -673,12 +712,25 @@
         const householdName = formatValue(record.householdName);
         const subtitleParts = [status, formatValue(record.caseRef)];
         const householdDisplay = householdName === "Not provided" ? "No household linked" : householdName;
+        const hasCoveragePlaced = (Array.isArray(record.coveragePolicies) && record.coveragePolicies.length > 0)
+          || record.statusGroup === "coverage-placed"
+          || record.statusGroup === "closed";
+        const hasProfileCreated = Boolean(String(record.id || "").trim());
+        const hasAnalysisCompleted = Boolean(record.analysisCompleted)
+          || record.statusGroup === "coverage-placed"
+          || record.statusGroup === "closed";
         const completion = calculateProfileCompletion(record);
+        const profileStatus = hasProfileCreated
+          ? `Saved ${formatDate(record.dateProfileCreated || record.lastUpdatedDate)}`
+          : "Incomplete";
         const preliminaryStatus = record.preliminaryUnderwritingCompleted
           ? `Saved ${formatDate(record.preliminaryUnderwriting?.savedAt)}`
           : "Incomplete";
         const pmiStatus = record.pmiCompleted
           ? `Saved ${formatDate(record.protectionModeling?.savedAt)}`
+          : "Incomplete";
+        const analysisStatus = hasAnalysisCompleted
+          ? `Saved ${formatDate(record.analysisCompletedDate || record.lastUpdatedDate)}`
           : "Incomplete";
 
         return `
@@ -692,14 +744,24 @@
                   <div class="client-profile-donut-map">
                     <div class="client-detail-avatar client-detail-avatar-progress">
                       ${buildDonutSvg(record)}
-                      <div class="client-detail-avatar-core">${escapeHtml(getInitials(record.displayName))}</div>
+                      <div class="client-detail-avatar-core">
+                        <div class="client-detail-avatar-core-inner">
+                          <div class="client-detail-avatar-core-face client-detail-avatar-core-front">${escapeHtml(getInitials(record.displayName))}</div>
+                          <div class="client-detail-avatar-core-face client-detail-avatar-core-back">
+                            <span class="client-detail-avatar-core-back-label">Created</span>
+                            <span class="client-detail-avatar-core-back-date">${escapeHtml(formatDate(record.dateProfileCreated || record.lastUpdatedDate))}</span>
+                          </div>
+                        </div>
+                      </div>
                     </div>
-                    <div class="client-profile-donut-tooltip" data-donut-tooltip hidden></div>
                   </div>
                 </div>
                 <div class="client-profile-sidebar-copy">
                   <p class="client-profile-completion-copy">${escapeHtml(`${completion}% account complete`)}</p>
-                  <h2>${escapeHtml(formatValue(record.displayName))}</h2>
+                  <h2>
+                    <span>${escapeHtml(formatValue(record.displayName))}</span>
+                    <span class="client-profile-name-badge${hasCoveragePlaced ? " is-complete" : ""}" aria-hidden="true"></span>
+                  </h2>
                   <p>${escapeHtml([
                     formatValue(record.age),
                     formatValue(record.insuranceRatingSex),
@@ -776,8 +838,10 @@
                   <div class="client-profile-dashboard">
                     <div class="client-profile-dashboard-main">
                       ${renderChecklistCard("Account Completion Checklist", [
+                        { label: "Create Profile", complete: hasProfileCreated, detail: profileStatus },
                         { label: "Preliminary Underwriting", complete: Boolean(record.preliminaryUnderwritingCompleted), detail: preliminaryStatus },
-                        { label: "Protection Modeling Inputs", complete: Boolean(record.pmiCompleted), detail: pmiStatus }
+                        { label: "Protection Modeling Inputs", complete: Boolean(record.pmiCompleted), detail: pmiStatus },
+                        { label: "Complete Analysis", complete: hasAnalysisCompleted, detail: analysisStatus }
                       ])}
                       ${renderBlankCard()}
                     </div>
@@ -802,8 +866,10 @@
                     </div>
                     <div class="client-profile-dashboard-side">
                       ${renderChecklistCard("Account Completion Checklist", [
+                        { label: "Create Profile", complete: hasProfileCreated, detail: profileStatus },
                         { label: "Preliminary Underwriting", complete: Boolean(record.preliminaryUnderwritingCompleted), detail: preliminaryStatus },
-                        { label: "PMI Form", complete: Boolean(record.pmiCompleted), detail: pmiStatus }
+                        { label: "Protection Modeling Inputs", complete: Boolean(record.pmiCompleted), detail: pmiStatus },
+                        { label: "Complete Analysis", complete: hasAnalysisCompleted, detail: analysisStatus }
                       ])}
                     </div>
                   </div>
@@ -997,7 +1063,6 @@
 
       const donutMap = host.querySelector(".client-profile-donut-map");
       const donutRing = host.querySelector(".client-detail-avatar-progress");
-      const donutTooltip = host.querySelector("[data-donut-tooltip]");
       const donutSegments = host.querySelectorAll(".client-detail-donut-segment-group");
       const profileTabs = host.querySelectorAll("[data-client-tab]");
       const profilePanels = host.querySelectorAll("[data-client-panel]");
@@ -1493,65 +1558,6 @@
         }
       });
 
-      if (donutMap && donutRing && donutTooltip && donutSegments.length) {
-        function hideDonutTooltip() {
-          donutTooltip.hidden = true;
-        }
-
-        function setSegmentTransform(segmentKey, transformValue) {
-          donutSegments.forEach(function (candidate) {
-            if ((candidate.dataset.segmentKey || "") === segmentKey) {
-              candidate.style.transform = transformValue;
-            }
-          });
-        }
-
-        donutSegments.forEach(function (segment) {
-          segment.addEventListener("pointerenter", function () {
-            donutTooltip.textContent = segment.dataset.milestoneLabel || "";
-            donutTooltip.hidden = false;
-            setSegmentTransform(
-              segment.dataset.segmentKey || "",
-              `translate(${segment.dataset.hoverX || 0}px, ${segment.dataset.hoverY || 0}px)`
-            );
-          });
-
-          segment.addEventListener("pointermove", function (event) {
-            const rect = donutMap.getBoundingClientRect();
-            donutTooltip.style.left = `${event.clientX - rect.left}px`;
-            donutTooltip.style.top = `${event.clientY - rect.top - 18}px`;
-          });
-
-          segment.addEventListener("pointerleave", function () {
-            setSegmentTransform(segment.dataset.segmentKey || "", "");
-            hideDonutTooltip();
-          });
-        });
-
-        donutRing.addEventListener("pointerleave", function () {
-          donutSegments.forEach(function (segment) {
-            segment.style.transform = "";
-          });
-          hideDonutTooltip();
-        });
-
-        donutMap.addEventListener("pointermove", function (event) {
-          if (donutTooltip.hidden) {
-            return;
-          }
-          const rect = donutMap.getBoundingClientRect();
-          donutTooltip.style.left = `${event.clientX - rect.left}px`;
-          donutTooltip.style.top = `${event.clientY - rect.top - 18}px`;
-        });
-
-        donutMap.addEventListener("pointerleave", function () {
-          donutSegments.forEach(function (segment) {
-            segment.style.transform = "";
-          });
-          donutTooltip.hidden = false;
-          hideDonutTooltip();
-        });
-      }
     })();
   </script>
 </body>
