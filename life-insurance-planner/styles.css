@@ -3280,8 +3280,8 @@ body.client-detail-page .client-detail-header {
 }
 
 .client-detail-avatar-core {
-  width: 5.7rem;
-  height: 5.7rem;
+  width: 6.45rem;
+  height: 6.45rem;
   border-radius: 50%;
   position: relative;
   z-index: 2;
@@ -3321,7 +3321,7 @@ body.client-detail-page .client-detail-header {
 }
 
 .client-detail-avatar-core-front {
-  font-size: 2.2rem;
+  font-size: 2.55rem;
   font-weight: 800;
   letter-spacing: 0.04em;
   font-family: "Fraunces", serif;
@@ -4321,10 +4321,10 @@ body.client-detail-page .client-detail-header {
 }
 
 .client-checklist-next-label {
-  color: #667084;
-  font-size: 0.66rem;
-  font-weight: 800;
-  letter-spacing: 0.08em;
+  color: #244a36;
+  font-size: 0.9rem;
+  font-weight: 900;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
 }
 

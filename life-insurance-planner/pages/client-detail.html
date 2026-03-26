@@ -307,7 +307,7 @@
         const ringGroups = getProfileRingGroups(record);
         const rings = [
           { radius: 69, strokeWidth: 14, segmented: true },
-          { radius: 38.5, strokeWidth: 2.6, segmented: false }
+          { radius: 43, strokeWidth: 2.6, segmented: false }
         ];
         const outerTickCount = 78;
         const outerTickSweep = 0.62;
@@ -817,10 +817,6 @@
 
               <div class="client-profile-tab-panels">
                 <section class="client-profile-tab-panel is-active" data-client-panel="overview">
-                  <section class="client-profile-banner">
-                    <p>Case ${escapeHtml(formatValue(record.caseRef))} is currently marked as ${escapeHtml(status)}. Household assignment is ${escapeHtml(householdDisplay)}.</p>
-                  </section>
-
                   <div class="client-profile-stats">
                     ${renderStatCard("Coverage Amount", formatCoverageCardCurrency(record.coverageAmount), "", {
                       editable: true,
@@ -876,6 +872,9 @@
                 </section>
 
                 <section class="client-profile-tab-panel" data-client-panel="household" hidden>
+                  <section class="client-profile-banner">
+                    <p>Case ${escapeHtml(formatValue(record.caseRef))} is currently marked as ${escapeHtml(status)}. Household assignment is ${escapeHtml(householdDisplay)}.</p>
+                  </section>
                   <div class="client-profile-dashboard">
                     <div class="client-profile-dashboard-main">
                       ${renderSummaryCard("Household Insight", [
