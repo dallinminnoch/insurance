@@ -6,7 +6,7 @@
   <title>Client Detail | Advisor Planning Suite</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@600&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../styles.css">
 </head>
 <body class="home-page prospect-page profile-creation-page client-detail-page">
@@ -757,7 +757,7 @@
                   </div>
                 </div>
                 <div class="client-profile-sidebar-copy">
-                  <p class="client-profile-completion-copy">${escapeHtml(`${completion}% account complete`)}</p>
+                  <p class="client-profile-completion-copy">${escapeHtml(`${completion}% Account Complete`)}</p>
                   <h2>
                     <span>${escapeHtml(formatValue(record.displayName))}</span>
                     <span class="client-profile-name-badge${hasCoveragePlaced ? " is-complete" : ""}" aria-hidden="true"></span>
@@ -809,7 +809,7 @@
 
             <section class="client-profile-main">
               <nav class="client-profile-tabs" aria-label="Client detail tabs">
-                <button class="client-profile-tab is-active" type="button" data-client-tab="overview" aria-selected="true">Overview</button>
+                <button class="client-profile-tab is-active" type="button" data-client-tab="overview" aria-selected="true">Dashboard</button>
                 <button class="client-profile-tab" type="button" data-client-tab="planning" aria-selected="false">Planning</button>
                 <button class="client-profile-tab" type="button" data-client-tab="household" aria-selected="false">Household</button>
                 <button class="client-profile-tab" type="button" data-client-tab="notes" aria-selected="false">Notes</button>
@@ -1561,3 +1561,5 @@
   </script>
 </body>
 </html>
+
+
