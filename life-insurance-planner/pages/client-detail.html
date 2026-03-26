@@ -635,6 +635,39 @@
         `;
       }
 
+      function renderNotesWidget(record) {
+        const rawNotes = String(record.clientNotes || "").trim();
+        const noteLines = rawNotes
+          ? rawNotes.split(/\r?\n+/).map(function (line) { return line.trim(); }).filter(Boolean).slice(0, 3)
+          : [];
+
+        return `
+          <section class="client-detail-card client-detail-card-compact client-notes-widget-card">
+            <div class="client-detail-card-header">
+              <h2>Notes</h2>
+            </div>
+            <div class="client-notes-widget-body">
+              ${noteLines.length ? `
+                <div class="client-notes-widget-list">
+                  ${noteLines.map(function (line) {
+                    return `
+                      <div class="client-notes-widget-item">
+                        <span class="client-notes-widget-dot" aria-hidden="true"></span>
+                        <span>${escapeHtml(line)}</span>
+                      </div>
+                    `;
+                  }).join("")}
+                </div>
+              ` : `
+                <div class="client-notes-widget-empty">
+                  No notes yet. Use the Notes tab to add account details, follow-ups, or policy reminders.
+                </div>
+              `}
+            </div>
+          </section>
+        `;
+      }
+
       function renderChecklistCard(title, items) {
         const incompleteItems = items.filter(function (item) { return !item.complete; });
         const completedCount = items.length - incompleteItems.length;
@@ -939,7 +972,7 @@
                     </div>
                     <div class="client-profile-dashboard-side">
                       ${renderCoverageCard(record)}
-                      ${renderBlankCard()}
+                      ${renderNotesWidget(record)}
                     </div>
                   </div>
                 </section>

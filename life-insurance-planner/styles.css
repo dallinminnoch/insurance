@@ -3910,6 +3910,47 @@ body.client-detail-page .client-detail-header {
   word-break: break-word;
 }
 
+.client-notes-widget-card {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.client-notes-widget-body {
+  display: grid;
+  gap: 0.7rem;
+}
+
+.client-notes-widget-list {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.client-notes-widget-item {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+  gap: 0.55rem;
+  color: #1f2937;
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+.client-notes-widget-dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  margin-top: 0.45rem;
+  border-radius: 50%;
+  background: #4f46e5;
+  flex: 0 0 auto;
+}
+
+.client-notes-widget-empty {
+  color: #667084;
+  font-size: 0.9rem;
+  line-height: 1.45;
+  padding: 0.1rem 0;
+}
+
 .client-detail-card {
   padding: 1.15rem 1.2rem;
   border: 1px solid rgba(213, 221, 232, 0.95);
@@ -4413,10 +4454,10 @@ body.client-detail-page .client-detail-header {
 }
 
 .client-checklist-next-label {
-  color: #24533d;
-  font-size: 1rem;
-  font-weight: 900 !important;
-  letter-spacing: 0.06em;
+  color: #9f1d1d;
+  font-size: 1.02rem;
+  font-weight: 1000 !important;
+  letter-spacing: 0.03em;
   text-transform: uppercase;
 }
 
