@@ -556,9 +556,13 @@
               <h2>${escapeHtml(title)}</h2>
             </div>
             <div class="client-checklist-next ${nextItem ? "is-incomplete" : "is-complete"}">
-              <span class="client-checklist-next-label">Next Action</span>
-              <strong>${escapeHtml(nextActionTitle)}</strong>
-              <span>${escapeHtml(nextActionDetail)}</span>
+              <div class="client-checklist-next-top">
+                <span class="client-checklist-next-label">Next Action</span>
+                <div class="client-checklist-next-row">
+                  <strong>${escapeHtml(nextActionTitle)}</strong>
+                  <img class="client-checklist-next-icon" src="../Images/start_24dp_E3E3E3_FILL0_wght400_GRAD0_opsz24.svg" alt="" aria-hidden="true">
+                </div>
+              </div>
             </div>
             <div class="client-checklist-progress">${completedCount} of ${items.length} complete</div>
             <div class="client-checklist-list">
