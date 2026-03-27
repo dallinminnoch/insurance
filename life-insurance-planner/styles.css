@@ -767,6 +767,25 @@ textarea {
   border-color: #233044;
 }
 
+.admin-state-tax-summary {
+  list-style: none;
+  cursor: pointer;
+}
+
+.admin-state-tax-summary::-webkit-details-marker {
+  display: none;
+}
+
+.admin-state-tax-body {
+  padding-top: var(--space-md);
+}
+
+.admin-state-tax-filing-group + .admin-state-tax-filing-group {
+  margin-top: var(--space-lg);
+  padding-top: var(--space-lg);
+  border-top: 1px solid rgba(213, 221, 232, 0.85);
+}
+
 .admin-tax-bracket-table.is-disabled {
   opacity: 0.58;
 }

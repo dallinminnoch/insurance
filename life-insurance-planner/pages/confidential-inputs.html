@@ -1542,12 +1542,13 @@
 
       function getStateTaxConfigForState(stateCode) {
         const normalizedCode = String(stateCode || "").trim().toUpperCase();
+        const normalizedFilingStatus = String(filingStatusField?.value || "").trim();
         const defaultConfig = {
           hasIncomeTax: !noIncomeTaxStates.has(normalizedCode),
           rows: noIncomeTaxStates.has(normalizedCode) ? [] : defaultStateTaxRows
         };
 
-        if (!normalizedCode) {
+        if (!normalizedCode || !normalizedFilingStatus) {
           return { hasIncomeTax: false, rows: [] };
         }
 
@@ -1555,7 +1556,10 @@
           const stored = JSON.parse(localStorage.getItem(stateTaxBracketStorageKey) || "null");
           if (stored && typeof stored === "object" && stored[normalizedCode] && typeof stored[normalizedCode] === "object") {
             const hasIncomeTax = stored[normalizedCode].hasIncomeTax === false ? false : true;
-            const rows = Array.isArray(stored[normalizedCode].rows) ? stored[normalizedCode].rows : [];
+            const filings = stored[normalizedCode].filings && typeof stored[normalizedCode].filings === "object"
+              ? stored[normalizedCode].filings
+              : {};
+            const rows = Array.isArray(filings[normalizedFilingStatus]) ? filings[normalizedFilingStatus] : [];
             return {
               hasIncomeTax,
               rows: hasIncomeTax ? (rows.length ? rows : defaultConfig.rows) : []
@@ -1677,15 +1681,16 @@
 
         const currentValue = String(stateIncomeTaxBracketField.value || "").trim();
         const selectedState = String(stateOfResidenceField?.value || "").trim().toUpperCase();
+        const selectedFilingStatus = String(filingStatusField?.value || "").trim();
         const stateTaxBracketLabel = form.querySelector("[data-state-tax-bracket-label]");
         const stateConfig = getStateTaxConfigForState(selectedState);
-        const shouldDisable = !selectedState || !stateConfig.hasIncomeTax;
+        const shouldDisable = !selectedState || !selectedFilingStatus || !stateConfig.hasIncomeTax;
 
         stateIncomeTaxBracketField.disabled = shouldDisable;
         stateIncomeTaxBracketField.closest(".field-group")?.classList.toggle("is-disabled", shouldDisable);
         stateTaxBracketLabel?.classList.toggle("is-disabled", shouldDisable);
 
-        if (!selectedState) {
+        if (!selectedState || !selectedFilingStatus) {
           stateIncomeTaxBracketField.innerHTML = '<option value="">Please select</option>';
           stateIncomeTaxBracketField.value = "";
           return;
@@ -1747,7 +1752,8 @@
         }
 
         const selectedState = String(stateOfResidenceField?.value || "").trim().toUpperCase();
-        if (!selectedState) {
+        const selectedFilingStatus = String(filingStatusField?.value || "").trim();
+        if (!selectedState || !selectedFilingStatus) {
           stateIncomeTaxBracketField.value = "";
           return;
         }

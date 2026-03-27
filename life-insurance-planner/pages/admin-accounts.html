@@ -189,7 +189,12 @@
             state.code,
             {
               hasIncomeTax: !noIncomeTaxStates.has(state.code),
-              rows: noIncomeTaxStates.has(state.code) ? [] : defaultStateRows.map((row) => ({ ...row }))
+              filings: Object.fromEntries(
+                filingStatuses.map((status) => [
+                  status,
+                  noIncomeTaxStates.has(state.code) ? [] : defaultStateRows.map((row) => ({ ...row }))
+                ])
+              )
             }
           ])
         );
@@ -240,10 +245,15 @@
             }
 
             const hasIncomeTax = existing.hasIncomeTax === false ? false : true;
-            const rows = Array.isArray(existing.rows) ? existing.rows.map(normalizeRow).filter(Boolean) : [];
+            const filings = existing.filings && typeof existing.filings === "object" ? existing.filings : {};
             defaults[state.code] = {
               hasIncomeTax,
-              rows: hasIncomeTax ? (rows.length ? rows : defaults[state.code].rows) : []
+              filings: Object.fromEntries(
+                filingStatuses.map((status) => {
+                  const rows = Array.isArray(filings[status]) ? filings[status].map(normalizeRow).filter(Boolean) : [];
+                  return [status, hasIncomeTax ? (rows.length ? rows : defaults[state.code].filings[status]) : []];
+                })
+              )
             };
           });
 
@@ -262,84 +272,108 @@
           const sectionTitle = status === "Single" ? "Filing Single" : status;
 
           return `
-            <section class="admin-tax-bracket-group" data-tax-group="${statusKey}">
-              <div class="admin-tax-bracket-toolbar">
-                <span class="section-label">${escapeHtml(sectionTitle)}</span>
-                <strong>${rows.length}</strong>
-              </div>
-              <table class="admin-tax-bracket-table">
-                <thead>
-                  <tr>
-                    <th>Tax %</th>
-                    <th>Range From</th>
-                    <th>Range To</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  ${rows.map((row, index) => `
-                    <tr class="admin-tax-bracket-row">
-                      <td><input class="admin-tax-bracket-input" type="text" value="${escapeHtml(row.rate)}" data-tax-rate data-tax-status="${statusKey}" data-tax-index="${index}" placeholder="24%"></td>
-                      <td><input class="admin-tax-bracket-input" type="text" value="${escapeHtml(row.minIncome)}" data-tax-min data-tax-status="${statusKey}" data-tax-index="${index}" placeholder="100526"></td>
-                      <td><input class="admin-tax-bracket-input" type="text" value="${escapeHtml(row.maxIncome)}" data-tax-max data-tax-status="${statusKey}" data-tax-index="${index}" placeholder="191950"></td>
-                      <td class="admin-tax-bracket-actions-cell"><button class="admin-action-button admin-tax-bracket-remove" type="button" data-tax-remove="${index}" data-tax-status="${statusKey}">Remove</button></td>
+            <details class="admin-tax-bracket-group admin-federal-tax-group" data-tax-group="${statusKey}">
+              <summary class="admin-state-tax-summary">
+                <div class="admin-tax-bracket-toolbar">
+                  <span class="section-label">${escapeHtml(sectionTitle)}</span>
+                  <strong>${rows.length}</strong>
+                </div>
+              </summary>
+              <div class="admin-state-tax-body">
+                <table class="admin-tax-bracket-table">
+                  <thead>
+                    <tr>
+                      <th>Tax %</th>
+                      <th>Range From</th>
+                      <th>Range To</th>
+                      <th>Actions</th>
                     </tr>
-                  `).join("")}
-                </tbody>
-              </table>
-              <div class="admin-tax-bracket-actions">
-                <button class="admin-action-button" type="button" data-federal-tax-add="${statusKey}">Add Bracket</button>
-                <button class="admin-action-button" type="button" data-federal-tax-reset="${statusKey}">Reset Defaults</button>
-                <button class="admin-action-button" type="button" data-federal-tax-save="${statusKey}">Save Changes</button>
+                  </thead>
+                  <tbody>
+                    ${rows.map((row, index) => `
+                      <tr class="admin-tax-bracket-row">
+                        <td><input class="admin-tax-bracket-input" type="text" value="${escapeHtml(row.rate)}" data-tax-rate data-tax-status="${statusKey}" data-tax-index="${index}" placeholder="24%"></td>
+                        <td><input class="admin-tax-bracket-input" type="text" value="${escapeHtml(row.minIncome)}" data-tax-min data-tax-status="${statusKey}" data-tax-index="${index}" placeholder="100526"></td>
+                        <td><input class="admin-tax-bracket-input" type="text" value="${escapeHtml(row.maxIncome)}" data-tax-max data-tax-status="${statusKey}" data-tax-index="${index}" placeholder="191950"></td>
+                        <td class="admin-tax-bracket-actions-cell"><button class="admin-action-button admin-tax-bracket-remove" type="button" data-tax-remove="${index}" data-tax-status="${statusKey}">Remove</button></td>
+                      </tr>
+                    `).join("")}
+                  </tbody>
+                </table>
+                <div class="admin-tax-bracket-actions">
+                  <button class="admin-action-button" type="button" data-federal-tax-add="${statusKey}">Add Bracket</button>
+                  <button class="admin-action-button" type="button" data-federal-tax-reset="${statusKey}">Reset Defaults</button>
+                  <button class="admin-action-button" type="button" data-federal-tax-save="${statusKey}">Save Changes</button>
+                </div>
+                <p class="panel-copy admin-tax-bracket-feedback" data-federal-tax-feedback="${statusKey}">${escapeHtml(feedbackByStatus?.[status] || "")}</p>
               </div>
-              <p class="panel-copy admin-tax-bracket-feedback" data-federal-tax-feedback="${statusKey}">${escapeHtml(feedbackByStatus?.[status] || "")}</p>
-            </section>
+            </details>
           `;
         }).join("");
       }
 
-      function renderStateGroups(config, feedbackByState) {
+      function renderStateGroups(config, feedbackByKey) {
         stateGroupsHost.innerHTML = states.map((state) => {
-          const stateConfig = config[state.code] || { hasIncomeTax: true, rows: defaultStateRows.map((row) => ({ ...row })) };
-          const rows = Array.isArray(stateConfig.rows) && stateConfig.rows.length ? stateConfig.rows : (stateConfig.hasIncomeTax ? defaultStateRows.map((row) => ({ ...row })) : []);
-          const safeCode = escapeHtml(state.code);
+          const stateConfig = config[state.code] || buildDefaultStateConfig()[state.code];
           const hasIncomeTax = stateConfig.hasIncomeTax !== false;
-          return `
-            <section class="admin-tax-bracket-group admin-state-tax-group" data-state-tax-group="${safeCode}">
-              <div class="admin-tax-bracket-toolbar">
-                <span class="section-label">${escapeHtml(state.name)} (${safeCode})</span>
-                <div class="admin-state-tax-toggle" role="group" aria-label="${escapeHtml(state.name)} income tax">
-                  <button class="admin-action-button${hasIncomeTax ? ' is-active' : ''}" type="button" data-state-tax-toggle="${safeCode}" data-state-tax-value="yes">Yes</button>
-                  <button class="admin-action-button${!hasIncomeTax ? ' is-active' : ''}" type="button" data-state-tax-toggle="${safeCode}" data-state-tax-value="no">No</button>
+          const safeCode = escapeHtml(state.code);
+          const filingMarkup = filingStatuses.map((status) => {
+            const safeStatus = escapeHtml(status);
+            const rows = Array.isArray(stateConfig.filings?.[status]) && stateConfig.filings[status].length
+              ? stateConfig.filings[status]
+              : (hasIncomeTax ? defaultStateRows.map((row) => ({ ...row })) : []);
+            const feedbackKey = `${state.code}::${status}`;
+            return `
+              <section class="admin-tax-bracket-group admin-state-tax-filing-group" data-state-tax-filing-group="${safeCode}" data-state-tax-filing="${safeStatus}">
+                <div class="admin-tax-bracket-toolbar">
+                  <span class="section-label">${escapeHtml(status)}</span>
+                  <strong>${rows.length}</strong>
                 </div>
-              </div>
-              <table class="admin-tax-bracket-table${hasIncomeTax ? '' : ' is-disabled'}">
-                <thead>
-                  <tr>
-                    <th>Tax %</th>
-                    <th>Range From</th>
-                    <th>Range To</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  ${rows.map((row, index) => `
-                    <tr class="admin-tax-bracket-row">
-                      <td><input class="admin-tax-bracket-input" type="text" value="${escapeHtml(row.rate)}" data-state-tax-rate data-state-tax-state="${safeCode}" data-state-tax-index="${index}" placeholder="5%" ${hasIncomeTax ? '' : 'disabled'}></td>
-                      <td><input class="admin-tax-bracket-input" type="text" value="${escapeHtml(row.minIncome)}" data-state-tax-min data-state-tax-state="${safeCode}" data-state-tax-index="${index}" placeholder="0" ${hasIncomeTax ? '' : 'disabled'}></td>
-                      <td><input class="admin-tax-bracket-input" type="text" value="${escapeHtml(row.maxIncome)}" data-state-tax-max data-state-tax-state="${safeCode}" data-state-tax-index="${index}" placeholder="50000" ${hasIncomeTax ? '' : 'disabled'}></td>
-                      <td class="admin-tax-bracket-actions-cell"><button class="admin-action-button admin-tax-bracket-remove" type="button" data-state-tax-remove="${index}" data-state-tax-state="${safeCode}" ${hasIncomeTax ? '' : 'disabled'}>Remove</button></td>
+                <table class="admin-tax-bracket-table${hasIncomeTax ? '' : ' is-disabled'}">
+                  <thead>
+                    <tr>
+                      <th>Tax %</th>
+                      <th>Range From</th>
+                      <th>Range To</th>
+                      <th>Actions</th>
                     </tr>
-                  `).join("")}
-                </tbody>
-              </table>
-              <div class="admin-tax-bracket-actions">
-                <button class="admin-action-button" type="button" data-state-tax-add="${safeCode}" ${hasIncomeTax ? '' : 'disabled'}>Add Bracket</button>
-                <button class="admin-action-button" type="button" data-state-tax-reset="${safeCode}">Reset Defaults</button>
-                <button class="admin-action-button" type="button" data-state-tax-save="${safeCode}">Save Changes</button>
+                  </thead>
+                  <tbody>
+                    ${rows.map((row, index) => `
+                      <tr class="admin-tax-bracket-row">
+                        <td><input class="admin-tax-bracket-input" type="text" value="${escapeHtml(row.rate)}" data-state-tax-rate data-state-tax-state="${safeCode}" data-state-tax-filing="${safeStatus}" data-state-tax-index="${index}" placeholder="5%" ${hasIncomeTax ? '' : 'disabled'}></td>
+                        <td><input class="admin-tax-bracket-input" type="text" value="${escapeHtml(row.minIncome)}" data-state-tax-min data-state-tax-state="${safeCode}" data-state-tax-filing="${safeStatus}" data-state-tax-index="${index}" placeholder="0" ${hasIncomeTax ? '' : 'disabled'}></td>
+                        <td><input class="admin-tax-bracket-input" type="text" value="${escapeHtml(row.maxIncome)}" data-state-tax-max data-state-tax-state="${safeCode}" data-state-tax-filing="${safeStatus}" data-state-tax-index="${index}" placeholder="50000" ${hasIncomeTax ? '' : 'disabled'}></td>
+                        <td class="admin-tax-bracket-actions-cell"><button class="admin-action-button admin-tax-bracket-remove" type="button" data-state-tax-remove="${index}" data-state-tax-state="${safeCode}" data-state-tax-filing="${safeStatus}" ${hasIncomeTax ? '' : 'disabled'}>Remove</button></td>
+                      </tr>
+                    `).join("")}
+                  </tbody>
+                </table>
+                <div class="admin-tax-bracket-actions">
+                  <button class="admin-action-button" type="button" data-state-tax-add="${safeCode}" data-state-tax-filing="${safeStatus}" ${hasIncomeTax ? '' : 'disabled'}>Add Bracket</button>
+                  <button class="admin-action-button" type="button" data-state-tax-reset="${safeCode}" data-state-tax-filing="${safeStatus}">Reset Defaults</button>
+                  <button class="admin-action-button" type="button" data-state-tax-save="${safeCode}" data-state-tax-filing="${safeStatus}">Save Changes</button>
+                </div>
+                <p class="panel-copy admin-tax-bracket-feedback" data-state-tax-feedback="${escapeHtml(feedbackKey)}">${escapeHtml(feedbackByKey?.[feedbackKey] || "")}</p>
+              </section>
+            `;
+          }).join("");
+
+          return `
+            <details class="admin-tax-bracket-group admin-state-tax-group" data-state-tax-group="${safeCode}">
+              <summary class="admin-state-tax-summary">
+                <div class="admin-tax-bracket-toolbar">
+                  <span class="section-label">${escapeHtml(state.name)} (${safeCode})</span>
+                  <div class="admin-state-tax-toggle" role="group" aria-label="${escapeHtml(state.name)} income tax">
+                    <button class="admin-action-button${hasIncomeTax ? ' is-active' : ''}" type="button" data-state-tax-toggle="${safeCode}" data-state-tax-value="yes">Yes</button>
+                    <button class="admin-action-button${!hasIncomeTax ? ' is-active' : ''}" type="button" data-state-tax-toggle="${safeCode}" data-state-tax-value="no">No</button>
+                  </div>
+                </div>
+              </summary>
+              <div class="admin-state-tax-body">
+                ${filingMarkup}
               </div>
-              <p class="panel-copy admin-tax-bracket-feedback" data-state-tax-feedback="${safeCode}">${escapeHtml(feedbackByState?.[state.code] || "")}</p>
-            </section>
+            </details>
           `;
         }).join("");
       }
@@ -366,15 +400,16 @@
         return rows;
       }
 
-      function collectStateRowsForCode(stateCode) {
+      function collectStateRows(stateCode, filingStatus) {
         const rows = [];
         const safeCode = String(stateCode || "").trim();
-        const rateInputs = Array.from(stateGroupsHost.querySelectorAll(`[data-state-tax-rate][data-state-tax-state="${safeCode}"]`));
+        const safeStatus = String(filingStatus || "").trim();
+        const rateInputs = Array.from(stateGroupsHost.querySelectorAll(`[data-state-tax-rate][data-state-tax-state="${safeCode}"][data-state-tax-filing="${safeStatus}"]`));
 
         rateInputs.forEach((input) => {
           const index = input.getAttribute("data-state-tax-index");
-          const minInput = stateGroupsHost.querySelector(`[data-state-tax-min][data-state-tax-state="${safeCode}"][data-state-tax-index="${index}"]`);
-          const maxInput = stateGroupsHost.querySelector(`[data-state-tax-max][data-state-tax-state="${safeCode}"][data-state-tax-index="${index}"]`);
+          const minInput = stateGroupsHost.querySelector(`[data-state-tax-min][data-state-tax-state="${safeCode}"][data-state-tax-filing="${safeStatus}"][data-state-tax-index="${index}"]`);
+          const maxInput = stateGroupsHost.querySelector(`[data-state-tax-max][data-state-tax-state="${safeCode}"][data-state-tax-filing="${safeStatus}"][data-state-tax-index="${index}"]`);
           const normalized = normalizeRow({
             rate: input.value,
             minIncome: minInput?.value,
@@ -443,11 +478,19 @@
         const currentConfig = readStoredStateConfig();
 
         if (toggleButton) {
+          event.preventDefault();
           const stateCode = toggleButton.getAttribute("data-state-tax-toggle");
           const hasIncomeTax = toggleButton.getAttribute("data-state-tax-value") === "yes";
           currentConfig[stateCode] = {
             hasIncomeTax,
-            rows: hasIncomeTax ? (collectStateRowsForCode(stateCode).length ? collectStateRowsForCode(stateCode) : defaultStateRows.map((row) => ({ ...row }))) : []
+            filings: Object.fromEntries(
+              filingStatuses.map((status) => [
+                status,
+                hasIncomeTax
+                  ? (collectStateRows(stateCode, status).length ? collectStateRows(stateCode, status) : defaultStateRows.map((row) => ({ ...row })))
+                  : []
+              ])
+            )
           };
           renderStateGroups(currentConfig, {});
           return;
@@ -455,53 +498,44 @@
 
         if (addButton) {
           const stateCode = addButton.getAttribute("data-state-tax-add");
-          const existing = currentConfig[stateCode] || { hasIncomeTax: true, rows: [] };
-          currentConfig[stateCode] = {
-            hasIncomeTax: true,
-            rows: [...collectStateRowsForCode(stateCode), { rate: "", minIncome: "", maxIncome: "" }]
-          };
+          const filingStatus = addButton.getAttribute("data-state-tax-filing");
+          currentConfig[stateCode].filings[filingStatus] = [...collectStateRows(stateCode, filingStatus), { rate: "", minIncome: "", maxIncome: "" }];
           renderStateGroups(currentConfig, {});
           return;
         }
 
         if (removeButton) {
           const stateCode = removeButton.getAttribute("data-state-tax-state");
+          const filingStatus = removeButton.getAttribute("data-state-tax-filing");
           const indexToRemove = removeButton.getAttribute("data-state-tax-remove");
-          const nextRows = collectStateRowsForCode(stateCode).filter((_row, index) => String(index) !== String(indexToRemove));
-          currentConfig[stateCode] = {
-            hasIncomeTax: true,
-            rows: nextRows.length ? nextRows : defaultStateRows.map((row) => ({ ...row }))
-          };
+          const nextRows = collectStateRows(stateCode, filingStatus).filter((_row, index) => String(index) !== String(indexToRemove));
+          currentConfig[stateCode].filings[filingStatus] = nextRows.length ? nextRows : defaultStateRows.map((row) => ({ ...row }));
           renderStateGroups(currentConfig, {});
           return;
         }
 
         if (saveButton) {
           const stateCode = saveButton.getAttribute("data-state-tax-save");
-          const existing = currentConfig[stateCode] || { hasIncomeTax: true, rows: [] };
-          const hasIncomeTax = existing.hasIncomeTax !== false;
-          const nextRows = hasIncomeTax ? collectStateRowsForCode(stateCode) : [];
+          const filingStatus = saveButton.getAttribute("data-state-tax-filing");
+          const hasIncomeTax = currentConfig[stateCode].hasIncomeTax !== false;
+          const nextRows = hasIncomeTax ? collectStateRows(stateCode, filingStatus) : [];
+          const feedbackKey = `${stateCode}::${filingStatus}`;
 
           if (hasIncomeTax && !nextRows.length) {
-            renderStateGroups(currentConfig, { [stateCode]: "Add at least one state income tax bracket row or set the state to No." });
+            renderStateGroups(currentConfig, { [feedbackKey]: "Add at least one state income tax bracket row or set the state to No." });
             return;
           }
 
-          currentConfig[stateCode] = {
-            hasIncomeTax,
-            rows: hasIncomeTax ? nextRows : []
-          };
+          currentConfig[stateCode].filings[filingStatus] = hasIncomeTax ? nextRows : [];
           localStorage.setItem(stateStorageKey, JSON.stringify(currentConfig));
-          renderStateGroups(currentConfig, { [stateCode]: hasIncomeTax ? "State income tax rows saved." : "State marked as no income tax." });
+          renderStateGroups(currentConfig, { [feedbackKey]: hasIncomeTax ? "State income tax rows saved." : "State marked as no income tax." });
           return;
         }
 
         if (resetButton) {
           const stateCode = resetButton.getAttribute("data-state-tax-reset");
-          currentConfig[stateCode] = {
-            hasIncomeTax: !noIncomeTaxStates.has(stateCode),
-            rows: noIncomeTaxStates.has(stateCode) ? [] : defaultStateRows.map((row) => ({ ...row }))
-          };
+          const filingStatus = resetButton.getAttribute("data-state-tax-filing");
+          currentConfig[stateCode].filings[filingStatus] = currentConfig[stateCode].hasIncomeTax === false ? [] : defaultStateRows.map((row) => ({ ...row }));
           localStorage.setItem(stateStorageKey, JSON.stringify(currentConfig));
           renderStateGroups(currentConfig, {});
         }
