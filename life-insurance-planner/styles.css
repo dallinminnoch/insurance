@@ -687,6 +687,72 @@ textarea {
   margin-top: var(--space-lg);
 }
 
+.admin-tax-bracket-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+  margin-top: var(--space-lg);
+}
+
+.admin-tax-bracket-list {
+  background: #fff;
+}
+
+.admin-tax-bracket-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0 0.65rem;
+  margin-top: var(--space-md);
+  table-layout: fixed;
+}
+
+.admin-tax-bracket-table th {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  text-align: left;
+  padding: 0 0 0.15rem;
+}
+
+.admin-tax-bracket-table td {
+  vertical-align: middle;
+  padding: 0;
+}
+
+.admin-tax-bracket-row td {
+  background: transparent;
+}
+
+.admin-tax-bracket-input {
+  min-height: 2.5rem;
+  padding: 0 0.9rem;
+  border: 1px solid rgba(213, 221, 232, 0.9);
+  border-radius: var(--radius-sm);
+  background: #fff;
+  font: inherit;
+  color: var(--text);
+}
+
+.admin-tax-bracket-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  margin-top: var(--space-lg);
+  flex-wrap: wrap;
+}
+
+.admin-tax-bracket-feedback {
+  min-height: 1.25rem;
+  margin-top: var(--space-sm);
+}
+
+.admin-tax-bracket-actions-cell {
+  text-align: right;
+}
+
 .admin-account-card {
   display: flex;
   align-items: center;
@@ -1384,6 +1450,72 @@ select option:disabled {
   max-width: 5.25rem;
   justify-self: start;
   text-align: center;
+}
+
+.profile-state-field {
+  width: 4.5rem;
+  min-width: 4.5rem;
+  max-width: 4.5rem;
+  justify-self: start;
+  text-transform: uppercase;
+}
+
+.profile-state-select-shell {
+  position: relative;
+  width: 4.5rem;
+  min-width: 4.5rem;
+  max-width: 4.5rem;
+}
+
+.profile-state-select-shell::after {
+  content: "";
+  position: absolute;
+  right: 0.75rem;
+  top: 50%;
+  width: 0.45rem;
+  height: 0.45rem;
+  border-right: 1.5px solid #4b5563;
+  border-bottom: 1.5px solid #4b5563;
+  transform: translateY(-60%) rotate(45deg);
+  pointer-events: none;
+  z-index: 3;
+}
+
+.profile-state-select-shell .profile-state-field {
+  width: 100%;
+  min-width: 100%;
+  max-width: 100%;
+  position: relative;
+  z-index: 1;
+  color: transparent;
+  text-shadow: none;
+}
+
+.profile-state-select-shell .profile-state-field:focus {
+  color: transparent;
+}
+
+.profile-state-select-shell .profile-state-field option {
+  color: #0f172a;
+}
+
+.profile-state-select-value {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 0 1.6rem 0 0.9rem;
+  font: inherit;
+  color: #0f172a;
+  pointer-events: none;
+  z-index: 2;
+  text-transform: uppercase;
+}
+
+.profile-state-select-value.is-placeholder {
+  color: #8a8f99;
+  text-transform: none;
 }
 
 .profile-yes-no-field {

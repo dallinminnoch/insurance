@@ -41,6 +41,35 @@
       </div>
       <div id="admin-accounts-list" class="admin-accounts-list"></div>
     </section>
+
+    <section class="admin-accounts-panel">
+      <div class="admin-panel-header">
+        <div class="section-label">Planning Configuration</div>
+        <h2>Federal Tax Brackets</h2>
+        <p class="panel-copy">These options populate the Protection Modeling form federal tax bracket dropdown. Update them here when bracket selections change.</p>
+      </div>
+      <div class="admin-tax-bracket-toolbar">
+        <span class="section-label">Bracket Options</span>
+        <strong id="admin-tax-bracket-count">0</strong>
+      </div>
+      <table class="admin-tax-bracket-table">
+        <thead>
+          <tr>
+            <th>Tax %</th>
+            <th>Range From</th>
+            <th>Range To</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="admin-tax-bracket-list"></tbody>
+      </table>
+      <div class="admin-tax-bracket-actions">
+        <button class="admin-action-button" type="button" id="admin-tax-bracket-add">Add Bracket</button>
+        <button class="admin-action-button" type="button" id="admin-tax-bracket-reset">Reset Defaults</button>
+        <button class="admin-action-button" type="button" id="admin-tax-bracket-save">Save Changes</button>
+      </div>
+      <p class="panel-copy admin-tax-bracket-feedback" id="admin-tax-bracket-feedback"></p>
+    </section>
   </main>
 
   <script src="../data.js"></script>

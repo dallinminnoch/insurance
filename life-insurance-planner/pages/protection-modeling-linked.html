@@ -147,13 +147,7 @@
       const pinInputs = Array.from(document.querySelectorAll("[data-pin-input]"));
       const confidentialContinue = document.querySelector("[data-confidential-continue]");
       const advisorContinue = document.querySelector('.entry-mode-button[href="next-step.html"]');
-
-      if (caseRefField) {
-        caseRefField.addEventListener("input", () => {
-          caseRefField.value = caseRefField.value.toUpperCase();
-          window.setLensLinkedCaseRef?.(caseRefField.value);
-        });
-      }
+      let linkedRecord = null;
 
       function getClientRecordsStorageKey() {
         let session = null;
@@ -188,6 +182,8 @@
       }
 
       function updateLinkedClientButton(record) {
+        linkedRecord = record || null;
+
         if (!linkOpenButton) {
           return;
         }
@@ -195,6 +191,17 @@
         if (!record) {
           linkOpenButton.classList.remove("is-linked");
           linkOpenButton.innerHTML = "Search Client Directory";
+          advisorContinue && (advisorContinue.href = "next-step.html");
+          advisorContinue?.setAttribute("aria-disabled", "true");
+          advisorContinue?.setAttribute("tabindex", "-1");
+          advisorContinue?.classList.add("is-disabled");
+          confidentialTrigger?.setAttribute("aria-disabled", "true");
+          confidentialTrigger?.classList.add("is-disabled");
+          confidentialContinue && (confidentialContinue.href = "confidential-inputs.html");
+          confidentialContinue?.setAttribute("aria-disabled", "true");
+          confidentialContinue?.setAttribute("tabindex", "-1");
+          confidentialContinue?.classList.add("is-disabled");
+          pinShell?.classList.add("is-disabled");
           return;
         }
 
@@ -203,6 +210,17 @@
           <span class="preliminary-link-button-primary">${String(record.displayName || "").trim()}</span>
           <span class="preliminary-link-button-secondary">Click to change</span>
         `;
+        advisorContinue?.setAttribute("aria-disabled", "false");
+        advisorContinue?.setAttribute("tabindex", "0");
+        advisorContinue?.classList.remove("is-disabled");
+        if (advisorContinue) {
+          advisorContinue.href = `next-step.html?caseRef=${encodeURIComponent(String(record.caseRef || "").trim())}`;
+        }
+        confidentialTrigger?.setAttribute("aria-disabled", "false");
+        confidentialTrigger?.classList.remove("is-disabled");
+        if (confidentialContinue) {
+          confidentialContinue.href = `confidential-inputs.html?caseRef=${encodeURIComponent(String(record.caseRef || "").trim())}`;
+        }
       }
 
       function syncLinkedClientFromCaseRef() {
@@ -278,7 +296,8 @@
       if (caseRefField) {
         caseRefField.addEventListener("input", () => {
           caseRefField.value = String(caseRefField.value || "").toUpperCase();
-          window.setLensLinkedCaseRef?.(caseRefField.value);
+          const matchedRecord = findRecordByCaseRef(caseRefField.value);
+          window.setLensLinkedCaseRef?.(matchedRecord ? String(matchedRecord.caseRef || "").trim() : "");
           syncLinkedClientFromCaseRef();
         });
       }
@@ -296,8 +315,14 @@
       });
 
       linkModal?.querySelector(".profile-search-modal-backdrop")?.addEventListener("click", closeLinkModal);
-      advisorContinue?.addEventListener("click", () => {
-        window.setLensLinkedCaseRef?.(caseRefField?.value || "");
+      advisorContinue?.addEventListener("click", (event) => {
+        if (!linkedRecord) {
+          event.preventDefault();
+          return;
+        }
+
+        const linkedCaseRef = String(linkedRecord.caseRef || "").trim();
+        window.setLensLinkedCaseRef?.(linkedCaseRef);
       });
 
       if (!confidentialTrigger || !pinShell || !pinInputs.length || !confidentialContinue) {
@@ -307,7 +332,7 @@
 
       function syncContinueState() {
         const pin = pinInputs.map((input) => input.value).join("");
-        const isComplete = pin.length === 4 && /^\d{4}$/.test(pin);
+        const isComplete = Boolean(linkedRecord) && pin.length === 4 && /^\d{4}$/.test(pin);
 
         confidentialContinue.setAttribute("aria-disabled", isComplete ? "false" : "true");
         confidentialContinue.tabIndex = isComplete ? 0 : -1;
@@ -321,6 +346,10 @@
       }
 
       function enablePinShell() {
+        if (!linkedRecord) {
+          return;
+        }
+
         pinShell.classList.remove("is-disabled");
         confidentialTrigger.classList.add("is-selected");
         pinInputs[0]?.focus();
@@ -329,13 +358,14 @@
       confidentialTrigger.addEventListener("click", enablePinShell);
 
       confidentialContinue.addEventListener("click", (event) => {
-        if (confidentialContinue.getAttribute("aria-disabled") === "true") {
+        if (confidentialContinue.getAttribute("aria-disabled") === "true" || !linkedRecord) {
           event.preventDefault();
           enablePinShell();
           return;
         }
 
-        window.setLensLinkedCaseRef?.(caseRefField?.value || "");
+        const linkedCaseRef = String(linkedRecord.caseRef || "").trim();
+        window.setLensLinkedCaseRef?.(linkedCaseRef);
       });
 
       pinInputs.forEach((input, index) => {

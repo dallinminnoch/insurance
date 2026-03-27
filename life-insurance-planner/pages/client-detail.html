@@ -747,8 +747,11 @@
       }
 
       function renderPmiEntryCard(record) {
-        const modeling = record.protectionModeling || {};
-        const modelingData = modeling.data || {};
+        const modelingEntries = Array.isArray(record.protectionModelingEntries) && record.protectionModelingEntries.length
+          ? record.protectionModelingEntries
+          : (record.protectionModeling ? [record.protectionModeling] : []);
+        const latestModeling = modelingEntries[modelingEntries.length - 1] || {};
+        const modelingData = latestModeling.data || {};
         return `
           <section class="client-detail-card client-detail-card-compact client-planning-card client-planning-card-pmi">
             <div class="client-detail-card-header">
@@ -757,9 +760,10 @@
             <div class="client-summary-list">
               ${[
                 { label: "Status", value: record.pmiCompleted ? "Completed" : "Not started" },
-                { label: "Saved At", value: record.pmiCompleted ? formatDate(modeling.savedAt) : "Not provided" },
-                { label: "Linked Case Ref", value: formatValue(modeling.linkedCaseRef || record.caseRef) },
-                { label: "Entry Variant", value: formatValue(modeling.variant) },
+                { label: "Forms Saved", value: String(modelingEntries.length || 0) },
+                { label: "Latest Saved At", value: record.pmiCompleted ? formatDate(latestModeling.savedAt) : "Not provided" },
+                { label: "Linked Case Ref", value: formatValue(latestModeling.linkedCaseRef || record.caseRef) },
+                { label: "Latest Entry Variant", value: formatValue(latestModeling.variant) },
                 { label: "Current Coverage", value: formatCurrency(modelingData.currentCoverageAmount || modelingData.currentLifeInsuranceCoverage || 0) },
                 { label: "Income Input", value: formatCurrency(modelingData.annualIncome || modelingData.householdIncome || 0) }
               ].map(function (item) {
@@ -804,32 +808,48 @@
       }
 
       function renderPmiDetailModalBody(record) {
-        const modeling = record.protectionModeling || {};
-        const modelingData = modeling.data || {};
-        const detailFields = [
-          ["Status", record.pmiCompleted ? "Completed" : "Not started"],
-          ["Saved At", record.pmiCompleted ? formatDate(modeling.savedAt) : "Not provided"],
-          ["Linked Case Ref", formatValue(modeling.linkedCaseRef || record.caseRef)],
-          ["Entry Variant", formatValue(modeling.variant)],
-          ["Page", formatValue(modeling.page)]
-        ];
+        const modelingEntries = Array.isArray(record.protectionModelingEntries) && record.protectionModelingEntries.length
+          ? record.protectionModelingEntries
+          : (record.protectionModeling ? [record.protectionModeling] : []);
 
-        Object.entries(modelingData).forEach(function (entry) {
-          detailFields.push([humanizePlanningKey(entry[0]), formatPlanningDetailValue(entry[1])]);
-        });
+        if (!modelingEntries.length) {
+          return `
+            <div class="client-policy-modal-grid">
+              <div class="client-policy-modal-field">
+                <span class="client-policy-modal-label">Status</span>
+                <span class="client-policy-modal-value">Not started</span>
+              </div>
+            </div>
+          `;
+        }
 
-        return `
-          <div class="client-policy-modal-grid">
-            ${detailFields.map(function (field) {
-              return `
-                <div class="client-policy-modal-field">
-                  <span class="client-policy-modal-label">${escapeHtml(field[0])}</span>
-                  <span class="client-policy-modal-value">${escapeHtml(field[1])}</span>
-                </div>
-              `;
-            }).join("")}
-          </div>
-        `;
+        return modelingEntries.map(function (modeling, index) {
+          const modelingData = modeling.data || {};
+          const detailFields = [
+            ["Form", String(index + 1)],
+            ["Saved At", formatDate(modeling.savedAt)],
+            ["Linked Case Ref", formatValue(modeling.linkedCaseRef || record.caseRef)],
+            ["Entry Variant", formatValue(modeling.variant)],
+            ["Page", formatValue(modeling.page)]
+          ];
+
+          Object.entries(modelingData).forEach(function (entry) {
+            detailFields.push([humanizePlanningKey(entry[0]), formatPlanningDetailValue(entry[1])]);
+          });
+
+          return `
+            <div class="client-policy-modal-grid">
+              ${detailFields.map(function (field) {
+                return `
+                  <div class="client-policy-modal-field">
+                    <span class="client-policy-modal-label">${escapeHtml(field[0])}</span>
+                    <span class="client-policy-modal-value">${escapeHtml(field[1])}</span>
+                  </div>
+                `;
+              }).join("")}
+            </div>
+          `;
+        }).join('<div class="client-policy-modal-divider"></div>');
       }
 
       function renderRiskAnalysisCard(record) {
