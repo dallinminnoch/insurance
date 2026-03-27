@@ -557,10 +557,44 @@
       function loadClientRecords() {
         try {
           const records = JSON.parse(localStorage.getItem(getClientRecordsStorageKey()) || "[]");
-          return Array.isArray(records) ? records : [];
+          return Array.isArray(records)
+            ? records.filter((record) => String(record.viewType || "").trim() === "individuals")
+            : [];
         } catch (error) {
           return [];
         }
+      }
+
+      function findRecordByCaseRef(caseRef) {
+        const normalizedCaseRef = String(caseRef || "").trim().toUpperCase();
+        if (!normalizedCaseRef) {
+          return null;
+        }
+
+        return loadClientRecords().find((record) => String(record.caseRef || "").trim().toUpperCase() === normalizedCaseRef) || null;
+      }
+
+      function updateLinkedClientButton(record) {
+        if (!linkOpenButton) {
+          return;
+        }
+
+        if (!record) {
+          linkOpenButton.classList.remove("is-linked");
+          linkOpenButton.innerHTML = "Search Client Directory";
+          return;
+        }
+
+        linkOpenButton.classList.add("is-linked");
+        linkOpenButton.innerHTML = `
+          <span class="preliminary-link-button-primary">${String(record.displayName || "").trim()}</span>
+          <span class="preliminary-link-button-secondary">Click to change</span>
+        `;
+      }
+
+      function syncLinkedClientFromCaseRef() {
+        const matchedRecord = findRecordByCaseRef(caseRefField?.value || "");
+        updateLinkedClientButton(matchedRecord);
       }
 
       function openLinkModal() {
@@ -620,9 +654,17 @@
             if (caseRefField) {
               caseRefField.value = String(record.caseRef || "").trim();
             }
+            syncLinkedClientFromCaseRef();
             closeLinkModal();
           });
           linkModalResults.appendChild(button);
+        });
+      }
+
+      if (caseRefField) {
+        caseRefField.addEventListener("input", () => {
+          caseRefField.value = String(caseRefField.value || "").toUpperCase();
+          syncLinkedClientFromCaseRef();
         });
       }
 
@@ -664,6 +706,7 @@
       });
 
       renderLinkResults();
+      syncLinkedClientFromCaseRef();
       });
     })();
   </script>
