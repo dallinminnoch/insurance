@@ -1345,6 +1345,12 @@ select option:disabled {
   gap: 0.28rem;
 }
 
+.profile-subgrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-md);
+}
+
 .profile-empty-slot {
   min-height: 0;
 }
@@ -5997,6 +6003,7 @@ textarea {
 
 
   .form-grid,
+  .profile-subgrid,
   .step-track {
     grid-template-columns: 1fr;
   }
