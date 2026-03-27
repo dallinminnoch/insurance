@@ -661,6 +661,7 @@
               ])
             )
           };
+          localStorage.setItem(stateStorageKey, JSON.stringify(currentConfig));
           renderStateGroups(currentConfig, {});
           return;
         }
@@ -669,6 +670,7 @@
           const stateCode = modeButton.getAttribute("data-state-tax-mode");
           const mode = modeButton.getAttribute("data-state-tax-mode-value") === "flat" ? "flat" : "brackets";
           currentConfig[stateCode].mode = mode;
+          localStorage.setItem(stateStorageKey, JSON.stringify(currentConfig));
           renderStateGroups(currentConfig, {});
           return;
         }

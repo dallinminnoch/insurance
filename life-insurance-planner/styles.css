@@ -5751,6 +5751,23 @@ body[data-step] {
   grid-column: 1 / -1;
 }
 
+.profile-creation-form .field-group.profile-net-income-highlight {
+  padding: 0.8rem 0.9rem 0.95rem;
+  border-radius: 0.9rem;
+  background: linear-gradient(180deg, rgba(219, 241, 228, 0.94) 0%, rgba(203, 232, 215, 0.9) 100%);
+  border: 1px solid rgba(88, 151, 109, 0.2);
+}
+
+.profile-creation-form .field-group.profile-net-income-highlight > label {
+  font-weight: 800;
+  color: #1f5b34;
+}
+
+.profile-creation-form .field-group.profile-net-income-highlight input[readonly] {
+  font-weight: 800;
+  color: #1f5b34;
+}
+
 label {
   font-size: 0.92rem;
   font-weight: 700;
