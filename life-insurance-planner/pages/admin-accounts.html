@@ -219,6 +219,20 @@
           .replace(/'/g, "&#39;");
       }
 
+      function normalizePercentValue(value) {
+        const trimmed = String(value || "").trim();
+        if (!trimmed) {
+          return "";
+        }
+
+        const cleaned = trimmed.replace(/[^0-9.]/g, "");
+        if (!cleaned) {
+          return "";
+        }
+
+        return `${cleaned}%`;
+      }
+
       function isMedicareTaxName(value) {
         return String(value || "").trim().toLowerCase() === "medicare";
       }
@@ -327,7 +341,7 @@
 
             const hasIncomeTax = existing.hasIncomeTax === false ? false : true;
             const mode = String(existing.mode || "brackets").trim() === "flat" ? "flat" : "brackets";
-            const flatRate = String(existing.flatRate || "").trim();
+            const flatRate = normalizePercentValue(existing.flatRate);
             const filings = existing.filings && typeof existing.filings === "object" ? existing.filings : {};
             defaults[state.code] = {
               hasIncomeTax,
@@ -427,7 +441,7 @@
           const stateConfig = config[state.code] || buildDefaultStateConfig()[state.code];
           const hasIncomeTax = stateConfig.hasIncomeTax !== false;
           const mode = stateConfig.mode === "flat" ? "flat" : "brackets";
-          const flatRate = String(stateConfig.flatRate || "").trim();
+          const flatRate = normalizePercentValue(stateConfig.flatRate);
           const safeCode = escapeHtml(state.code);
           const filingMarkup = filingStatuses.map((status) => {
             const safeStatus = escapeHtml(status);
@@ -687,7 +701,7 @@
           const stateCode = saveFlatButton.getAttribute("data-state-tax-save-flat");
           const feedbackKey = `${stateCode}::flat`;
           const flatInput = stateGroupsHost.querySelector(`[data-state-tax-flat-rate="${stateCode}"]`);
-          const flatRate = String(flatInput?.value || "").trim();
+          const flatRate = normalizePercentValue(flatInput?.value);
 
           if (currentConfig[stateCode].hasIncomeTax !== false && currentConfig[stateCode].mode === "flat" && !flatRate) {
             renderStateGroups(currentConfig, { [feedbackKey]: "Enter a flat tax rate before saving." });
