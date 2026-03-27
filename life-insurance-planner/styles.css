@@ -755,6 +755,27 @@ textarea {
   flex-wrap: wrap;
 }
 
+.admin-state-tax-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.admin-state-tax-toggle .admin-action-button.is-active {
+  background: #233044;
+  color: #ffffff;
+  border-color: #233044;
+}
+
+.admin-tax-bracket-table.is-disabled {
+  opacity: 0.58;
+}
+
+.admin-tax-bracket-table.is-disabled .admin-tax-bracket-input {
+  background: #f3f5f9;
+  color: #9aa4b2;
+}
+
 .admin-tax-bracket-feedback {
   min-height: 1.25rem;
   margin-top: var(--space-sm);
