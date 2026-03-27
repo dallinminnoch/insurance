@@ -5768,6 +5768,39 @@ body[data-step] {
   color: #1f5b34;
 }
 
+.profile-form-toggle-group {
+  display: flex;
+  gap: 0.55rem;
+  flex-wrap: wrap;
+}
+
+.profile-form-toggle-group.is-disabled {
+  opacity: 0.55;
+}
+
+.profile-form-toggle-button {
+  border: 1px solid rgba(17, 24, 39, 0.14);
+  background: #ffffff;
+  color: #1f2937;
+  border-radius: 0.85rem;
+  padding: 0.62rem 0.9rem;
+  font: inherit;
+  font-size: 0.92rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 180ms ease, color 180ms ease, border-color 180ms ease, transform 180ms ease;
+}
+
+.profile-form-toggle-button.is-active {
+  background: #111827;
+  border-color: #111827;
+  color: #ffffff;
+}
+
+.profile-form-toggle-button:disabled {
+  cursor: default;
+}
+
 label {
   font-size: 0.92rem;
   font-weight: 700;
