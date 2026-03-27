@@ -46,29 +46,9 @@
       <div class="admin-panel-header">
         <div class="section-label">Planning Configuration</div>
         <h2>Federal Tax Brackets</h2>
-        <p class="panel-copy">These options populate the Protection Modeling form federal tax bracket dropdown. Update them here when bracket selections change.</p>
+        <p class="panel-copy">These options populate the Protection Modeling form federal tax bracket dropdown by filing status. Update them here when bracket selections change.</p>
       </div>
-      <div class="admin-tax-bracket-toolbar">
-        <span class="section-label">Bracket Options</span>
-        <strong id="admin-tax-bracket-count">0</strong>
-      </div>
-      <table class="admin-tax-bracket-table">
-        <thead>
-          <tr>
-            <th>Tax %</th>
-            <th>Range From</th>
-            <th>Range To</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody id="admin-tax-bracket-list"></tbody>
-      </table>
-      <div class="admin-tax-bracket-actions">
-        <button class="admin-action-button" type="button" id="admin-tax-bracket-add">Add Bracket</button>
-        <button class="admin-action-button" type="button" id="admin-tax-bracket-reset">Reset Defaults</button>
-        <button class="admin-action-button" type="button" id="admin-tax-bracket-save">Save Changes</button>
-      </div>
-      <p class="panel-copy admin-tax-bracket-feedback" id="admin-tax-bracket-feedback"></p>
+      <div id="admin-tax-bracket-groups" class="admin-tax-bracket-groups"></div>
     </section>
   </main>
 
@@ -79,7 +59,14 @@
   <script>
     (function () {
       const storageKey = "lensFederalTaxBrackets";
-      const defaultRows = [
+      const filingStatuses = [
+        "Single",
+        "Married Filing Jointly",
+        "Married Filing Separately",
+        "Head of Household",
+        "Qualifying Surviving Spouse"
+      ];
+      const defaultSingleRows = [
         { rate: "10%", minIncome: "0", maxIncome: "11600" },
         { rate: "12%", minIncome: "11601", maxIncome: "47150" },
         { rate: "22%", minIncome: "47151", maxIncome: "100525" },
@@ -88,15 +75,9 @@
         { rate: "35%", minIncome: "243726", maxIncome: "609350" },
         { rate: "37%", minIncome: "609351", maxIncome: "" }
       ];
+      const groupsHost = document.getElementById("admin-tax-bracket-groups");
 
-      const listHost = document.getElementById("admin-tax-bracket-list");
-      const countHost = document.getElementById("admin-tax-bracket-count");
-      const feedbackHost = document.getElementById("admin-tax-bracket-feedback");
-      const addButton = document.getElementById("admin-tax-bracket-add");
-      const saveButton = document.getElementById("admin-tax-bracket-save");
-      const resetButton = document.getElementById("admin-tax-bracket-reset");
-
-      if (!listHost || !countHost || !addButton || !saveButton || !resetButton) {
+      if (!groupsHost) {
         return;
       }
 
@@ -125,41 +106,98 @@
         return { rate, minIncome, maxIncome };
       }
 
-      function readStoredRows() {
+      function buildDefaultConfig() {
+        return Object.fromEntries(
+          filingStatuses.map((status) => [
+            status,
+            defaultSingleRows.map((row) => ({ ...row }))
+          ])
+        );
+      }
+
+      function readStoredConfig() {
         try {
           const parsed = JSON.parse(localStorage.getItem(storageKey) || "null");
-          if (!Array.isArray(parsed) || !parsed.length) {
-            return defaultRows.map((row) => ({ ...row }));
+          const defaults = buildDefaultConfig();
+
+          if (Array.isArray(parsed)) {
+            const normalizedRows = parsed.map(normalizeRow).filter(Boolean);
+            defaults.Single = normalizedRows.length ? normalizedRows : defaults.Single;
+            return defaults;
           }
 
-          const normalized = parsed.map(normalizeRow).filter(Boolean);
-          return normalized.length ? normalized : defaultRows.map((row) => ({ ...row }));
+          if (!parsed || typeof parsed !== "object") {
+            return defaults;
+          }
+
+          filingStatuses.forEach((status) => {
+            const rows = Array.isArray(parsed[status]) ? parsed[status] : [];
+            const normalizedRows = rows.map(normalizeRow).filter(Boolean);
+            if (normalizedRows.length) {
+              defaults[status] = normalizedRows;
+            }
+          });
+
+          return defaults;
         } catch (_error) {
-          return defaultRows.map((row) => ({ ...row }));
+          return buildDefaultConfig();
         }
       }
 
-      function renderRows(rows, feedbackMessage) {
-        countHost.textContent = String(rows.length);
-        listHost.innerHTML = rows.map((row, index) => `
-          <tr class="admin-tax-bracket-row">
-            <td><input class="admin-tax-bracket-input" type="text" value="${escapeHtml(row.rate)}" data-tax-rate data-tax-index="${index}" placeholder="24%"></td>
-            <td><input class="admin-tax-bracket-input" type="text" value="${escapeHtml(row.minIncome)}" data-tax-min data-tax-index="${index}" placeholder="100526"></td>
-            <td><input class="admin-tax-bracket-input" type="text" value="${escapeHtml(row.maxIncome)}" data-tax-max data-tax-index="${index}" placeholder="191950"></td>
-            <td class="admin-tax-bracket-actions-cell"><button class="admin-action-button admin-tax-bracket-remove" type="button" data-tax-remove="${index}">Remove</button></td>
-          </tr>
-        `).join("");
-        feedbackHost.textContent = feedbackMessage || "";
+      function renderGroups(config, feedbackByStatus) {
+        groupsHost.innerHTML = filingStatuses.map((status) => {
+          const rows = Array.isArray(config[status]) && config[status].length
+            ? config[status]
+            : defaultSingleRows.map((row) => ({ ...row }));
+          const statusKey = escapeHtml(status);
+          const sectionTitle = status === "Single" ? "Filing Single" : status;
+
+          return `
+            <section class="admin-tax-bracket-group" data-tax-group="${statusKey}">
+              <div class="admin-tax-bracket-toolbar">
+                <span class="section-label">${escapeHtml(sectionTitle)}</span>
+                <strong>${rows.length}</strong>
+              </div>
+              <table class="admin-tax-bracket-table">
+                <thead>
+                  <tr>
+                    <th>Tax %</th>
+                    <th>Range From</th>
+                    <th>Range To</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${rows.map((row, index) => `
+                    <tr class="admin-tax-bracket-row">
+                      <td><input class="admin-tax-bracket-input" type="text" value="${escapeHtml(row.rate)}" data-tax-rate data-tax-status="${statusKey}" data-tax-index="${index}" placeholder="24%"></td>
+                      <td><input class="admin-tax-bracket-input" type="text" value="${escapeHtml(row.minIncome)}" data-tax-min data-tax-status="${statusKey}" data-tax-index="${index}" placeholder="100526"></td>
+                      <td><input class="admin-tax-bracket-input" type="text" value="${escapeHtml(row.maxIncome)}" data-tax-max data-tax-status="${statusKey}" data-tax-index="${index}" placeholder="191950"></td>
+                      <td class="admin-tax-bracket-actions-cell"><button class="admin-action-button admin-tax-bracket-remove" type="button" data-tax-remove="${index}" data-tax-status="${statusKey}">Remove</button></td>
+                    </tr>
+                  `).join("")}
+                </tbody>
+              </table>
+              <div class="admin-tax-bracket-actions">
+                <button class="admin-action-button" type="button" data-tax-add="${statusKey}">Add Bracket</button>
+                <button class="admin-action-button" type="button" data-tax-reset="${statusKey}">Reset Defaults</button>
+                <button class="admin-action-button" type="button" data-tax-save="${statusKey}">Save Changes</button>
+              </div>
+              <p class="panel-copy admin-tax-bracket-feedback" data-tax-feedback="${statusKey}">${escapeHtml(feedbackByStatus?.[status] || "")}</p>
+            </section>
+          `;
+        }).join("");
       }
 
-      function collectRows() {
+      function collectRowsForStatus(status) {
         const rows = [];
-        const rateInputs = Array.from(listHost.querySelectorAll("[data-tax-rate]"));
+        const safeStatus = String(status || "").trim();
+        const rateInputs = Array.from(groupsHost.querySelectorAll(`[data-tax-rate][data-tax-status="${safeStatus}"]`));
 
         rateInputs.forEach((input) => {
           const index = input.getAttribute("data-tax-index");
-          const minInput = listHost.querySelector(`[data-tax-min][data-tax-index="${index}"]`);
-          const maxInput = listHost.querySelector(`[data-tax-max][data-tax-index="${index}"]`);
+          const minInput = groupsHost.querySelector(`[data-tax-min][data-tax-status="${safeStatus}"][data-tax-index="${index}"]`);
+          const maxInput = groupsHost.querySelector(`[data-tax-max][data-tax-status="${safeStatus}"][data-tax-index="${index}"]`);
           const normalized = normalizeRow({
             rate: input.value,
             minIncome: minInput?.value,
@@ -173,39 +211,53 @@
         return rows;
       }
 
-      listHost.addEventListener("click", (event) => {
+      groupsHost.addEventListener("click", (event) => {
+        const addButton = event.target.closest("[data-tax-add]");
         const removeButton = event.target.closest("[data-tax-remove]");
-        if (!removeButton) {
+        const saveButton = event.target.closest("[data-tax-save]");
+        const resetButton = event.target.closest("[data-tax-reset]");
+        const currentConfig = readStoredConfig();
+
+        if (addButton) {
+          const status = addButton.getAttribute("data-tax-add");
+          const nextRows = [...collectRowsForStatus(status), { rate: "", minIncome: "", maxIncome: "" }];
+          currentConfig[status] = nextRows;
+          renderGroups(currentConfig, {});
           return;
         }
 
-        const indexToRemove = removeButton.getAttribute("data-tax-remove");
-        const nextRows = collectRows().filter((_row, index) => String(index) !== String(indexToRemove));
-        renderRows(nextRows.length ? nextRows : defaultRows.map((row) => ({ ...row })), "");
-      });
-
-      addButton.addEventListener("click", () => {
-        const nextRows = [...collectRows(), { rate: "", minIncome: "", maxIncome: "" }];
-        renderRows(nextRows, "");
-      });
-
-      saveButton.addEventListener("click", () => {
-        const rows = collectRows();
-        if (!rows.length) {
-          feedbackHost.textContent = "Add at least one federal tax bracket row.";
+        if (removeButton) {
+          const status = removeButton.getAttribute("data-tax-status");
+          const indexToRemove = removeButton.getAttribute("data-tax-remove");
+          const nextRows = collectRowsForStatus(status).filter((_row, index) => String(index) !== String(indexToRemove));
+          currentConfig[status] = nextRows.length ? nextRows : defaultSingleRows.map((row) => ({ ...row }));
+          renderGroups(currentConfig, {});
           return;
         }
 
-        localStorage.setItem(storageKey, JSON.stringify(rows));
-        renderRows(rows, "Federal tax bracket rows saved.");
+        if (saveButton) {
+          const status = saveButton.getAttribute("data-tax-save");
+          const nextRows = collectRowsForStatus(status);
+          if (!nextRows.length) {
+            renderGroups(currentConfig, { [status]: "Add at least one federal tax bracket row." });
+            return;
+          }
+
+          currentConfig[status] = nextRows;
+          localStorage.setItem(storageKey, JSON.stringify(currentConfig));
+          renderGroups(currentConfig, { [status]: "Federal tax bracket rows saved." });
+          return;
+        }
+
+        if (resetButton) {
+          const status = resetButton.getAttribute("data-tax-reset");
+          currentConfig[status] = defaultSingleRows.map((row) => ({ ...row }));
+          localStorage.setItem(storageKey, JSON.stringify(currentConfig));
+          renderGroups(currentConfig, {});
+        }
       });
 
-      resetButton.addEventListener("click", () => {
-        localStorage.removeItem(storageKey);
-        renderRows(defaultRows.map((row) => ({ ...row })), "");
-      });
-
-      renderRows(readStoredRows(), "");
+      renderGroups(readStoredConfig(), {});
     })();
   </script>
 </body>

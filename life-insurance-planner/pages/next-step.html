@@ -87,6 +87,10 @@
             </div>
             <div class="form-grid">
               <div class="field-group">
+                <label for="linked-marital-status">Marital Status</label>
+                <input id="linked-marital-status" name="linkedMaritalStatusDisplay" type="text" readonly>
+              </div>
+              <div class="field-group">
                 <label for="filing-status">Filing Status</label>
                 <select id="filing-status" name="filingStatus">
                   <option value="">Please select</option>
@@ -98,8 +102,50 @@
                 </select>
               </div>
               <div class="field-group">
-                <label for="federal-tax-bracket">Federal Tax Bracket</label>
-                <select id="federal-tax-bracket" name="federalTaxBracket">
+                <label for="gross-annual-income">Gross Annual Income</label>
+                <div class="profile-currency-field">
+                  <input id="gross-annual-income" name="grossAnnualIncome" type="number" min="0" step="1000">
+                  <span class="profile-currency-suffix">USD</span>
+                </div>
+              </div>
+              <div class="field-group">
+                <label for="spouse-income">Spouse Gross Annual Income</label>
+                <div class="profile-currency-field">
+                  <input id="spouse-income" name="spouseIncome" type="number" min="0" step="1000">
+                  <span class="profile-currency-suffix">USD</span>
+                </div>
+              </div>
+              <div class="field-group">
+                <label for="yearly-tax-deductions">Yearly Tax Deductions</label>
+                <div class="profile-currency-field">
+                  <input id="yearly-tax-deductions" name="yearlyTaxDeductions" type="number" min="0" step="1000">
+                  <span class="profile-currency-suffix">USD</span>
+                </div>
+              </div>
+              <div class="field-group">
+                <label for="spouse-yearly-tax-deductions">Spouse Yearly Tax Deductions</label>
+                <div class="profile-currency-field">
+                  <input id="spouse-yearly-tax-deductions" name="spouseYearlyTaxDeductions" type="number" min="0" step="1000">
+                  <span class="profile-currency-suffix">USD</span>
+                </div>
+              </div>
+              <div class="field-group">
+                <label for="taxable-income">Taxable Income</label>
+                <div class="profile-currency-field">
+                  <input id="taxable-income" name="taxableIncome" type="number" min="0" step="1000" readonly>
+                  <span class="profile-currency-suffix">USD</span>
+                </div>
+              </div>
+              <div class="field-group">
+                <label for="spouse-taxable-income">Spouse Taxable Income</label>
+                <div class="profile-currency-field">
+                  <input id="spouse-taxable-income" name="spouseTaxableIncome" type="number" min="0" step="1000" readonly>
+                  <span class="profile-currency-suffix">USD</span>
+                </div>
+              </div>
+              <div class="field-group">
+                <label for="federal-tax-bracket" data-federal-tax-bracket-label>Federal Tax Bracket</label>
+                <select id="federal-tax-bracket" name="federalTaxBracket" disabled>
                   <option value="">Please select</option>
                 </select>
               </div>
@@ -162,6 +208,20 @@
                   <span class="profile-state-select-value" data-state-select-value>Select state</span>
                 </div>
               </div>
+              <div class="field-group">
+                <label for="net-annual-income">Net Annual Income</label>
+                <div class="profile-currency-field">
+                  <input id="net-annual-income" name="netAnnualIncome" type="number" min="0" step="1000">
+                  <span class="profile-currency-suffix">USD</span>
+                </div>
+              </div>
+              <div class="field-group">
+                <label for="spouse-net-annual-income">Spouse Net Annual Income</label>
+                <div class="profile-currency-field">
+                  <input id="spouse-net-annual-income" name="spouseNetAnnualIncome" type="number" min="0" step="1000">
+                  <span class="profile-currency-suffix">USD</span>
+                </div>
+              </div>
             </div>
           </section>
 
@@ -171,27 +231,6 @@
               <p class="profile-section-note">Fields already captured on the client profile are intentionally excluded here.</p>
             </div>
             <div class="form-grid">
-              <div class="field-group">
-                <label for="gross-annual-income">Gross Annual Income</label>
-                <div class="profile-currency-field">
-                  <input id="gross-annual-income" name="grossAnnualIncome" type="number" min="0" step="1000">
-                  <span class="profile-currency-suffix">USD</span>
-                </div>
-              </div>
-              <div class="field-group">
-                <label for="net-annual-income">Net Annual Income</label>
-                <div class="profile-currency-field">
-                  <input id="net-annual-income" name="netAnnualIncome" type="number" min="0" step="1000">
-                  <span class="profile-currency-suffix">USD</span>
-                </div>
-              </div>
-              <div class="field-group">
-                <label for="spouse-income">Spouse Income</label>
-                <div class="profile-currency-field">
-                  <input id="spouse-income" name="spouseIncome" type="number" min="0" step="1000">
-                  <span class="profile-currency-suffix">USD</span>
-                </div>
-              </div>
               <div class="field-group">
                 <label for="income-growth-rate">Income Growth Rate Assumption</label>
                 <div class="profile-currency-field">
@@ -1054,6 +1093,7 @@
       const helpByFieldId = {
         "gross-annual-income": "Total annual household income before taxes.",
         "net-annual-income": "Annual income after taxes and deductions, if known.",
+        "spouse-net-annual-income": "Annual spouse income after taxes and deductions, if known.",
         "spouse-income": "Annual income earned by a spouse or partner.",
         "income-growth-rate": "Expected annual income growth used for future projections.",
         "bonus-variable-income": "Bonuses, commissions, or other variable pay to include in the plan.",
@@ -1375,9 +1415,27 @@
 
       const storageKey = `lipPlannerProtectionDraft:${form.dataset.pmiDraftKey || "advisor"}`;
       const costToFundPercentField = form.elements.namedItem("costToFundPercent");
+      const linkedMaritalStatusField = form.elements.namedItem("linkedMaritalStatusDisplay");
+      const filingStatusField = form.elements.namedItem("filingStatus");
+      const grossAnnualIncomeField = form.elements.namedItem("grossAnnualIncome");
+      const spouseIncomeField = form.elements.namedItem("spouseIncome");
+      const yearlyTaxDeductionsField = form.elements.namedItem("yearlyTaxDeductions");
+      const spouseYearlyTaxDeductionsField = form.elements.namedItem("spouseYearlyTaxDeductions");
+      const taxableIncomeField = form.elements.namedItem("taxableIncome");
+      const spouseTaxableIncomeField = form.elements.namedItem("spouseTaxableIncome");
       const stateOfResidenceField = form.elements.namedItem("stateOfResidence");
       const federalTaxBracketField = form.elements.namedItem("federalTaxBracket");
       const urlLinkedCaseRef = new URLSearchParams(window.location.search).get("caseRef");
+      const federalTaxBracketStorageKey = "lensFederalTaxBrackets";
+      const defaultFederalTaxRows = [
+        { rate: "10%", minIncome: "0", maxIncome: "11600" },
+        { rate: "12%", minIncome: "11601", maxIncome: "47150" },
+        { rate: "22%", minIncome: "47151", maxIncome: "100525" },
+        { rate: "24%", minIncome: "100526", maxIncome: "191950" },
+        { rate: "32%", minIncome: "191951", maxIncome: "243725" },
+        { rate: "35%", minIncome: "243726", maxIncome: "609350" },
+        { rate: "37%", minIncome: "609351", maxIncome: "" }
+      ];
 
       if (urlLinkedCaseRef) {
         window.setLensLinkedCaseRef?.(urlLinkedCaseRef);
@@ -1427,15 +1485,123 @@
         }
       }
 
+      function syncLinkedMaritalStatus() {
+        if (!linkedMaritalStatusField || linkedMaritalStatusField instanceof RadioNodeList) {
+          return;
+        }
+
+        linkedMaritalStatusField.value = String(getLinkedRecord()?.maritalStatus || "").trim();
+      }
+
+      function getFederalTaxBracketRowsForStatus(filingStatus) {
+        const normalizedStatus = String(filingStatus || "").trim();
+        const defaultConfig = {
+          "Single": defaultFederalTaxRows,
+          "Married Filing Jointly": defaultFederalTaxRows,
+          "Married Filing Separately": defaultFederalTaxRows,
+          "Head of Household": defaultFederalTaxRows,
+          "Qualifying Surviving Spouse": defaultFederalTaxRows
+        };
+
+        try {
+          const stored = JSON.parse(localStorage.getItem(federalTaxBracketStorageKey) || "null");
+
+          if (Array.isArray(stored)) {
+            return stored;
+          }
+
+          if (stored && typeof stored === "object" && Array.isArray(stored[normalizedStatus])) {
+            return stored[normalizedStatus];
+          }
+        } catch (_error) {
+        }
+
+        return defaultConfig[normalizedStatus] || defaultFederalTaxRows;
+      }
+
+      function parseCurrencyLikeNumber(value) {
+        const cleaned = String(value || "").replace(/[^0-9.]/g, "");
+        const numericValue = Number(cleaned);
+        return Number.isFinite(numericValue) ? numericValue : 0;
+      }
+
+      function getFederalTaxBracketIncomeBasis() {
+        const filingStatus = String(filingStatusField?.value || "").trim();
+        const taxableIncome = parseCurrencyLikeNumber(taxableIncomeField?.value);
+        const spouseTaxableIncome = parseCurrencyLikeNumber(spouseTaxableIncomeField?.value);
+
+        if (filingStatus === "Married Filing Jointly") {
+          return taxableIncome + spouseTaxableIncome;
+        }
+
+        return taxableIncome;
+      }
+
+      function syncTaxableIncomeFields() {
+        if (taxableIncomeField && !(taxableIncomeField instanceof RadioNodeList)) {
+          const taxableIncome = Math.max(0, parseCurrencyLikeNumber(grossAnnualIncomeField?.value) - parseCurrencyLikeNumber(yearlyTaxDeductionsField?.value));
+          taxableIncomeField.value = taxableIncome ? String(taxableIncome) : "0";
+        }
+
+        if (spouseTaxableIncomeField && !(spouseTaxableIncomeField instanceof RadioNodeList)) {
+          const spouseTaxableIncome = Math.max(0, parseCurrencyLikeNumber(spouseIncomeField?.value) - parseCurrencyLikeNumber(spouseYearlyTaxDeductionsField?.value));
+          spouseTaxableIncomeField.value = spouseTaxableIncome ? String(spouseTaxableIncome) : "0";
+        }
+      }
+
+      function syncFilingStatusOptions() {
+        if (!filingStatusField || filingStatusField instanceof RadioNodeList || !linkedMaritalStatusField || linkedMaritalStatusField instanceof RadioNodeList) {
+          return;
+        }
+
+        const maritalStatus = String(linkedMaritalStatusField.value || "").trim();
+        const allowedByMaritalStatus = {
+          "Married": ["Married Filing Jointly", "Married Filing Separately"],
+          "Domestic Partnership": ["Single", "Head of Household"],
+          "Single": ["Single", "Head of Household"],
+          "Divorced": ["Single", "Head of Household"],
+          "Separated": ["Single", "Head of Household", "Married Filing Separately"],
+          "Widowed": ["Single", "Head of Household", "Qualifying Surviving Spouse"]
+        };
+
+        const allowedOptions = allowedByMaritalStatus[maritalStatus] || null;
+
+        Array.from(filingStatusField.options).forEach((option) => {
+          if (!option.value) {
+            option.disabled = false;
+            option.hidden = false;
+            return;
+          }
+
+          const isAllowed = !allowedOptions || allowedOptions.includes(option.value);
+          option.disabled = !isAllowed;
+        });
+
+        if (filingStatusField.value && allowedOptions && !allowedOptions.includes(filingStatusField.value)) {
+          filingStatusField.value = "";
+        }
+      }
+
       function populateFederalTaxBracketOptions() {
         if (!federalTaxBracketField || federalTaxBracketField instanceof RadioNodeList) {
           return;
         }
 
         const currentValue = String(federalTaxBracketField.value || "").trim();
-        const options = Array.isArray(window.getLensFederalTaxBrackets?.())
-          ? window.getLensFederalTaxBrackets()
-          : [];
+        const selectedFilingStatus = String(filingStatusField?.value || "").trim();
+        const federalTaxBracketLabel = form.querySelector("[data-federal-tax-bracket-label]");
+
+        federalTaxBracketField.disabled = !selectedFilingStatus;
+        federalTaxBracketField.closest(".field-group")?.classList.toggle("is-disabled", !selectedFilingStatus);
+        federalTaxBracketLabel?.classList.toggle("is-disabled", !selectedFilingStatus);
+
+        if (!selectedFilingStatus) {
+          federalTaxBracketField.innerHTML = '<option value="">Please select</option>';
+          federalTaxBracketField.value = "";
+          return;
+        }
+
+        const options = getFederalTaxBracketRowsForStatus(selectedFilingStatus);
 
         federalTaxBracketField.innerHTML = '<option value="">Please select</option>' + options.map((row) => {
           const safeValue = String(row?.rate || "").trim();
@@ -1450,6 +1616,34 @@
         if (currentValue) {
           federalTaxBracketField.value = currentValue;
         }
+
+        if (federalTaxBracketField.value !== currentValue) {
+          federalTaxBracketField.value = "";
+        }
+      }
+
+      function syncFederalTaxBracketSelection() {
+        if (!federalTaxBracketField || federalTaxBracketField instanceof RadioNodeList || federalTaxBracketField.disabled) {
+          return;
+        }
+
+        const selectedFilingStatus = String(filingStatusField?.value || "").trim();
+        if (!selectedFilingStatus) {
+          federalTaxBracketField.value = "";
+          return;
+        }
+
+        const incomeBasis = getFederalTaxBracketIncomeBasis();
+        const options = getFederalTaxBracketRowsForStatus(selectedFilingStatus);
+
+        const matchedRow = options.find((row) => {
+          const minIncome = parseCurrencyLikeNumber(row?.minIncome);
+          const maxRaw = String(row?.maxIncome || "").trim();
+          const maxIncome = maxRaw ? parseCurrencyLikeNumber(maxRaw) : Number.POSITIVE_INFINITY;
+          return incomeBasis >= minIncome && incomeBasis <= maxIncome;
+        });
+
+        federalTaxBracketField.value = String(matchedRow?.rate || "");
       }
 
       function syncStateOfResidenceDisplay() {
@@ -1553,6 +1747,8 @@
             }
           });
           clampCostToFundPercent();
+          syncLinkedMaritalStatus();
+          syncFilingStatusOptions();
           syncLinkedStateOfResidence();
           syncStateOfResidenceDisplay();
         } catch (_error) {
@@ -1611,6 +1807,45 @@
         survivorWorkingSelect.addEventListener("input", syncSurvivorshipAdjustments);
       }
 
+      if (filingStatusField && !(filingStatusField instanceof RadioNodeList)) {
+        const syncFederalBracketState = () => {
+          populateFederalTaxBracketOptions();
+          syncFederalTaxBracketSelection();
+        };
+        filingStatusField.addEventListener("change", syncFederalBracketState);
+        filingStatusField.addEventListener("input", syncFederalBracketState);
+      }
+
+      [grossAnnualIncomeField, spouseIncomeField].forEach((field) => {
+        if (!field || field instanceof RadioNodeList) {
+          return;
+        }
+
+        field.addEventListener("input", () => {
+          syncTaxableIncomeFields();
+          syncFederalTaxBracketSelection();
+        });
+        field.addEventListener("blur", () => {
+          syncTaxableIncomeFields();
+          syncFederalTaxBracketSelection();
+        });
+      });
+
+      [yearlyTaxDeductionsField, spouseYearlyTaxDeductionsField].forEach((field) => {
+        if (!field || field instanceof RadioNodeList) {
+          return;
+        }
+
+        field.addEventListener("input", () => {
+          syncTaxableIncomeFields();
+          syncFederalTaxBracketSelection();
+        });
+        field.addEventListener("blur", () => {
+          syncTaxableIncomeFields();
+          syncFederalTaxBracketSelection();
+        });
+      });
+
       if (stateOfResidenceField && !(stateOfResidenceField instanceof RadioNodeList)) {
         stateOfResidenceField.addEventListener("change", syncStateOfResidenceDisplay);
         stateOfResidenceField.addEventListener("input", syncStateOfResidenceDisplay);
@@ -1623,6 +1858,11 @@
 
       populateFederalTaxBracketOptions();
       restoreDraft();
+      syncTaxableIncomeFields();
+      syncLinkedMaritalStatus();
+      syncFilingStatusOptions();
+      populateFederalTaxBracketOptions();
+      syncFederalTaxBracketSelection();
       syncLinkedStateOfResidence();
       syncStateOfResidenceDisplay();
       syncSurvivorshipAdjustments();

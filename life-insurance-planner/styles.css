@@ -699,6 +699,17 @@ textarea {
   background: #fff;
 }
 
+.admin-tax-bracket-groups {
+  display: grid;
+  gap: var(--space-xl);
+  margin-top: var(--space-lg);
+}
+
+.admin-tax-bracket-group + .admin-tax-bracket-group {
+  padding-top: var(--space-lg);
+  border-top: 1px solid rgba(213, 221, 232, 0.85);
+}
+
 .admin-tax-bracket-table {
   width: 100%;
   border-collapse: separate;

@@ -20,7 +20,7 @@
     federalTaxBrackets: "lensFederalTaxBrackets"
   };
 
-  const DEFAULT_FEDERAL_TAX_BRACKETS = [
+  const DEFAULT_SINGLE_FEDERAL_TAX_BRACKETS = [
     { rate: "10%", minIncome: "0", maxIncome: "11600" },
     { rate: "12%", minIncome: "11601", maxIncome: "47150" },
     { rate: "22%", minIncome: "47151", maxIncome: "100525" },
@@ -28,6 +28,14 @@
     { rate: "32%", minIncome: "191951", maxIncome: "243725" },
     { rate: "35%", minIncome: "243726", maxIncome: "609350" },
     { rate: "37%", minIncome: "609351", maxIncome: "" }
+  ];
+
+  const FEDERAL_TAX_BRACKET_FILINGS = [
+    "Single",
+    "Married Filing Jointly",
+    "Married Filing Separately",
+    "Head of Household",
+    "Qualifying Surviving Spouse"
   ];
   const ADMIN_CREDENTIALS = {
     email: "admin@lens.com",
@@ -667,11 +675,46 @@
     return { rate, minIncome, maxIncome };
   }
 
-  function getFederalTaxBracketOptions() {
-    const stored = loadJson(STORAGE_KEYS.federalTaxBrackets);
-    const source = Array.isArray(stored) && stored.length ? stored : DEFAULT_FEDERAL_TAX_BRACKETS;
+  function buildDefaultFederalTaxBracketConfig() {
+    return {
+      "Single": DEFAULT_SINGLE_FEDERAL_TAX_BRACKETS.map((row) => ({ ...row })),
+      "Married Filing Jointly": DEFAULT_SINGLE_FEDERAL_TAX_BRACKETS.map((row) => ({ ...row })),
+      "Married Filing Separately": DEFAULT_SINGLE_FEDERAL_TAX_BRACKETS.map((row) => ({ ...row })),
+      "Head of Household": DEFAULT_SINGLE_FEDERAL_TAX_BRACKETS.map((row) => ({ ...row })),
+      "Qualifying Surviving Spouse": DEFAULT_SINGLE_FEDERAL_TAX_BRACKETS.map((row) => ({ ...row }))
+    };
+  }
 
-    return source
+  function getFederalTaxBracketConfig() {
+    const stored = loadJson(STORAGE_KEYS.federalTaxBrackets);
+    const defaults = buildDefaultFederalTaxBracketConfig();
+
+    if (Array.isArray(stored)) {
+      const normalizedRows = stored.map(normalizeFederalTaxBracketRow).filter(Boolean);
+      defaults.Single = normalizedRows.length ? normalizedRows : defaults.Single;
+      return defaults;
+    }
+
+    if (!stored || typeof stored !== "object") {
+      return defaults;
+    }
+
+    FEDERAL_TAX_BRACKET_FILINGS.forEach((filingStatus) => {
+      const rows = Array.isArray(stored[filingStatus]) ? stored[filingStatus] : [];
+      const normalizedRows = rows.map(normalizeFederalTaxBracketRow).filter(Boolean);
+      if (normalizedRows.length) {
+        defaults[filingStatus] = normalizedRows;
+      }
+    });
+
+    return defaults;
+  }
+
+  function getFederalTaxBracketOptions(filingStatus) {
+    const config = getFederalTaxBracketConfig();
+    const normalizedStatus = String(filingStatus || "").trim();
+
+    return (config[normalizedStatus] || config.Single || [])
       .map(normalizeFederalTaxBracketRow)
       .filter(Boolean);
   }
