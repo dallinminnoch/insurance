@@ -76,6 +76,138 @@
   <script src="../calculations.js"></script>
   <script src="../charts.js"></script>
   <script src="../app.js"></script>
+  <script>
+    (function () {
+      const storageKey = "lensFederalTaxBrackets";
+      const defaultRows = [
+        { rate: "10%", minIncome: "0", maxIncome: "11600" },
+        { rate: "12%", minIncome: "11601", maxIncome: "47150" },
+        { rate: "22%", minIncome: "47151", maxIncome: "100525" },
+        { rate: "24%", minIncome: "100526", maxIncome: "191950" },
+        { rate: "32%", minIncome: "191951", maxIncome: "243725" },
+        { rate: "35%", minIncome: "243726", maxIncome: "609350" },
+        { rate: "37%", minIncome: "609351", maxIncome: "" }
+      ];
+
+      const listHost = document.getElementById("admin-tax-bracket-list");
+      const countHost = document.getElementById("admin-tax-bracket-count");
+      const feedbackHost = document.getElementById("admin-tax-bracket-feedback");
+      const addButton = document.getElementById("admin-tax-bracket-add");
+      const saveButton = document.getElementById("admin-tax-bracket-save");
+      const resetButton = document.getElementById("admin-tax-bracket-reset");
+
+      if (!listHost || !countHost || !addButton || !saveButton || !resetButton) {
+        return;
+      }
+
+      function escapeHtml(value) {
+        return String(value || "")
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#39;");
+      }
+
+      function normalizeRow(row) {
+        if (!row || typeof row !== "object") {
+          return null;
+        }
+
+        const rate = String(row.rate || row.percentage || "").trim();
+        const minIncome = String(row.minIncome || row.rangeStart || "").trim();
+        const maxIncome = String(row.maxIncome || row.rangeEnd || "").trim();
+
+        if (!rate && !minIncome && !maxIncome) {
+          return null;
+        }
+
+        return { rate, minIncome, maxIncome };
+      }
+
+      function readStoredRows() {
+        try {
+          const parsed = JSON.parse(localStorage.getItem(storageKey) || "null");
+          if (!Array.isArray(parsed) || !parsed.length) {
+            return defaultRows.map((row) => ({ ...row }));
+          }
+
+          const normalized = parsed.map(normalizeRow).filter(Boolean);
+          return normalized.length ? normalized : defaultRows.map((row) => ({ ...row }));
+        } catch (_error) {
+          return defaultRows.map((row) => ({ ...row }));
+        }
+      }
+
+      function renderRows(rows, feedbackMessage) {
+        countHost.textContent = String(rows.length);
+        listHost.innerHTML = rows.map((row, index) => `
+          <tr class="admin-tax-bracket-row">
+            <td><input class="admin-tax-bracket-input" type="text" value="${escapeHtml(row.rate)}" data-tax-rate data-tax-index="${index}" placeholder="24%"></td>
+            <td><input class="admin-tax-bracket-input" type="text" value="${escapeHtml(row.minIncome)}" data-tax-min data-tax-index="${index}" placeholder="100526"></td>
+            <td><input class="admin-tax-bracket-input" type="text" value="${escapeHtml(row.maxIncome)}" data-tax-max data-tax-index="${index}" placeholder="191950"></td>
+            <td class="admin-tax-bracket-actions-cell"><button class="admin-action-button admin-tax-bracket-remove" type="button" data-tax-remove="${index}">Remove</button></td>
+          </tr>
+        `).join("");
+        feedbackHost.textContent = feedbackMessage || "";
+      }
+
+      function collectRows() {
+        const rows = [];
+        const rateInputs = Array.from(listHost.querySelectorAll("[data-tax-rate]"));
+
+        rateInputs.forEach((input) => {
+          const index = input.getAttribute("data-tax-index");
+          const minInput = listHost.querySelector(`[data-tax-min][data-tax-index="${index}"]`);
+          const maxInput = listHost.querySelector(`[data-tax-max][data-tax-index="${index}"]`);
+          const normalized = normalizeRow({
+            rate: input.value,
+            minIncome: minInput?.value,
+            maxIncome: maxInput?.value
+          });
+          if (normalized) {
+            rows.push(normalized);
+          }
+        });
+
+        return rows;
+      }
+
+      listHost.addEventListener("click", (event) => {
+        const removeButton = event.target.closest("[data-tax-remove]");
+        if (!removeButton) {
+          return;
+        }
+
+        const indexToRemove = removeButton.getAttribute("data-tax-remove");
+        const nextRows = collectRows().filter((_row, index) => String(index) !== String(indexToRemove));
+        renderRows(nextRows.length ? nextRows : defaultRows.map((row) => ({ ...row })), "");
+      });
+
+      addButton.addEventListener("click", () => {
+        const nextRows = [...collectRows(), { rate: "", minIncome: "", maxIncome: "" }];
+        renderRows(nextRows, "");
+      });
+
+      saveButton.addEventListener("click", () => {
+        const rows = collectRows();
+        if (!rows.length) {
+          feedbackHost.textContent = "Add at least one federal tax bracket row.";
+          return;
+        }
+
+        localStorage.setItem(storageKey, JSON.stringify(rows));
+        renderRows(rows, "Federal tax bracket rows saved.");
+      });
+
+      resetButton.addEventListener("click", () => {
+        localStorage.removeItem(storageKey);
+        renderRows(defaultRows.map((row) => ({ ...row })), "");
+      });
+
+      renderRows(readStoredRows(), "");
+    })();
+  </script>
 </body>
 </html>
 

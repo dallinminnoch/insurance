@@ -552,41 +552,6 @@
       });
     }
 
-    const bracketList = document.getElementById("admin-tax-bracket-list");
-    if (bracketList) {
-      bracketList.addEventListener("click", (event) => {
-        const removeButton = event.target.closest("[data-admin-tax-bracket-remove]");
-        if (!removeButton) {
-          return;
-        }
-
-        removeAdminTaxBracketRow(removeButton.dataset.adminTaxBracketRemove);
-      });
-    }
-
-    const addBracketButton = document.getElementById("admin-tax-bracket-add");
-    if (addBracketButton) {
-      addBracketButton.addEventListener("click", () => {
-        addAdminTaxBracketRow();
-      });
-    }
-
-    const saveBracketButton = document.getElementById("admin-tax-bracket-save");
-    if (saveBracketButton) {
-      saveBracketButton.addEventListener("click", () => {
-        saveAdminTaxBrackets();
-      });
-    }
-
-    const resetBracketButton = document.getElementById("admin-tax-bracket-reset");
-    if (resetBracketButton) {
-      resetBracketButton.addEventListener("click", () => {
-        localStorage.removeItem(STORAGE_KEYS.federalTaxBrackets);
-        renderFederalTaxBracketAdmin();
-      });
-    }
-
-    renderFederalTaxBracketAdmin();
   }
 
   function renderAdminAccounts() {
@@ -702,22 +667,6 @@
     return { rate, minIncome, maxIncome };
   }
 
-  function formatFederalTaxBracketLabel(row) {
-    const normalized = normalizeFederalTaxBracketRow(row);
-    if (!normalized) {
-      return "";
-    }
-
-    const { rate, minIncome, maxIncome } = normalized;
-    if (!minIncome && !maxIncome) {
-      return rate;
-    }
-
-    const start = minIncome || "0";
-    const end = maxIncome || "No cap";
-    return `${rate} | ${start} - ${end}`;
-  }
-
   function getFederalTaxBracketOptions() {
     const stored = loadJson(STORAGE_KEYS.federalTaxBrackets);
     const source = Array.isArray(stored) && stored.length ? stored : DEFAULT_FEDERAL_TAX_BRACKETS;
@@ -725,80 +674,6 @@
     return source
       .map(normalizeFederalTaxBracketRow)
       .filter(Boolean);
-  }
-
-  function renderFederalTaxBracketAdmin() {
-    const brackets = getFederalTaxBracketOptions();
-    renderAdminTaxBracketRows(brackets.length ? brackets : DEFAULT_FEDERAL_TAX_BRACKETS, "");
-  }
-
-  function renderAdminTaxBracketRows(brackets, feedbackMessage) {
-    const listHost = document.getElementById("admin-tax-bracket-list");
-    const countHost = document.getElementById("admin-tax-bracket-count");
-    const feedbackHost = document.getElementById("admin-tax-bracket-feedback");
-
-    if (countHost) {
-      countHost.textContent = String(brackets.length);
-    }
-
-    if (!listHost) {
-      return;
-    }
-
-    listHost.innerHTML = brackets.map((row, index) => `
-      <tr class="admin-tax-bracket-row">
-        <td><input class="admin-tax-bracket-input" type="text" value="${escapeHtml(row.rate)}" data-admin-tax-bracket-rate data-admin-tax-bracket-index="${index}" placeholder="24%"></td>
-        <td><input class="admin-tax-bracket-input" type="text" value="${escapeHtml(row.minIncome)}" data-admin-tax-bracket-min data-admin-tax-bracket-index="${index}" placeholder="100526"></td>
-        <td><input class="admin-tax-bracket-input" type="text" value="${escapeHtml(row.maxIncome)}" data-admin-tax-bracket-max data-admin-tax-bracket-index="${index}" placeholder="191950"></td>
-        <td class="admin-tax-bracket-actions-cell"><button class="admin-action-button admin-tax-bracket-remove" type="button" data-admin-tax-bracket-remove="${index}">Remove</button></td>
-      </tr>
-    `).join("");
-
-    if (feedbackHost) {
-      feedbackHost.textContent = feedbackMessage || "";
-    }
-  }
-
-  function collectAdminTaxBracketValues() {
-    const rateInputs = Array.from(document.querySelectorAll("[data-admin-tax-bracket-rate]"));
-
-    return rateInputs
-      .map((input, index) => {
-        const minInput = document.querySelector(`[data-admin-tax-bracket-min][data-admin-tax-bracket-index="${index}"]`);
-        const maxInput = document.querySelector(`[data-admin-tax-bracket-max][data-admin-tax-bracket-index="${index}"]`);
-
-        return normalizeFederalTaxBracketRow({
-          rate: String(input.value || "").trim(),
-          minIncome: String(minInput?.value || "").trim(),
-          maxIncome: String(maxInput?.value || "").trim()
-        });
-      })
-      .filter(Boolean);
-  }
-
-  function addAdminTaxBracketRow() {
-    const nextValues = [...collectAdminTaxBracketValues(), { rate: "", minIncome: "", maxIncome: "" }];
-    renderAdminTaxBracketRows(nextValues, "");
-  }
-
-  function removeAdminTaxBracketRow(indexToRemove) {
-    const nextValues = collectAdminTaxBracketValues().filter((_value, index) => String(index) !== String(indexToRemove));
-    renderAdminTaxBracketRows(nextValues.length ? nextValues : [{ rate: "", minIncome: "", maxIncome: "" }], "");
-  }
-
-  function saveAdminTaxBrackets() {
-    const feedbackHost = document.getElementById("admin-tax-bracket-feedback");
-    const nextValues = collectAdminTaxBracketValues();
-
-    if (!nextValues.length) {
-      if (feedbackHost) {
-        feedbackHost.textContent = "Add at least one federal tax bracket option.";
-      }
-      return;
-    }
-
-    localStorage.setItem(STORAGE_KEYS.federalTaxBrackets, JSON.stringify(nextValues));
-    renderAdminTaxBracketRows(nextValues, "Federal tax bracket options saved.");
   }
 
   function updateAuthMode(mode, modeButtons, registerFieldsHost, submitButton, feedback, modeField) {
