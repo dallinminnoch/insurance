@@ -154,6 +154,12 @@
                 </select>
               </div>
               <div class="field-group">
+                <label for="spouse-federal-tax-bracket" data-spouse-federal-tax-bracket-label>Spouse Federal Tax Bracket</label>
+                <select id="spouse-federal-tax-bracket" name="spouseFederalTaxBracket" disabled>
+                  <option value="">Please select</option>
+                </select>
+              </div>
+              <div class="field-group full-width">
                 <label for="state-of-residence">State of Residence</label>
                 <div class="profile-state-select-shell">
                   <select id="state-of-residence" class="profile-state-field" name="stateOfResidence" data-state-select>
@@ -215,6 +221,12 @@
               <div class="field-group">
                 <label for="state-income-tax-bracket" data-state-tax-bracket-label>State Income Tax Bracket</label>
                 <select id="state-income-tax-bracket" name="stateIncomeTaxBracket" disabled>
+                  <option value="">Please select</option>
+                </select>
+              </div>
+              <div class="field-group">
+                <label for="spouse-state-income-tax-bracket" data-spouse-state-tax-bracket-label>Spouse State Income Tax Bracket</label>
+                <select id="spouse-state-income-tax-bracket" name="spouseStateIncomeTaxBracket" disabled>
                   <option value="">Please select</option>
                 </select>
               </div>
@@ -1172,8 +1184,10 @@
         "individual-years-remaining": "Remaining years on any term policy.",
         "group-life-coverage": "Employer-provided group life coverage amount.",
         "group-life-portability": "Whether group coverage can continue after employment changes.",
+        "spouse-federal-tax-bracket": "Federal tax bracket used for the spouse when filing status is Married Filing Separately.",
         "state-of-residence": "State abbreviation used for future state tax handling. If this form is linked to a client, it will prefill from the profile address but can still be changed here.",
         "state-income-tax-bracket": "State income tax bracket for the selected state of residence.",
+        "spouse-state-income-tax-bracket": "State income tax bracket used for the spouse when filing status is Married Filing Separately.",
         "funeral-burial-estimate": "A common national reference point is about $8,300 for a funeral with burial and about $6,280 for cremation, based on NFDA medians. Once cemetery, marker, and other burial fees are added, the total can commonly reach $15,000 or more.",
         "medical-end-of-life-costs": "A practical planning range is often $10,000 to $25,000, depending on coverage and expected care needs.",
         "estate-settlement-costs": "A practical starting range is often $5,000 to $15,000, with higher amounts for larger or more complex estates.",
@@ -1438,7 +1452,9 @@
       const spouseTaxableIncomeField = form.elements.namedItem("spouseTaxableIncome");
       const stateOfResidenceField = form.elements.namedItem("stateOfResidence");
       const stateIncomeTaxBracketField = form.elements.namedItem("stateIncomeTaxBracket");
+      const spouseStateIncomeTaxBracketField = form.elements.namedItem("spouseStateIncomeTaxBracket");
       const federalTaxBracketField = form.elements.namedItem("federalTaxBracket");
+      const spouseFederalTaxBracketField = form.elements.namedItem("spouseFederalTaxBracket");
       const urlLinkedCaseRef = new URLSearchParams(window.location.search).get("caseRef");
       const federalTaxBracketStorageKey = "lensFederalTaxBrackets";
       const stateTaxBracketStorageKey = "lensStateIncomeTaxBrackets";
@@ -1680,6 +1696,46 @@
         }
       }
 
+      function populateSpouseFederalTaxBracketOptions() {
+        if (!spouseFederalTaxBracketField || spouseFederalTaxBracketField instanceof RadioNodeList) {
+          return;
+        }
+
+        const currentValue = String(spouseFederalTaxBracketField.value || "").trim();
+        const selectedFilingStatus = String(filingStatusField?.value || "").trim();
+        const spouseFederalTaxBracketLabel = form.querySelector("[data-spouse-federal-tax-bracket-label]");
+        const isMarriedFilingSeparately = selectedFilingStatus === "Married Filing Separately";
+
+        spouseFederalTaxBracketField.disabled = !isMarriedFilingSeparately;
+        spouseFederalTaxBracketField.closest(".field-group")?.classList.toggle("is-disabled", !isMarriedFilingSeparately);
+        spouseFederalTaxBracketLabel?.classList.toggle("is-disabled", !isMarriedFilingSeparately);
+
+        if (!isMarriedFilingSeparately) {
+          spouseFederalTaxBracketField.innerHTML = '<option value="">Please select</option>';
+          spouseFederalTaxBracketField.value = "";
+          return;
+        }
+
+        const options = getFederalTaxBracketRowsForStatus(selectedFilingStatus);
+        spouseFederalTaxBracketField.innerHTML = '<option value="">Please select</option>' + options.map((row) => {
+          const safeValue = String(row?.rate || "").trim();
+          const minIncome = String(row?.minIncome || "").trim();
+          const maxIncome = String(row?.maxIncome || "").trim();
+          const rangeStart = minIncome || "0";
+          const rangeEnd = maxIncome || "No cap";
+          const label = minIncome || maxIncome ? `${safeValue} | ${rangeStart} - ${rangeEnd}` : safeValue;
+          return `<option value="${safeValue}">${label}</option>`;
+        }).join("");
+
+        if (currentValue) {
+          spouseFederalTaxBracketField.value = currentValue;
+        }
+
+        if (spouseFederalTaxBracketField.value !== currentValue) {
+          spouseFederalTaxBracketField.value = "";
+        }
+      }
+
       function populateStateTaxBracketOptions() {
         if (!stateIncomeTaxBracketField || stateIncomeTaxBracketField instanceof RadioNodeList) {
           return;
@@ -1735,6 +1791,62 @@
         }
       }
 
+      function populateSpouseStateTaxBracketOptions() {
+        if (!spouseStateIncomeTaxBracketField || spouseStateIncomeTaxBracketField instanceof RadioNodeList) {
+          return;
+        }
+
+        const currentValue = String(spouseStateIncomeTaxBracketField.value || "").trim();
+        const selectedState = String(stateOfResidenceField?.value || "").trim().toUpperCase();
+        const selectedFilingStatus = String(filingStatusField?.value || "").trim();
+        const spouseStateTaxBracketLabel = form.querySelector("[data-spouse-state-tax-bracket-label]");
+        const stateConfig = getStateTaxConfigForState(selectedState);
+        const isMarriedFilingSeparately = selectedFilingStatus === "Married Filing Separately";
+        const shouldDisable = !selectedState || !isMarriedFilingSeparately || !stateConfig.hasIncomeTax;
+
+        spouseStateIncomeTaxBracketField.disabled = shouldDisable;
+        spouseStateIncomeTaxBracketField.closest(".field-group")?.classList.toggle("is-disabled", shouldDisable);
+        spouseStateTaxBracketLabel?.classList.toggle("is-disabled", shouldDisable);
+
+        if (!selectedState || !isMarriedFilingSeparately) {
+          spouseStateIncomeTaxBracketField.innerHTML = '<option value="">Please select</option>';
+          spouseStateIncomeTaxBracketField.value = "";
+          return;
+        }
+
+        if (!stateConfig.hasIncomeTax) {
+          spouseStateIncomeTaxBracketField.innerHTML = '<option value="">No state income tax</option>';
+          spouseStateIncomeTaxBracketField.value = "";
+          return;
+        }
+
+        if (stateConfig.mode === "flat") {
+          const flatRate = String(stateConfig.flatRate || "").trim();
+          spouseStateIncomeTaxBracketField.innerHTML = `<option value="${flatRate}">${flatRate ? `${flatRate} | Flat Tax Rate` : "Flat tax rate not set"}</option>`;
+          spouseStateIncomeTaxBracketField.value = flatRate;
+          return;
+        }
+
+        const options = Array.isArray(stateConfig.rows) ? stateConfig.rows : [];
+        spouseStateIncomeTaxBracketField.innerHTML = '<option value="">Please select</option>' + options.map((row) => {
+          const safeValue = String(row?.rate || "").trim();
+          const minIncome = String(row?.minIncome || "").trim();
+          const maxIncome = String(row?.maxIncome || "").trim();
+          const rangeStart = minIncome || "0";
+          const rangeEnd = maxIncome || "No cap";
+          const label = minIncome || maxIncome ? `${safeValue} | ${rangeStart} - ${rangeEnd}` : safeValue;
+          return `<option value="${safeValue}">${label}</option>`;
+        }).join("");
+
+        if (currentValue) {
+          spouseStateIncomeTaxBracketField.value = currentValue;
+        }
+
+        if (spouseStateIncomeTaxBracketField.value !== currentValue) {
+          spouseStateIncomeTaxBracketField.value = "";
+        }
+      }
+
       function syncFederalTaxBracketSelection() {
         if (!federalTaxBracketField || federalTaxBracketField instanceof RadioNodeList || federalTaxBracketField.disabled) {
           return;
@@ -1757,6 +1869,29 @@
         });
 
         federalTaxBracketField.value = String(matchedRow?.rate || "");
+      }
+
+      function syncSpouseFederalTaxBracketSelection() {
+        if (!spouseFederalTaxBracketField || spouseFederalTaxBracketField instanceof RadioNodeList || spouseFederalTaxBracketField.disabled) {
+          return;
+        }
+
+        const selectedFilingStatus = String(filingStatusField?.value || "").trim();
+        if (selectedFilingStatus !== "Married Filing Separately") {
+          spouseFederalTaxBracketField.value = "";
+          return;
+        }
+
+        const spouseIncomeBasis = parseCurrencyLikeNumber(spouseTaxableIncomeField?.value);
+        const options = getFederalTaxBracketRowsForStatus(selectedFilingStatus);
+        const matchedRow = options.find((row) => {
+          const minIncome = parseCurrencyLikeNumber(row?.minIncome);
+          const maxRaw = String(row?.maxIncome || "").trim();
+          const maxIncome = maxRaw ? parseCurrencyLikeNumber(maxRaw) : Number.POSITIVE_INFINITY;
+          return spouseIncomeBasis >= minIncome && spouseIncomeBasis <= maxIncome;
+        });
+
+        spouseFederalTaxBracketField.value = String(matchedRow?.rate || "");
       }
 
       function syncStateTaxBracketSelection() {
@@ -1792,6 +1927,41 @@
         });
 
         stateIncomeTaxBracketField.value = String(matchedRow?.rate || "");
+      }
+
+      function syncSpouseStateTaxBracketSelection() {
+        if (!spouseStateIncomeTaxBracketField || spouseStateIncomeTaxBracketField instanceof RadioNodeList || spouseStateIncomeTaxBracketField.disabled) {
+          return;
+        }
+
+        const selectedState = String(stateOfResidenceField?.value || "").trim().toUpperCase();
+        const selectedFilingStatus = String(filingStatusField?.value || "").trim();
+        if (!selectedState || selectedFilingStatus !== "Married Filing Separately") {
+          spouseStateIncomeTaxBracketField.value = "";
+          return;
+        }
+
+        const stateConfig = getStateTaxConfigForState(selectedState);
+        if (!stateConfig.hasIncomeTax) {
+          spouseStateIncomeTaxBracketField.value = "";
+          return;
+        }
+
+        if (stateConfig.mode === "flat") {
+          spouseStateIncomeTaxBracketField.value = String(stateConfig.flatRate || "").trim();
+          return;
+        }
+
+        const spouseIncomeBasis = parseCurrencyLikeNumber(spouseTaxableIncomeField?.value);
+        const options = Array.isArray(stateConfig.rows) ? stateConfig.rows : [];
+        const matchedRow = options.find((row) => {
+          const minIncome = parseCurrencyLikeNumber(row?.minIncome);
+          const maxRaw = String(row?.maxIncome || "").trim();
+          const maxIncome = maxRaw ? parseCurrencyLikeNumber(maxRaw) : Number.POSITIVE_INFINITY;
+          return spouseIncomeBasis >= minIncome && spouseIncomeBasis <= maxIncome;
+        });
+
+        spouseStateIncomeTaxBracketField.value = String(matchedRow?.rate || "");
       }
 
       function syncStateOfResidenceDisplay() {
@@ -1958,8 +2128,13 @@
       if (filingStatusField && !(filingStatusField instanceof RadioNodeList)) {
         const syncFederalBracketState = () => {
           populateFederalTaxBracketOptions();
+          populateSpouseFederalTaxBracketOptions();
+          populateStateTaxBracketOptions();
+          populateSpouseStateTaxBracketOptions();
           syncFederalTaxBracketSelection();
+          syncSpouseFederalTaxBracketSelection();
           syncStateTaxBracketSelection();
+          syncSpouseStateTaxBracketSelection();
         };
         filingStatusField.addEventListener("change", syncFederalBracketState);
         filingStatusField.addEventListener("input", syncFederalBracketState);
@@ -1973,12 +2148,16 @@
         field.addEventListener("input", () => {
           syncTaxableIncomeFields();
           syncFederalTaxBracketSelection();
+          syncSpouseFederalTaxBracketSelection();
           syncStateTaxBracketSelection();
+          syncSpouseStateTaxBracketSelection();
         });
         field.addEventListener("blur", () => {
           syncTaxableIncomeFields();
           syncFederalTaxBracketSelection();
+          syncSpouseFederalTaxBracketSelection();
           syncStateTaxBracketSelection();
+          syncSpouseStateTaxBracketSelection();
         });
       });
 
@@ -1990,12 +2169,16 @@
         field.addEventListener("input", () => {
           syncTaxableIncomeFields();
           syncFederalTaxBracketSelection();
+          syncSpouseFederalTaxBracketSelection();
           syncStateTaxBracketSelection();
+          syncSpouseStateTaxBracketSelection();
         });
         field.addEventListener("blur", () => {
           syncTaxableIncomeFields();
           syncFederalTaxBracketSelection();
+          syncSpouseFederalTaxBracketSelection();
           syncStateTaxBracketSelection();
+          syncSpouseStateTaxBracketSelection();
         });
       });
 
@@ -2003,7 +2186,9 @@
         const syncStateTaxState = () => {
           syncStateOfResidenceDisplay();
           populateStateTaxBracketOptions();
+          populateSpouseStateTaxBracketOptions();
           syncStateTaxBracketSelection();
+          syncSpouseStateTaxBracketSelection();
         };
         stateOfResidenceField.addEventListener("change", syncStateTaxState);
         stateOfResidenceField.addEventListener("input", syncStateTaxState);
@@ -2020,11 +2205,15 @@
       syncLinkedMaritalStatus();
       syncFilingStatusOptions();
       populateFederalTaxBracketOptions();
+      populateSpouseFederalTaxBracketOptions();
       syncFederalTaxBracketSelection();
+      syncSpouseFederalTaxBracketSelection();
       syncLinkedStateOfResidence();
       syncStateOfResidenceDisplay();
       populateStateTaxBracketOptions();
+      populateSpouseStateTaxBracketOptions();
       syncStateTaxBracketSelection();
+      syncSpouseStateTaxBracketSelection();
       syncSurvivorshipAdjustments();
     })();
   </script>
