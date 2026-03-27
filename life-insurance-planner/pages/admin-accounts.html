@@ -189,6 +189,8 @@
             state.code,
             {
               hasIncomeTax: !noIncomeTaxStates.has(state.code),
+              mode: "brackets",
+              flatRate: "",
               filings: Object.fromEntries(
                 filingStatuses.map((status) => [
                   status,
@@ -245,9 +247,13 @@
             }
 
             const hasIncomeTax = existing.hasIncomeTax === false ? false : true;
+            const mode = String(existing.mode || "brackets").trim() === "flat" ? "flat" : "brackets";
+            const flatRate = String(existing.flatRate || "").trim();
             const filings = existing.filings && typeof existing.filings === "object" ? existing.filings : {};
             defaults[state.code] = {
               hasIncomeTax,
+              mode,
+              flatRate,
               filings: Object.fromEntries(
                 filingStatuses.map((status) => {
                   const rows = Array.isArray(filings[status]) ? filings[status].map(normalizeRow).filter(Boolean) : [];
@@ -316,6 +322,8 @@
         stateGroupsHost.innerHTML = states.map((state) => {
           const stateConfig = config[state.code] || buildDefaultStateConfig()[state.code];
           const hasIncomeTax = stateConfig.hasIncomeTax !== false;
+          const mode = stateConfig.mode === "flat" ? "flat" : "brackets";
+          const flatRate = String(stateConfig.flatRate || "").trim();
           const safeCode = escapeHtml(state.code);
           const filingMarkup = filingStatuses.map((status) => {
             const safeStatus = escapeHtml(status);
@@ -324,7 +332,7 @@
               : (hasIncomeTax ? defaultStateRows.map((row) => ({ ...row })) : []);
             const feedbackKey = `${state.code}::${status}`;
             return `
-              <section class="admin-tax-bracket-group admin-state-tax-filing-group" data-state-tax-filing-group="${safeCode}" data-state-tax-filing="${safeStatus}">
+              <section class="admin-tax-bracket-group admin-state-tax-filing-group${mode === 'flat' ? ' is-disabled' : ''}" data-state-tax-filing-group="${safeCode}" data-state-tax-filing="${safeStatus}">
                 <div class="admin-tax-bracket-toolbar">
                   <span class="section-label">${escapeHtml(status)}</span>
                   <strong>${rows.length}</strong>
@@ -364,13 +372,29 @@
               <summary class="admin-state-tax-summary">
                 <div class="admin-tax-bracket-toolbar">
                   <span class="section-label">${escapeHtml(state.name)} (${safeCode})</span>
-                  <div class="admin-state-tax-toggle" role="group" aria-label="${escapeHtml(state.name)} income tax">
-                    <button class="admin-action-button${hasIncomeTax ? ' is-active' : ''}" type="button" data-state-tax-toggle="${safeCode}" data-state-tax-value="yes">Yes</button>
-                    <button class="admin-action-button${!hasIncomeTax ? ' is-active' : ''}" type="button" data-state-tax-toggle="${safeCode}" data-state-tax-value="no">No</button>
+                  <div class="admin-state-tax-controls">
+                    <div class="admin-state-tax-toggle" role="group" aria-label="${escapeHtml(state.name)} income tax">
+                      <button class="admin-action-button${hasIncomeTax ? ' is-active' : ''}" type="button" data-state-tax-toggle="${safeCode}" data-state-tax-value="yes">Yes</button>
+                      <button class="admin-action-button${!hasIncomeTax ? ' is-active' : ''}" type="button" data-state-tax-toggle="${safeCode}" data-state-tax-value="no">No</button>
+                    </div>
+                    <div class="admin-state-tax-toggle" role="group" aria-label="${escapeHtml(state.name)} tax mode">
+                      <button class="admin-action-button${mode === 'flat' ? ' is-active' : ''}" type="button" data-state-tax-mode="${safeCode}" data-state-tax-mode-value="flat" ${hasIncomeTax ? '' : 'disabled'}>Flat Tax Rate</button>
+                      <button class="admin-action-button${mode === 'brackets' ? ' is-active' : ''}" type="button" data-state-tax-mode="${safeCode}" data-state-tax-mode-value="brackets" ${hasIncomeTax ? '' : 'disabled'}>Bracket Tables</button>
+                    </div>
                   </div>
                 </div>
               </summary>
               <div class="admin-state-tax-body">
+                <section class="admin-tax-bracket-group${mode === 'brackets' ? ' is-disabled' : ''}">
+                  <div class="admin-tax-bracket-toolbar">
+                    <span class="section-label">Flat Tax Rate</span>
+                  </div>
+                  <div class="admin-tax-bracket-actions">
+                    <input class="admin-tax-bracket-input admin-state-tax-flat-input" type="text" value="${escapeHtml(flatRate)}" data-state-tax-flat-rate="${safeCode}" placeholder="5%" ${hasIncomeTax && mode === 'flat' ? '' : 'disabled'}>
+                    <button class="admin-action-button" type="button" data-state-tax-save-flat="${safeCode}" ${hasIncomeTax ? '' : 'disabled'}>Save Flat Rate</button>
+                  </div>
+                  <p class="panel-copy admin-tax-bracket-feedback" data-state-tax-flat-feedback="${escapeHtml(`${state.code}::flat`)}">${escapeHtml(feedbackByKey?.[`${state.code}::flat`] || "")}</p>
+                </section>
                 ${filingMarkup}
               </div>
             </details>
@@ -471,9 +495,11 @@
 
       stateGroupsHost.addEventListener("click", (event) => {
         const toggleButton = event.target.closest("[data-state-tax-toggle]");
+        const modeButton = event.target.closest("[data-state-tax-mode]");
         const addButton = event.target.closest("[data-state-tax-add]");
         const removeButton = event.target.closest("[data-state-tax-remove]");
         const saveButton = event.target.closest("[data-state-tax-save]");
+        const saveFlatButton = event.target.closest("[data-state-tax-save-flat]");
         const resetButton = event.target.closest("[data-state-tax-reset]");
         const currentConfig = readStoredStateConfig();
 
@@ -483,6 +509,8 @@
           const hasIncomeTax = toggleButton.getAttribute("data-state-tax-value") === "yes";
           currentConfig[stateCode] = {
             hasIncomeTax,
+            mode: currentConfig[stateCode]?.mode === "flat" ? "flat" : "brackets",
+            flatRate: String(currentConfig[stateCode]?.flatRate || "").trim(),
             filings: Object.fromEntries(
               filingStatuses.map((status) => [
                 status,
@@ -496,11 +524,36 @@
           return;
         }
 
+        if (modeButton) {
+          const stateCode = modeButton.getAttribute("data-state-tax-mode");
+          const mode = modeButton.getAttribute("data-state-tax-mode-value") === "flat" ? "flat" : "brackets";
+          currentConfig[stateCode].mode = mode;
+          renderStateGroups(currentConfig, {});
+          return;
+        }
+
         if (addButton) {
           const stateCode = addButton.getAttribute("data-state-tax-add");
           const filingStatus = addButton.getAttribute("data-state-tax-filing");
           currentConfig[stateCode].filings[filingStatus] = [...collectStateRows(stateCode, filingStatus), { rate: "", minIncome: "", maxIncome: "" }];
           renderStateGroups(currentConfig, {});
+          return;
+        }
+
+        if (saveFlatButton) {
+          const stateCode = saveFlatButton.getAttribute("data-state-tax-save-flat");
+          const feedbackKey = `${stateCode}::flat`;
+          const flatInput = stateGroupsHost.querySelector(`[data-state-tax-flat-rate="${stateCode}"]`);
+          const flatRate = String(flatInput?.value || "").trim();
+
+          if (currentConfig[stateCode].hasIncomeTax !== false && currentConfig[stateCode].mode === "flat" && !flatRate) {
+            renderStateGroups(currentConfig, { [feedbackKey]: "Enter a flat tax rate before saving." });
+            return;
+          }
+
+          currentConfig[stateCode].flatRate = flatRate;
+          localStorage.setItem(stateStorageKey, JSON.stringify(currentConfig));
+          renderStateGroups(currentConfig, { [feedbackKey]: "Flat tax rate saved." });
           return;
         }
 

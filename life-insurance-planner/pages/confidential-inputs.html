@@ -1545,6 +1545,8 @@
         const normalizedFilingStatus = String(filingStatusField?.value || "").trim();
         const defaultConfig = {
           hasIncomeTax: !noIncomeTaxStates.has(normalizedCode),
+          mode: "brackets",
+          flatRate: "",
           rows: noIncomeTaxStates.has(normalizedCode) ? [] : defaultStateTaxRows
         };
 
@@ -1556,12 +1558,16 @@
           const stored = JSON.parse(localStorage.getItem(stateTaxBracketStorageKey) || "null");
           if (stored && typeof stored === "object" && stored[normalizedCode] && typeof stored[normalizedCode] === "object") {
             const hasIncomeTax = stored[normalizedCode].hasIncomeTax === false ? false : true;
+            const mode = String(stored[normalizedCode].mode || "brackets").trim() === "flat" ? "flat" : "brackets";
+            const flatRate = String(stored[normalizedCode].flatRate || "").trim();
             const filings = stored[normalizedCode].filings && typeof stored[normalizedCode].filings === "object"
               ? stored[normalizedCode].filings
               : {};
             const rows = Array.isArray(filings[normalizedFilingStatus]) ? filings[normalizedFilingStatus] : [];
             return {
               hasIncomeTax,
+              mode,
+              flatRate,
               rows: hasIncomeTax ? (rows.length ? rows : defaultConfig.rows) : []
             };
           }
@@ -1702,6 +1708,13 @@
           return;
         }
 
+        if (stateConfig.mode === "flat") {
+          const flatRate = String(stateConfig.flatRate || "").trim();
+          stateIncomeTaxBracketField.innerHTML = `<option value="${flatRate}">${flatRate ? `${flatRate} | Flat Tax Rate` : "Flat tax rate not set"}</option>`;
+          stateIncomeTaxBracketField.value = flatRate;
+          return;
+        }
+
         const options = Array.isArray(stateConfig.rows) ? stateConfig.rows : [];
         stateIncomeTaxBracketField.innerHTML = '<option value="">Please select</option>' + options.map((row) => {
           const safeValue = String(row?.rate || "").trim();
@@ -1761,6 +1774,11 @@
         const stateConfig = getStateTaxConfigForState(selectedState);
         if (!stateConfig.hasIncomeTax) {
           stateIncomeTaxBracketField.value = "";
+          return;
+        }
+
+        if (stateConfig.mode === "flat") {
+          stateIncomeTaxBracketField.value = String(stateConfig.flatRate || "").trim();
           return;
         }
 

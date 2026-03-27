@@ -761,6 +761,14 @@ textarea {
   gap: 0.45rem;
 }
 
+.admin-state-tax-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
 .admin-state-tax-toggle .admin-action-button.is-active {
   background: #233044;
   color: #ffffff;
@@ -784,6 +792,14 @@ textarea {
   margin-top: var(--space-lg);
   padding-top: var(--space-lg);
   border-top: 1px solid rgba(213, 221, 232, 0.85);
+}
+
+.admin-state-tax-filing-group.is-disabled {
+  opacity: 0.58;
+}
+
+.admin-state-tax-flat-input {
+  width: min(14rem, 100%);
 }
 
 .admin-tax-bracket-table.is-disabled {
