@@ -58,6 +58,44 @@
       </div>
       <div id="admin-state-tax-groups" class="admin-tax-bracket-groups"></div>
     </section>
+    <section class="admin-accounts-panel">
+      <div class="admin-panel-header">
+        <div class="section-label">Planning Configuration</div>
+        <h2>Payroll Taxes</h2>
+        <p class="panel-copy">Maintain the payroll tax rates and wage-base thresholds used for future income modeling. This section is configuration only.</p>
+      </div>
+      <table class="admin-tax-bracket-table" id="admin-payroll-tax-table">
+        <thead>
+          <tr>
+            <th>Payroll Tax</th>
+            <th>Tax %</th>
+            <th>Wage Base / Threshold</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="admin-payroll-tax-body"></tbody>
+      </table>
+      <div class="admin-tax-bracket-actions">
+        <button class="admin-action-button" type="button" id="admin-payroll-tax-add">Add Payroll Tax</button>
+        <button class="admin-action-button" type="button" id="admin-payroll-tax-reset">Reset Defaults</button>
+        <button class="admin-action-button" type="button" id="admin-payroll-tax-save">Save Changes</button>
+      </div>
+      <section class="admin-tax-bracket-group">
+        <div class="admin-tax-bracket-toolbar">
+          <span class="section-label">Additional Medicare Thresholds</span>
+        </div>
+        <table class="admin-tax-bracket-table" id="admin-additional-medicare-table">
+          <thead>
+            <tr>
+              <th>Filing Status</th>
+              <th>Threshold</th>
+            </tr>
+          </thead>
+          <tbody id="admin-additional-medicare-body"></tbody>
+        </table>
+      </section>
+      <p class="panel-copy admin-tax-bracket-feedback" id="admin-payroll-tax-feedback"></p>
+    </section>
   </main>
 
   <script src="../data.js"></script>
@@ -68,6 +106,7 @@
     (function () {
       const federalStorageKey = "lensFederalTaxBrackets";
       const stateStorageKey = "lensStateIncomeTaxBrackets";
+      const payrollStorageKey = "lensPayrollTaxConfig";
       const filingStatuses = [
         "Single",
         "Married Filing Jointly",
@@ -142,10 +181,32 @@
         { rate: "6.5%", minIncome: "50001", maxIncome: "100000" },
         { rate: "8%", minIncome: "100001", maxIncome: "" }
       ];
+      const defaultPayrollRows = [
+        { name: "Social Security", rate: "6.2%", wageBase: "176100" },
+        { name: "Medicare", rate: "1.45%", wageBase: "" },
+        {
+          name: "Additional Medicare",
+          rate: "0.9%",
+          wageBase: "",
+          thresholds: {
+            "Single": "200000",
+            "Married Filing Jointly": "250000",
+            "Married Filing Separately": "125000",
+            "Head of Household": "200000",
+            "Qualifying Surviving Spouse": "250000"
+          }
+        }
+      ];
       const federalGroupsHost = document.getElementById("admin-tax-bracket-groups");
       const stateGroupsHost = document.getElementById("admin-state-tax-groups");
+      const payrollTaxBody = document.getElementById("admin-payroll-tax-body");
+      const additionalMedicareBody = document.getElementById("admin-additional-medicare-body");
+      const payrollTaxFeedback = document.getElementById("admin-payroll-tax-feedback");
+      const payrollTaxAddButton = document.getElementById("admin-payroll-tax-add");
+      const payrollTaxResetButton = document.getElementById("admin-payroll-tax-reset");
+      const payrollTaxSaveButton = document.getElementById("admin-payroll-tax-save");
 
-      if (!federalGroupsHost || !stateGroupsHost) {
+      if (!federalGroupsHost || !stateGroupsHost || !payrollTaxBody || !additionalMedicareBody || !payrollTaxFeedback || !payrollTaxAddButton || !payrollTaxResetButton || !payrollTaxSaveButton) {
         return;
       }
 
@@ -156,6 +217,24 @@
           .replace(/>/g, "&gt;")
           .replace(/"/g, "&quot;")
           .replace(/'/g, "&#39;");
+      }
+
+      function isMedicareTaxName(value) {
+        return String(value || "").trim().toLowerCase() === "medicare";
+      }
+
+      function isAdditionalMedicareTaxName(value) {
+        return String(value || "").trim().toLowerCase() === "additional medicare";
+      }
+
+      function getDefaultAdditionalMedicareThresholds() {
+        return {
+          "Single": "200000",
+          "Married Filing Jointly": "250000",
+          "Married Filing Separately": "125000",
+          "Head of Household": "200000",
+          "Qualifying Surviving Spouse": "250000"
+        };
       }
 
       function normalizeRow(row) {
@@ -266,6 +345,31 @@
           return defaults;
         } catch (_error) {
           return buildDefaultStateConfig();
+        }
+      }
+
+      function readStoredPayrollConfig() {
+        try {
+          const raw = JSON.parse(localStorage.getItem(payrollStorageKey) || "[]");
+          if (!Array.isArray(raw) || !raw.length) {
+            return defaultPayrollRows.map((row) => ({ ...row }));
+          }
+
+          return raw.map((row) => ({
+            name: String(row?.name || "").trim(),
+            rate: String(row?.rate || "").trim(),
+            wageBase: String(row?.wageBase || "").trim(),
+            thresholds: isAdditionalMedicareTaxName(row?.name)
+              ? {
+                  ...getDefaultAdditionalMedicareThresholds(),
+                  ...(row?.thresholds && typeof row.thresholds === "object" ? Object.fromEntries(
+                    Object.entries(getDefaultAdditionalMedicareThresholds()).map(([status]) => [status, String(row.thresholds?.[status] || getDefaultAdditionalMedicareThresholds()[status]).trim()])
+                  ) : {})
+                }
+              : undefined
+          }));
+        } catch (_error) {
+          return defaultPayrollRows.map((row) => ({ ...row }));
         }
       }
 
@@ -400,6 +504,43 @@
             </details>
           `;
         }).join("");
+      }
+
+      function renderPayrollTaxRows(rows, feedbackMessage) {
+        const additionalMedicareRow = rows.find((row) => isAdditionalMedicareTaxName(row.name));
+        const additionalMedicareThresholds = additionalMedicareRow?.thresholds || getDefaultAdditionalMedicareThresholds();
+
+        payrollTaxBody.innerHTML = rows.map((row, index) => `
+          <tr class="admin-tax-bracket-row">
+            <td><input class="admin-tax-bracket-input" type="text" value="${escapeHtml(row.name)}" data-payroll-tax-name data-payroll-tax-index="${index}" placeholder="Social Security"></td>
+            <td><input class="admin-tax-bracket-input" type="text" value="${escapeHtml(row.rate)}" data-payroll-tax-rate data-payroll-tax-index="${index}" placeholder="6.2%"></td>
+            <td><input class="admin-tax-bracket-input" type="text" value="${escapeHtml(isMedicareTaxName(row.name) || isAdditionalMedicareTaxName(row.name) ? "" : row.wageBase)}" data-payroll-tax-wage-base data-payroll-tax-index="${index}" placeholder="${isMedicareTaxName(row.name) ? 'Not applicable' : isAdditionalMedicareTaxName(row.name) ? 'See thresholds below' : '176100'}" ${isMedicareTaxName(row.name) || isAdditionalMedicareTaxName(row.name) ? 'disabled' : ''}></td>
+            <td class="admin-tax-bracket-actions-cell"><button class="admin-action-button admin-tax-bracket-remove" type="button" data-payroll-tax-remove="${index}">Remove</button></td>
+          </tr>
+        `).join("");
+        additionalMedicareBody.innerHTML = filingStatuses.map((status) => `
+          <tr class="admin-tax-bracket-row">
+            <td>${escapeHtml(status)}</td>
+            <td><input class="admin-tax-bracket-input" type="text" value="${escapeHtml(additionalMedicareThresholds[status] || "")}" data-additional-medicare-threshold="${escapeHtml(status)}" placeholder="200000"></td>
+          </tr>
+        `).join("");
+        payrollTaxFeedback.textContent = feedbackMessage || "";
+      }
+
+      function collectPayrollTaxRows() {
+        const additionalMedicareThresholds = Object.fromEntries(
+          filingStatuses.map((status) => [
+            status,
+            String(additionalMedicareBody.querySelector(`[data-additional-medicare-threshold="${status}"]`)?.value || "").trim()
+          ])
+        );
+
+        return Array.from(payrollTaxBody.querySelectorAll("tr")).map((row) => ({
+          name: String(row.querySelector("[data-payroll-tax-name]")?.value || "").trim(),
+          rate: String(row.querySelector("[data-payroll-tax-rate]")?.value || "").trim(),
+          wageBase: (isMedicareTaxName(row.querySelector("[data-payroll-tax-name]")?.value) || isAdditionalMedicareTaxName(row.querySelector("[data-payroll-tax-name]")?.value)) ? "" : String(row.querySelector("[data-payroll-tax-wage-base]")?.value || "").trim(),
+          thresholds: isAdditionalMedicareTaxName(row.querySelector("[data-payroll-tax-name]")?.value) ? additionalMedicareThresholds : undefined
+        })).filter((row) => row.name || row.rate || row.wageBase);
       }
 
       function collectFederalRowsForStatus(status) {
@@ -594,8 +735,51 @@
         }
       });
 
+      payrollTaxBody.addEventListener("click", (event) => {
+        const removeButton = event.target.closest("[data-payroll-tax-remove]");
+        if (!removeButton) {
+          return;
+        }
+
+        const currentRows = collectPayrollTaxRows();
+        const nextRows = currentRows.filter((_row, index) => String(index) !== String(removeButton.getAttribute("data-payroll-tax-remove")));
+        renderPayrollTaxRows(nextRows.length ? nextRows : defaultPayrollRows.map((row) => ({ ...row })), "");
+      });
+
+      payrollTaxBody.addEventListener("input", (event) => {
+        const nameInput = event.target.closest("[data-payroll-tax-name]");
+        if (!nameInput) {
+          return;
+        }
+
+        renderPayrollTaxRows(collectPayrollTaxRows(), "");
+      });
+
+      payrollTaxAddButton.addEventListener("click", () => {
+        const currentRows = collectPayrollTaxRows();
+        renderPayrollTaxRows([...currentRows, { name: "", rate: "", wageBase: "" }], "");
+      });
+
+      payrollTaxResetButton.addEventListener("click", () => {
+        const nextRows = defaultPayrollRows.map((row) => ({ ...row }));
+        localStorage.setItem(payrollStorageKey, JSON.stringify(nextRows));
+        renderPayrollTaxRows(nextRows, "Payroll tax defaults restored.");
+      });
+
+      payrollTaxSaveButton.addEventListener("click", () => {
+        const nextRows = collectPayrollTaxRows();
+        if (!nextRows.length) {
+          renderPayrollTaxRows(readStoredPayrollConfig(), "Add at least one payroll tax row.");
+          return;
+        }
+
+        localStorage.setItem(payrollStorageKey, JSON.stringify(nextRows));
+        renderPayrollTaxRows(nextRows, "Payroll tax rows saved.");
+      });
+
       renderFederalGroups(readStoredFederalConfig(), {});
       renderStateGroups(readStoredStateConfig(), {});
+      renderPayrollTaxRows(readStoredPayrollConfig(), "");
     })();
   </script>
 </body>
