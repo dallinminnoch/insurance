@@ -105,6 +105,13 @@
                   <option value="Qualifying Surviving Spouse">Qualifying Surviving Spouse</option>
                 </select>
               </div>
+              <div class="field-group full-width income-calculation-circle-row" aria-hidden="true">
+                <span class="income-calculation-circle" data-filing-status-circle="Single" title="Single"></span>
+                <span class="income-calculation-circle" data-filing-status-circle="Married Filing Jointly" title="Married Filing Jointly"></span>
+                <span class="income-calculation-circle" data-filing-status-circle="Married Filing Separately" title="Married Filing Separately"></span>
+                <span class="income-calculation-circle" data-filing-status-circle="Head of Household" title="Head of Household"></span>
+                <span class="income-calculation-circle" data-filing-status-circle="Qualifying Surviving Spouse" title="Qualifying Surviving Spouse"></span>
+              </div>
               <div class="field-group">
                 <label for="gross-annual-income">Gross Annual Income</label>
                 <div class="profile-currency-field">
@@ -1934,13 +1941,34 @@
       }
 
       function syncTaxableIncomeFields() {
+        const filingStatus = String(filingStatusField?.value || "").trim();
+        const primaryGrossIncome = parseCurrencyLikeNumber(grossAnnualIncomeField?.value);
+        const spouseGrossIncome = parseCurrencyLikeNumber(spouseIncomeField?.value);
+
+        if (filingStatus === "Married Filing Jointly") {
+          const combinedGrossIncome = primaryGrossIncome + spouseGrossIncome;
+          const combinedDeduction = getEffectiveDeductionValue("primary") + getEffectiveDeductionValue("spouse");
+          const combinedTaxableIncome = Math.max(0, combinedGrossIncome - combinedDeduction);
+          const primaryShare = combinedGrossIncome > 0 ? primaryGrossIncome / combinedGrossIncome : 1;
+          const spouseShare = combinedGrossIncome > 0 ? spouseGrossIncome / combinedGrossIncome : 0;
+
+          if (taxableIncomeField && !(taxableIncomeField instanceof RadioNodeList)) {
+            taxableIncomeField.value = formatNumberWithCommas(combinedTaxableIncome * primaryShare);
+          }
+
+          if (spouseTaxableIncomeField && !(spouseTaxableIncomeField instanceof RadioNodeList)) {
+            spouseTaxableIncomeField.value = formatNumberWithCommas(combinedTaxableIncome * spouseShare);
+          }
+          return;
+        }
+
         if (taxableIncomeField && !(taxableIncomeField instanceof RadioNodeList)) {
-          const taxableIncome = Math.max(0, parseCurrencyLikeNumber(grossAnnualIncomeField?.value) - getEffectiveDeductionValue("primary"));
+          const taxableIncome = Math.max(0, primaryGrossIncome - getEffectiveDeductionValue("primary"));
           taxableIncomeField.value = formatNumberWithCommas(taxableIncome);
         }
 
         if (spouseTaxableIncomeField && !(spouseTaxableIncomeField instanceof RadioNodeList)) {
-          const spouseTaxableIncome = Math.max(0, parseCurrencyLikeNumber(spouseIncomeField?.value) - getEffectiveDeductionValue("spouse"));
+          const spouseTaxableIncome = Math.max(0, spouseGrossIncome - getEffectiveDeductionValue("spouse"));
           spouseTaxableIncomeField.value = formatNumberWithCommas(spouseTaxableIncome);
         }
       }
@@ -1976,6 +2004,13 @@
         if (filingStatusField.value && allowedOptions && !allowedOptions.includes(filingStatusField.value)) {
           filingStatusField.value = "";
         }
+      }
+
+      function syncFilingStatusCircles() {
+        const selectedFilingStatus = String(filingStatusField?.value || "").trim();
+        form.querySelectorAll("[data-filing-status-circle]").forEach((circle) => {
+          circle.classList.toggle("is-active", circle.getAttribute("data-filing-status-circle") === selectedFilingStatus);
+        });
       }
 
       function syncIncomeCalculationSpouseFields() {
@@ -2613,6 +2648,7 @@
 
       if (filingStatusField && !(filingStatusField instanceof RadioNodeList)) {
         const syncFederalBracketState = () => {
+          syncFilingStatusCircles();
           syncStandardDeductionFields();
           syncDeductionMethodState();
           syncTaxableIncomeFields();
@@ -2727,6 +2763,7 @@
       syncTaxableIncomeFields();
       syncLinkedMaritalStatus();
       syncFilingStatusOptions();
+      syncFilingStatusCircles();
       syncIncomeCalculationSpouseFields();
       syncStandardDeductionFields();
       syncDeductionMethodState();

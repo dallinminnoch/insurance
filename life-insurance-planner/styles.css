@@ -5797,6 +5797,28 @@ body[data-step] {
   color: #1f5b34;
 }
 
+.income-calculation-circle-row {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding-top: 0.15rem;
+}
+
+.income-calculation-circle {
+  width: 0.85rem;
+  height: 0.85rem;
+  border: 1.5px solid rgba(148, 163, 184, 0.9);
+  border-radius: 999px;
+  background: transparent;
+  transition: background 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.income-calculation-circle.is-active {
+  background: #5478f0;
+  border-color: #5478f0;
+  box-shadow: 0 0 0 0.12rem rgba(84, 120, 240, 0.18);
+}
+
 .profile-form-toggle-group {
   display: flex;
   gap: 0.55rem;
