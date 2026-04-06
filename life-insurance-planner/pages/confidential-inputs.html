@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -937,7 +937,7 @@
   </main>
 
   <div class="floating-calculator" id="confidential-calculator" hidden aria-hidden="true">
-    <div class="floating-calculator-header" data-calculator-drag-handle><button class="floating-calculator-close" type="button" aria-label="Close calculator">�</button>
+    <div class="floating-calculator-header" data-calculator-drag-handle><button class="floating-calculator-close" type="button" aria-label="Close calculator">×</button>
     </div>
     <div class="floating-calculator-body">
       <input
@@ -1272,7 +1272,7 @@
       }
 
       function evaluateDisplay() {
-        const expression = sanitizeExpression(display.value).replace(/[×]/g, "*").replace(/[÷]/g, "/");
+        const expression = sanitizeExpression(display.value).replace(/[Ã—]/g, "*").replace(/[Ã·]/g, "/");
 
         if (!expression.trim()) {
           return;
@@ -1475,6 +1475,21 @@
       const netAnnualIncomeField = form.elements.namedItem("netAnnualIncome");
       const spouseNetAnnualIncomeField = form.elements.namedItem("spouseNetAnnualIncome");
       const incomeCalculationGrid = form.querySelector(".income-calculation-grid");
+      const derivedDraftFieldNames = new Set([
+        "linkedMaritalStatusDisplay",
+        "standardDeduction",
+        "spouseStandardDeduction",
+        "taxableIncome",
+        "spouseTaxableIncome",
+        "federalTaxBracket",
+        "spouseFederalTaxBracket",
+        "stateIncomeTaxBracket",
+        "spouseStateIncomeTaxBracket",
+        "primaryPayrollTaxes",
+        "spousePayrollTaxes",
+        "netAnnualIncome",
+        "spouseNetAnnualIncome"
+      ]);
       const urlLinkedCaseRef = new URLSearchParams(window.location.search).get("caseRef");
       const federalTaxBracketStorageKey = "lensFederalTaxBrackets";
       const standardDeductionStorageKey = "lensStandardDeductions";
@@ -1572,6 +1587,18 @@
 
       const resolvedLinkedCaseRef = String(urlLinkedCaseRef || window.getLensLinkedCaseRef?.() || "").trim();
 
+      function getCurrentClientRecordsStorageKey() {
+        let session = null;
+        try {
+          session = JSON.parse(localStorage.getItem("lipPlannerAuthSession") || "null");
+        } catch (_error) {
+          session = null;
+        }
+
+        const identity = session?.email ? String(session.email).trim().toLowerCase() : "guest";
+        return `lensClientRecords:${identity}`;
+      }
+
       function getLinkedRecord() {
         const linkedCaseRef = resolvedLinkedCaseRef.toLowerCase();
 
@@ -1579,21 +1606,79 @@
           return null;
         }
 
-        const storageKeys = Object.keys(localStorage).filter((key) => key.startsWith("lensClientRecords:"));
-
-        for (const key of storageKeys) {
-          try {
-            const records = JSON.parse(localStorage.getItem(key) || "[]");
-            if (!Array.isArray(records)) {
-              continue;
-            }
-
-            const match = records.find((record) => String(record?.caseRef || "").trim().toLowerCase() === linkedCaseRef);
-            if (match) {
-              return match;
-            }
-          } catch (_error) {
+        const key = getCurrentClientRecordsStorageKey();
+        try {
+          const records = JSON.parse(localStorage.getItem(key) || "[]");
+          if (!Array.isArray(records)) {
+            return null;
           }
+
+          const match = records.find((record) => String(record?.caseRef || "").trim().toLowerCase() === linkedCaseRef);
+          if (match) {
+            return match;
+          }
+        } catch (_error) {
+        }
+
+        return null;
+      }
+
+      function saveLinkedPmiEntry(draft) {
+        const linkedCaseRef = String(resolvedLinkedCaseRef || window.getLensLinkedCaseRef?.() || "").trim();
+        if (!linkedCaseRef) {
+          return null;
+        }
+
+        if (window.saveLensLinkedWorkflowSection) {
+          const savedRecord = window.saveLensLinkedWorkflowSection(linkedCaseRef, "protectionModeling", draft, {
+            variant: form.dataset.pmiDraftKey || "confidential",
+            page: "confidential-inputs"
+          });
+          if (savedRecord) {
+            return savedRecord;
+          }
+        }
+
+        const normalizedCaseRef = linkedCaseRef.toLowerCase();
+        const key = getCurrentClientRecordsStorageKey();
+        const today = new Date().toISOString().slice(0, 10);
+
+        try {
+          const records = JSON.parse(localStorage.getItem(key) || "[]");
+          if (!Array.isArray(records)) {
+            return null;
+          }
+
+          const recordIndex = records.findIndex((record) => String(record?.caseRef || "").trim().toLowerCase() === normalizedCaseRef);
+          if (recordIndex < 0) {
+            return null;
+          }
+
+          const currentRecord = records[recordIndex] || {};
+          const sectionPayload = {
+            completed: true,
+            linkedCaseRef,
+            savedAt: today,
+            variant: form.dataset.pmiDraftKey || "confidential",
+            page: "confidential-inputs",
+            data: draft && typeof draft === "object" ? draft : {}
+          };
+          const existingEntries = Array.isArray(currentRecord.protectionModelingEntries)
+            ? currentRecord.protectionModelingEntries.slice()
+            : [];
+          const updatedRecord = {
+            ...currentRecord,
+            lastUpdatedDate: today,
+            lastReview: today,
+            protectionModelingEntries: [...existingEntries, sectionPayload],
+            protectionModeling: sectionPayload,
+            pmiCompleted: true
+          };
+          const nextRecords = records.slice();
+          nextRecords[recordIndex] = updatedRecord;
+          localStorage.setItem(key, JSON.stringify(nextRecords));
+          return updatedRecord;
+        } catch (_error) {
         }
 
         return null;
@@ -1899,37 +1984,40 @@
         });
       }
 
-      function getPayrollTaxRow(name) {
-        const normalizedName = String(name || "").trim().toLowerCase();
-        return readStoredPayrollConfig().find((row) => String(row?.name || "").trim().toLowerCase() === normalizedName) || null;
-      }
-
       function getSelectedBracketRate(field) {
         return window.LensPmiTaxUtils.getSelectedBracketRate(field, parsePercentLikeNumber);
       }
 
-      function getAdditionalMedicareThreshold(filingStatus) {
-        return window.LensPmiTaxUtils.getAdditionalMedicareThreshold({
-          filingStatus,
-          payrollRows: readStoredPayrollConfig(),
-          parseCurrencyLikeNumber,
-          getDefaultAdditionalMedicareThresholds
-        });
-      }
-
       function getFederalTaxBracketIncomeBasis() {
         const filingStatus = String(filingStatusField?.value || "").trim();
-        const taxableIncome = parseCurrencyLikeNumber(taxableIncomeField?.value);
-        const spouseTaxableIncome = parseCurrencyLikeNumber(spouseTaxableIncomeField?.value);
+        const taxableIncomeValues = getCurrentTaxableIncomeValues();
 
         if (filingStatus === "Married Filing Jointly") {
-          return taxableIncome + spouseTaxableIncome;
+          return taxableIncomeValues.combined;
         }
 
-        return taxableIncome;
+        return taxableIncomeValues.primary;
       }
 
       function syncTaxableIncomeFields() {
+        const taxableIncomeValues = getCurrentTaxableIncomeValues();
+
+        if (taxableIncomeField && !(taxableIncomeField instanceof RadioNodeList)) {
+          taxableIncomeField.value = formatNumberWithCommas(
+            taxableIncomeValues.incomeCalculationMode === "joint"
+              ? taxableIncomeValues.combined
+              : taxableIncomeValues.primary
+          );
+        }
+
+        if (spouseTaxableIncomeField && !(spouseTaxableIncomeField instanceof RadioNodeList)) {
+          spouseTaxableIncomeField.value = taxableIncomeValues.incomeCalculationMode === "joint"
+            ? ""
+            : formatNumberWithCommas(taxableIncomeValues.spouse);
+        }
+      }
+
+      function getCurrentTaxableIncomeValues() {
         const incomeCalculationMode = getIncomeCalculationMode();
         const primaryGrossIncome = parseCurrencyLikeNumber(grossAnnualIncomeField?.value);
         const spouseGrossIncome = parseCurrencyLikeNumber(spouseIncomeField?.value);
@@ -1939,25 +2027,31 @@
           const combinedDeduction = getEffectiveDeductionValue("primary");
           const combinedTaxableIncome = Math.max(0, combinedGrossIncome - combinedDeduction);
 
-          if (taxableIncomeField && !(taxableIncomeField instanceof RadioNodeList)) {
-            taxableIncomeField.value = formatNumberWithCommas(combinedTaxableIncome);
+          if (!combinedGrossIncome) {
+            return {
+              incomeCalculationMode,
+              combined: combinedTaxableIncome,
+              primary: combinedTaxableIncome,
+              spouse: 0
+            };
           }
 
-          if (spouseTaxableIncomeField && !(spouseTaxableIncomeField instanceof RadioNodeList)) {
-            spouseTaxableIncomeField.value = "";
-          }
-          return;
+          return {
+            incomeCalculationMode,
+            combined: combinedTaxableIncome,
+            primary: combinedTaxableIncome * (primaryGrossIncome / combinedGrossIncome),
+            spouse: combinedTaxableIncome * (spouseGrossIncome / combinedGrossIncome)
+          };
         }
 
-        if (taxableIncomeField && !(taxableIncomeField instanceof RadioNodeList)) {
-          const taxableIncome = Math.max(0, primaryGrossIncome - getEffectiveDeductionValue("primary"));
-          taxableIncomeField.value = formatNumberWithCommas(taxableIncome);
-        }
-
-        if (spouseTaxableIncomeField && !(spouseTaxableIncomeField instanceof RadioNodeList)) {
-          const spouseTaxableIncome = Math.max(0, spouseGrossIncome - getEffectiveDeductionValue("spouse"));
-          spouseTaxableIncomeField.value = formatNumberWithCommas(spouseTaxableIncome);
-        }
+        const primaryTaxableIncome = Math.max(0, primaryGrossIncome - getEffectiveDeductionValue("primary"));
+        const spouseTaxableIncome = Math.max(0, spouseGrossIncome - getEffectiveDeductionValue("spouse"));
+        return {
+          incomeCalculationMode,
+          combined: primaryTaxableIncome + spouseTaxableIncome,
+          primary: primaryTaxableIncome,
+          spouse: spouseTaxableIncome
+        };
       }
 
       function syncFilingStatusOptions() {
@@ -2297,7 +2391,7 @@
           return;
         }
 
-        const spouseIncomeBasis = parseCurrencyLikeNumber(spouseTaxableIncomeField?.value);
+        const spouseIncomeBasis = getCurrentTaxableIncomeValues().spouse;
         const options = getFederalTaxBracketRowsForStatus(selectedFilingStatus);
         const matchedRow = options.find((row) => {
           const minIncome = parseCurrencyLikeNumber(row?.minIncome);
@@ -2367,7 +2461,7 @@
           return;
         }
 
-        const spouseIncomeBasis = parseCurrencyLikeNumber(spouseTaxableIncomeField?.value);
+        const spouseIncomeBasis = getCurrentTaxableIncomeValues().spouse;
         const options = Array.isArray(stateConfig.rows) ? stateConfig.rows : [];
         const matchedRow = options.find((row) => {
           const minIncome = parseCurrencyLikeNumber(row?.minIncome);
@@ -2383,8 +2477,9 @@
       // advisor and confidential PMI flows cannot drift apart.
       function getPrimaryAndSpouseFederalTaxAmounts() {
         const filingStatus = String(filingStatusField?.value || "").trim();
-        const primaryTaxableIncome = parseCurrencyLikeNumber(taxableIncomeField?.value);
-        const spouseTaxableIncome = parseCurrencyLikeNumber(spouseTaxableIncomeField?.value);
+        const taxableIncomeValues = getCurrentTaxableIncomeValues();
+        const primaryTaxableIncome = taxableIncomeValues.primary;
+        const spouseTaxableIncome = taxableIncomeValues.spouse;
         const federalBracketRows = getFederalTaxBracketRowsForStatus(filingStatus);
         return window.LensPmiTaxUtils.getProgressiveBracketTaxAmounts({
           filingStatus,
@@ -2399,8 +2494,9 @@
 
       function getPrimaryAndSpouseStateTaxAmounts() {
         const filingStatus = String(filingStatusField?.value || "").trim();
-        const primaryTaxableIncome = parseCurrencyLikeNumber(taxableIncomeField?.value);
-        const spouseTaxableIncome = parseCurrencyLikeNumber(spouseTaxableIncomeField?.value);
+        const taxableIncomeValues = getCurrentTaxableIncomeValues();
+        const primaryTaxableIncome = taxableIncomeValues.primary;
+        const spouseTaxableIncome = taxableIncomeValues.spouse;
         const selectedState = String(stateOfResidenceField?.value || "").trim().toUpperCase();
         const stateConfig = getStateTaxConfigForState(selectedState);
 
@@ -2433,6 +2529,8 @@
         const spouseEarnedIncome = parseCurrencyLikeNumber(spouseIncomeField?.value);
         return window.LensPmiTaxUtils.getPayrollTaxAmounts({
           filingStatus,
+          primaryEarnedIncome,
+          spouseEarnedIncome,
           primaryTaxableIncome: primaryEarnedIncome,
           spouseTaxableIncome: spouseEarnedIncome,
           payrollRows: readStoredPayrollConfig(),
@@ -2505,6 +2603,7 @@
       }
 
       function syncAllTaxDerivedFields() {
+        syncTaxableIncomeFields();
         syncFederalTaxBracketSelection();
         syncSpouseFederalTaxBracketSelection();
         syncStateTaxBracketSelection();
@@ -2519,6 +2618,7 @@
         }
 
         const display = form.querySelector("[data-state-select-value]");
+        const shell = stateOfResidenceField.closest(".profile-state-select-shell");
         if (!display) {
           return;
         }
@@ -2526,6 +2626,7 @@
         const selectedValue = String(stateOfResidenceField.value || "").trim().toUpperCase();
         display.textContent = selectedValue || "Select state";
         display.classList.toggle("is-placeholder", !selectedValue);
+        shell?.classList.toggle("is-placeholder", !selectedValue);
       }
 
       function clampCostToFundPercent() {
@@ -2592,6 +2693,10 @@
               return;
             }
 
+            if (derivedDraftFieldNames.has(name)) {
+              return;
+            }
+
             if (value === "" || value == null) {
               return;
             }
@@ -2632,6 +2737,10 @@
             return;
           }
 
+          if (derivedDraftFieldNames.has(element.name) || element.hasAttribute("readonly")) {
+            return;
+          }
+
           if (element.type === "radio") {
             if (element.checked) {
               draft[element.name] = element.value;
@@ -2654,16 +2763,19 @@
         clampCostToFundPercent();
         const draft = serializeForm();
         localStorage.setItem(storageKey, JSON.stringify(draft));
-        const linkedCaseRef = resolvedLinkedCaseRef || window.getLensLinkedCaseRef?.() || "";
-        if (linkedCaseRef && window.saveLensLinkedWorkflowSection) {
-          window.saveLensLinkedWorkflowSection(linkedCaseRef, "protectionModeling", draft, {
-            variant: form.dataset.pmiDraftKey || "confidential",
-            page: "confidential-inputs"
-          });
+        const linkedRecord = saveLinkedPmiEntry(draft);
+        const linkedRecordId = String(linkedRecord?.id || getLinkedRecord()?.id || "").trim();
+        const linkedCaseRef = String(linkedRecord?.caseRef || getLinkedRecord()?.caseRef || urlLinkedCaseRef || window.getLensLinkedCaseRef?.() || "").trim();
+        if (linkedRecordId) {
+          window.location.href = `client-detail.html?id=${encodeURIComponent(linkedRecordId)}&tab=planning`;
+          return;
+        }
+        if (linkedCaseRef) {
+          window.location.href = `client-detail.html?caseRef=${encodeURIComponent(linkedCaseRef)}&tab=planning`;
+          return;
         }
         window.location.href = "clients.html";
       });
-
       if (costToFundPercentField) {
         costToFundPercentField.addEventListener("input", clampCostToFundPercent);
         costToFundPercentField.addEventListener("change", clampCostToFundPercent);
@@ -2811,5 +2923,11 @@
   </script>
 </body>
 </html>
+
+
+
+
+
+
 
 

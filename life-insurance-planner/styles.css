@@ -1543,6 +1543,12 @@ select option:disabled {
   max-width: 4.5rem;
 }
 
+.profile-creation-form .profile-state-select-shell.is-placeholder {
+  width: 7.4rem;
+  min-width: 7.4rem;
+  max-width: 7.4rem;
+}
+
 .profile-state-select-shell::after {
   content: "";
   position: absolute;

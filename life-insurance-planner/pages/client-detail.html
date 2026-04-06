@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+ï»¿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -422,14 +422,36 @@
       function getRecord() {
         const params = new URLSearchParams(window.location.search);
         const recordId = String(params.get("id") || "").trim();
+        const caseRef = String(params.get("caseRef") || "").trim().toUpperCase();
         const records = loadJson(localStorage, getRecordsStorageKey());
-        if (!recordId || !Array.isArray(records)) {
+        if (!Array.isArray(records)) {
           return null;
         }
 
-        return records.find(function (item) {
-          return String(item?.id || "").trim() === recordId;
-        }) || null;
+        if (recordId) {
+          const matchedById = records.find(function (item) {
+            return String(item?.id || "").trim() === recordId;
+          }) || null;
+          if (matchedById) {
+            return matchedById;
+          }
+        }
+
+        if (caseRef) {
+          return records.find(function (item) {
+            return String(item?.caseRef || "").trim().toUpperCase() === caseRef;
+          }) || null;
+        }
+
+        return null;
+      }
+
+      function getRequestedTab() {
+        const params = new URLSearchParams(window.location.search);
+        const requestedTab = String(params.get("tab") || "").trim().toLowerCase();
+        return ["overview", "planning", "household", "notes"].includes(requestedTab)
+          ? requestedTab
+          : "overview";
       }
 
       function renderSection(sectionTitle, fields, options) {
@@ -894,7 +916,7 @@
                           <h2 id="client-activity-modal-title">Log Activity</h2>
                           <p>Choose the activity you want to add to this profile.</p>
                         </div>
-                        <button class="client-activity-modal-close" type="button" data-activity-modal-close aria-label="Close activity options">×</button>
+                        <button class="client-activity-modal-close" type="button" data-activity-modal-close aria-label="Close activity options">Ã—</button>
                       </div>
                       <div class="client-activity-modal-grid">
                         <button type="button" class="client-activity-option" data-activity-option="note">
@@ -1328,7 +1350,7 @@
             <div class="client-policy-modal-panel" role="dialog" aria-modal="true" aria-labelledby="client-policy-modal-title">
               <div class="client-policy-modal-header">
                 <button class="client-policy-edit-button" type="button" data-policy-edit-toggle>Edit</button>
-                <button class="client-policy-modal-close" type="button" data-policy-modal-close aria-label="Close policy details">×</button>
+                <button class="client-policy-modal-close" type="button" data-policy-modal-close aria-label="Close policy details">Ã—</button>
               </div>
               <h2 id="client-policy-modal-title" data-policy-modal-title>Policy Details</h2>
               <div class="client-policy-modal-body" data-policy-modal-body></div>
@@ -1345,7 +1367,7 @@
             <div class="client-policy-modal-panel client-policy-list-modal-panel" role="dialog" aria-modal="true" aria-labelledby="client-policy-list-modal-title">
               <div class="client-policy-modal-header">
                 <div></div>
-                <button class="client-policy-modal-close" type="button" data-policy-list-modal-close aria-label="Close policy list">×</button>
+                <button class="client-policy-modal-close" type="button" data-policy-list-modal-close aria-label="Close policy list">Ã—</button>
               </div>
               <h2 id="client-policy-list-modal-title">All Policies</h2>
               <div class="client-policy-list-modal-body" data-policy-list-modal-body></div>
@@ -1367,7 +1389,7 @@
             <div class="client-policy-modal-panel client-pmi-detail-modal-panel" role="dialog" aria-modal="true" aria-labelledby="client-pmi-detail-modal-title">
               <div class="client-policy-modal-header">
                 <div></div>
-                <button class="client-policy-modal-close" type="button" data-pmi-detail-close aria-label="Close protection modeling inputs">×</button>
+                <button class="client-policy-modal-close" type="button" data-pmi-detail-close aria-label="Close protection modeling inputs">Ã—</button>
               </div>
               <h2 id="client-pmi-detail-modal-title">Protection Modeling Inputs</h2>
               <div class="client-policy-modal-body" data-pmi-detail-body></div>
@@ -1378,7 +1400,7 @@
             <form class="client-activity-widget-modal-panel client-activity-widget" data-activity-widget role="dialog" aria-modal="true" aria-labelledby="client-activity-widget-title">
               <div class="client-activity-widget-header">
                 <button type="button" class="client-activity-widget-back" data-activity-widget-back>Back</button>
-                <button class="client-activity-modal-close" type="button" data-activity-widget-close aria-label="Close activity widget">×</button>
+                <button class="client-activity-modal-close" type="button" data-activity-widget-close aria-label="Close activity widget">Ã—</button>
               </div>
               <div class="client-activity-widget-heading">
                 <h2 id="client-activity-widget-title" data-activity-widget-title>Activity</h2>
@@ -1999,6 +2021,21 @@
 
       refreshCoverageAdequacy(true);
 
+      const requestedTab = getRequestedTab();
+      if (requestedTab !== "overview") {
+        profileTabs.forEach(function (button) {
+          const isActive = String(button.dataset.clientTab || "").trim() === requestedTab;
+          button.classList.toggle("is-active", isActive);
+          button.setAttribute("aria-selected", isActive ? "true" : "false");
+        });
+
+        profilePanels.forEach(function (panel) {
+          const isActive = String(panel.dataset.clientPanel || "").trim() === requestedTab;
+          panel.classList.toggle("is-active", isActive);
+          panel.hidden = !isActive;
+        });
+      }
+
       profileTabs.forEach(function (tab) {
         tab.addEventListener("click", function () {
           const nextPanel = String(tab.dataset.clientTab || "").trim();
@@ -2531,5 +2568,8 @@
   </script>
 </body>
 </html>
+
+
+
 
 

@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -456,7 +456,7 @@
   </main>
 
   <div class="floating-calculator" id="confidential-calculator" hidden aria-hidden="true">
-    <div class="floating-calculator-header" data-calculator-drag-handle><button class="floating-calculator-close" type="button" aria-label="Close calculator">×</button>
+    <div class="floating-calculator-header" data-calculator-drag-handle><button class="floating-calculator-close" type="button" aria-label="Close calculator">Ã—</button>
     </div>
     <div class="floating-calculator-body">
       <input
@@ -745,7 +745,7 @@
       }
 
       function evaluateDisplay() {
-        const expression = sanitizeExpression(display.value).replace(/[Ã—]/g, "*").replace(/[Ã·]/g, "/");
+        const expression = sanitizeExpression(display.value).replace(/[Ãƒâ€”]/g, "*").replace(/[ÃƒÂ·]/g, "/");
 
         if (!expression.trim()) {
           return;
@@ -932,6 +932,104 @@
         window.setLensLinkedCaseRef?.(urlLinkedCaseRef);
       }
 
+      function getCurrentClientRecordsStorageKey() {
+        let session = null;
+        try {
+          session = JSON.parse(localStorage.getItem("lipPlannerAuthSession") || "null");
+        } catch (_error) {
+          session = null;
+        }
+
+        const identity = session?.email ? String(session.email).trim().toLowerCase() : "guest";
+        return `lensClientRecords:${identity}`;
+      }
+
+      function getLinkedRecordEntry() {
+        const linkedCaseRef = String(urlLinkedCaseRef || window.getLensLinkedCaseRef?.() || "").trim().toLowerCase();
+        if (!linkedCaseRef) {
+          return null;
+        }
+
+        const key = getCurrentClientRecordsStorageKey();
+        try {
+          const records = JSON.parse(localStorage.getItem(key) || "[]");
+          if (!Array.isArray(records)) {
+            return null;
+          }
+
+          const recordIndex = records.findIndex((record) => String(record?.caseRef || "").trim().toLowerCase() === linkedCaseRef);
+          if (recordIndex >= 0) {
+            return {
+              key,
+              records,
+              recordIndex,
+              record: records[recordIndex]
+            };
+          }
+        } catch (_error) {
+        }
+
+        return null;
+      }
+
+      function getLinkedRecord() {
+        return getLinkedRecordEntry()?.record || null;
+      }
+
+      function saveLinkedPmiEntry(draft) {
+        const linkedCaseRef = String(urlLinkedCaseRef || window.getLensLinkedCaseRef?.() || "").trim();
+        if (!linkedCaseRef) {
+          return null;
+        }
+
+        if (window.saveLensLinkedWorkflowSection) {
+          const savedRecord = window.saveLensLinkedWorkflowSection(linkedCaseRef, "protectionModeling", draft, {
+            variant: form.dataset.pmiDraftKey || "simplified-confidential",
+            page: "simplified-pmi-confidential"
+          });
+          if (savedRecord) {
+            return savedRecord;
+          }
+        }
+
+        const linkedEntry = getLinkedRecordEntry();
+        if (!linkedEntry) {
+          return null;
+        }
+
+        const today = new Date().toISOString().slice(0, 10);
+
+        try {
+          const currentRecord = linkedEntry.record || {};
+          const sectionPayload = {
+            completed: true,
+            linkedCaseRef,
+            savedAt: today,
+            variant: form.dataset.pmiDraftKey || "simplified-confidential",
+            page: "simplified-pmi-confidential",
+            data: draft && typeof draft === "object" ? draft : {}
+          };
+          const existingEntries = Array.isArray(currentRecord.protectionModelingEntries)
+            ? currentRecord.protectionModelingEntries.slice()
+            : [];
+          const updatedRecord = {
+            ...currentRecord,
+            lastUpdatedDate: today,
+            lastReview: today,
+            protectionModelingEntries: [...existingEntries, sectionPayload],
+            protectionModeling: sectionPayload,
+            pmiCompleted: true
+          };
+          const nextRecords = linkedEntry.records.slice();
+          nextRecords[linkedEntry.recordIndex] = updatedRecord;
+          localStorage.setItem(linkedEntry.key, JSON.stringify(nextRecords));
+          return updatedRecord;
+        } catch (_error) {
+        }
+
+        return null;
+      }
+
       function clampCostToFundPercent() {
         if (!costToFundPercentField || !("value" in costToFundPercentField)) {
           return;
@@ -1048,16 +1146,19 @@
         clampCostToFundPercent();
         const draft = serializeForm();
         localStorage.setItem(storageKey, JSON.stringify(draft));
-        const linkedCaseRef = window.getLensLinkedCaseRef?.() || "";
-        if (linkedCaseRef && window.saveLensLinkedWorkflowSection) {
-          window.saveLensLinkedWorkflowSection(linkedCaseRef, "protectionModeling", draft, {
-            variant: form.dataset.pmiDraftKey || "simplified-confidential",
-            page: "simplified-pmi-confidential"
-          });
+        const linkedRecord = saveLinkedPmiEntry(draft);
+        const linkedRecordId = String(linkedRecord?.id || getLinkedRecord()?.id || "").trim();
+        const linkedCaseRef = String(linkedRecord?.caseRef || getLinkedRecord()?.caseRef || urlLinkedCaseRef || window.getLensLinkedCaseRef?.() || "").trim();
+        if (linkedRecordId) {
+          window.location.href = `client-detail.html?id=${encodeURIComponent(linkedRecordId)}&tab=planning`;
+          return;
+        }
+        if (linkedCaseRef) {
+          window.location.href = `client-detail.html?caseRef=${encodeURIComponent(linkedCaseRef)}&tab=planning`;
+          return;
         }
         window.location.href = "clients.html";
       });
-
       if (costToFundPercentField) {
         costToFundPercentField.addEventListener("input", clampCostToFundPercent);
         costToFundPercentField.addEventListener("change", clampCostToFundPercent);
@@ -1076,4 +1177,11 @@
   </script>
 </body>
 </html>
+
+
+
+
+
+
+
 

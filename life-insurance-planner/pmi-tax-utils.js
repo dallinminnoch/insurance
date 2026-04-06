@@ -223,6 +223,8 @@
   function getPayrollTaxAmounts(options) {
     const {
       filingStatus,
+      primaryEarnedIncome,
+      spouseEarnedIncome,
       primaryTaxableIncome,
       spouseTaxableIncome,
       payrollRows,
@@ -230,6 +232,8 @@
       parsePercentLikeNumber,
       getDefaultAdditionalMedicareThresholds
     } = options;
+    const primaryIncome = Math.max(0, Number(primaryEarnedIncome ?? primaryTaxableIncome) || 0);
+    const spouseIncome = Math.max(0, Number(spouseEarnedIncome ?? spouseTaxableIncome) || 0);
 
     const findRow = (name) => payrollRows.find((row) => String(row?.name || "").trim().toLowerCase() === String(name || "").trim().toLowerCase()) || null;
     const socialSecurityRow = findRow("Social Security");
@@ -246,30 +250,30 @@
       getDefaultAdditionalMedicareThresholds
     });
 
-    const primarySocialSecurityTax = Math.min(primaryTaxableIncome, socialSecurityWageBase) * socialSecurityRate;
-    const spouseSocialSecurityTax = Math.min(spouseTaxableIncome, socialSecurityWageBase) * socialSecurityRate;
-    const primaryMedicareTax = primaryTaxableIncome * medicareRate;
-    const spouseMedicareTax = spouseTaxableIncome * medicareRate;
+    const primarySocialSecurityTax = Math.min(primaryIncome, socialSecurityWageBase) * socialSecurityRate;
+    const spouseSocialSecurityTax = Math.min(spouseIncome, socialSecurityWageBase) * socialSecurityRate;
+    const primaryMedicareTax = primaryIncome * medicareRate;
+    const spouseMedicareTax = spouseIncome * medicareRate;
 
     let primaryAdditionalMedicareTax = 0;
     let spouseAdditionalMedicareTax = 0;
 
     if (filingStatus === "Married Filing Jointly") {
-      const combinedTaxableIncome = primaryTaxableIncome + spouseTaxableIncome;
-      const combinedAdditionalMedicareBase = Math.max(0, combinedTaxableIncome - additionalMedicareThreshold);
-      if (combinedTaxableIncome > 0 && combinedAdditionalMedicareBase > 0) {
+      const combinedIncome = primaryIncome + spouseIncome;
+      const combinedAdditionalMedicareBase = Math.max(0, combinedIncome - additionalMedicareThreshold);
+      if (combinedIncome > 0 && combinedAdditionalMedicareBase > 0) {
         primaryAdditionalMedicareTax =
-          combinedAdditionalMedicareBase * additionalMedicareRate * (primaryTaxableIncome / combinedTaxableIncome);
+          combinedAdditionalMedicareBase * additionalMedicareRate * (primaryIncome / combinedIncome);
         spouseAdditionalMedicareTax =
-          combinedAdditionalMedicareBase * additionalMedicareRate * (spouseTaxableIncome / combinedTaxableIncome);
+          combinedAdditionalMedicareBase * additionalMedicareRate * (spouseIncome / combinedIncome);
       }
     } else if (filingStatus === "Married Filing Separately") {
-      primaryAdditionalMedicareTax = Math.max(0, primaryTaxableIncome - additionalMedicareThreshold) * additionalMedicareRate;
-      spouseAdditionalMedicareTax = Math.max(0, spouseTaxableIncome - additionalMedicareThreshold) * additionalMedicareRate;
+      primaryAdditionalMedicareTax = Math.max(0, primaryIncome - additionalMedicareThreshold) * additionalMedicareRate;
+      spouseAdditionalMedicareTax = Math.max(0, spouseIncome - additionalMedicareThreshold) * additionalMedicareRate;
     } else {
-      primaryAdditionalMedicareTax = Math.max(0, primaryTaxableIncome - additionalMedicareThreshold) * additionalMedicareRate;
-      spouseAdditionalMedicareTax = spouseTaxableIncome > 0
-        ? Math.max(0, spouseTaxableIncome - getAdditionalMedicareThreshold({
+      primaryAdditionalMedicareTax = Math.max(0, primaryIncome - additionalMedicareThreshold) * additionalMedicareRate;
+      spouseAdditionalMedicareTax = spouseIncome > 0
+        ? Math.max(0, spouseIncome - getAdditionalMedicareThreshold({
             filingStatus: "Single",
             payrollRows,
             parseCurrencyLikeNumber,
@@ -284,8 +288,8 @@
     };
   }
 
-  function getNetIncome(taxableIncome, federalTax, stateTax, payrollTax) {
-    return Math.max(0, taxableIncome - federalTax - stateTax - payrollTax);
+  function getNetIncome(grossIncome, federalTax, stateTax, payrollTax) {
+    return Math.max(0, grossIncome - federalTax - stateTax - payrollTax);
   }
 
   global.LensPmiTaxUtils = {
