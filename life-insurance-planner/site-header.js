@@ -100,7 +100,7 @@
           <a class="site-brand" href="${homeHref}">
             <img class="site-brand-mark" src="${brandSrc}" alt="MODEL90">
           </a>
-          <div class="site-header-actions">
+          <div class="site-header-main-nav">
             <form class="site-search has-icon" role="search">
               <input type="search" placeholder="Search" data-i18n-placeholder="search.placeholder">
             </form>
@@ -120,11 +120,13 @@
                   <a class="site-dropdown-link" href="${policyHref}">Policy Web</a>
                 </div>
               </div>
-              <div class="language-slot" data-language-slot></div>
-              <div class="account-slot" data-account-slot>
-                ${renderAccountSlot(signInHref, adminHref)}
-              </div>
             </nav>
+          </div>
+          <div class="site-header-utility">
+            <div class="language-slot" data-language-slot></div>
+            <div class="account-slot" data-account-slot>
+              ${renderAccountSlot(signInHref, adminHref)}
+            </div>
           </div>
         </div>
       </header>

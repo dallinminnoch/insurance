@@ -104,9 +104,8 @@ textarea {
   min-height: clamp(4rem, 6vw, 4.75rem);
   margin: 0 auto;
   display: grid;
-  grid-template-columns: auto 1fr;
+  grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
-  justify-content: space-between;
   gap: clamp(10px, 1.4vw, 20px);
 }
 
@@ -115,25 +114,32 @@ textarea {
   align-items: center;
   gap: 0;
   justify-self: start;
-  margin-left: -0.4rem;
+  margin-left: -3.9rem;
 }
 
 .site-brand-mark {
   display: block;
   width: auto;
-  height: clamp(2.85rem, 4.8vw, 3.4rem);
-  max-width: min(27rem, 34vw);
+  height: clamp(4.3rem, 7.05vw, 5.2rem);
+  max-width: min(41rem, 51vw);
   flex-shrink: 0;
   object-fit: contain;
   object-position: left center;
 }
 
-.site-header-actions {
+.site-header-main-nav {
   display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(8px, 1vw, 14px);
+  min-width: 0;
+}
+
+.site-header-utility {
+  display: inline-flex;
   align-items: center;
   justify-content: flex-end;
   gap: clamp(8px, 1vw, 14px);
-  min-width: 0;
 }
 
 .site-nav {
@@ -2603,7 +2609,6 @@ select option:disabled {
 
 .client-export-dropdown {
   position: relative;
-  z-index: 50;
 }
 
 .client-header-action {
@@ -2811,7 +2816,7 @@ body.is-modal-open {
   border-radius: 0.95rem;
   background: #ffffff;
   box-shadow: 0 16px 34px rgba(16, 33, 52, 0.12);
-  z-index: 900;
+  z-index: 2;
 }
 
 .client-export-dropdown.is-open .client-export-menu {
@@ -6109,7 +6114,8 @@ textarea {
     max-width: none;
   }
 
-  .site-header-actions {
+  .site-header-main-nav,
+  .site-header-utility {
     gap: 14px;
   }
 
@@ -6133,8 +6139,8 @@ textarea {
   }
 
   .site-brand-mark {
-    height: 2.35rem;
-    max-width: 15.5rem;
+    height: 3.35rem;
+    max-width: 21.5rem;
   }
 
   .language-trigger,
@@ -6229,10 +6235,15 @@ textarea {
     padding: var(--space-md) 0;
   }
 
-  .site-header-actions {
+  .site-header-main-nav {
     width: 100%;
     flex-direction: column;
     align-items: stretch;
+  }
+
+  .site-header-utility {
+    width: 100%;
+    justify-content: flex-end;
   }
 
   .client-directory-workspace {
