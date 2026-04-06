@@ -76,7 +76,7 @@
             </div>
             <div class="field-group">
               <label for="protection-modeling-case-ref">Case Ref Number</label>
-              <input id="protection-modeling-case-ref" name="protectionModelingCaseRef" type="text" placeholder="CL/00000" data-protection-modeling-case-ref autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">
+              <input id="protection-modeling-case-ref" name="protectionModelingCaseRef" type="text" placeholder="CL/00000" data-protection-modeling-case-ref autocomplete="new-password" autocapitalize="off" autocorrect="off" spellcheck="false" readonly>
             </div>
           </div>
           <p class="underwriting-helper-text preliminary-link-helper">Use either the search button or the case reference number to link this protection modeling form to a client profile.</p>
@@ -145,6 +145,7 @@
       const confidentialTrigger = document.querySelector("[data-confidential-trigger]");
       const pinShell = document.querySelector("[data-pin-shell]");
       const pinInputs = Array.from(document.querySelectorAll("[data-pin-input]"));
+      const pinHelp = document.querySelector(".entry-mode-pin-label .entry-mode-help");
       const confidentialContinue = document.querySelector("[data-confidential-continue]");
       const advisorContinue = document.querySelector('.entry-mode-button[href="next-step.html"]');
       let linkedRecord = null;
@@ -197,6 +198,9 @@
           advisorContinue?.classList.add("is-disabled");
           confidentialTrigger?.setAttribute("aria-disabled", "true");
           confidentialTrigger?.classList.add("is-disabled");
+          if (confidentialTrigger) {
+            confidentialTrigger.disabled = true;
+          }
           confidentialContinue && (confidentialContinue.href = "confidential-inputs.html");
           confidentialContinue?.setAttribute("aria-disabled", "true");
           confidentialContinue?.setAttribute("tabindex", "-1");
@@ -218,6 +222,9 @@
         }
         confidentialTrigger?.setAttribute("aria-disabled", "false");
         confidentialTrigger?.classList.remove("is-disabled");
+        if (confidentialTrigger) {
+          confidentialTrigger.disabled = false;
+        }
         if (confidentialContinue) {
           confidentialContinue.href = `confidential-inputs.html?caseRef=${encodeURIComponent(String(record.caseRef || "").trim())}`;
         }
@@ -246,8 +253,12 @@
           return;
         }
 
+        if (linkModalInput) {
+          linkModalInput.value = "";
+        }
         linkModal.hidden = true;
         linkModal.classList.remove("is-open");
+        renderLinkResults();
       }
 
       function renderLinkResults() {
@@ -294,6 +305,12 @@
       }
 
       if (caseRefField) {
+        const unlockCaseRefField = () => {
+          caseRefField.removeAttribute("readonly");
+        };
+
+        caseRefField.addEventListener("focus", unlockCaseRefField);
+        caseRefField.addEventListener("pointerdown", unlockCaseRefField);
         caseRefField.addEventListener("input", () => {
           caseRefField.value = String(caseRefField.value || "").toUpperCase();
           const matchedRecord = findRecordByCaseRef(caseRefField.value);
@@ -356,6 +373,13 @@
       }
 
       confidentialTrigger.addEventListener("click", enablePinShell);
+
+      ["mousedown", "click"].forEach((eventName) => {
+        pinHelp?.addEventListener(eventName, (event) => {
+          event.preventDefault();
+          event.stopPropagation();
+        });
+      });
 
       confidentialContinue.addEventListener("click", (event) => {
         if (confidentialContinue.getAttribute("aria-disabled") === "true" || !linkedRecord) {

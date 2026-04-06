@@ -1859,6 +1859,17 @@ select option:disabled {
   border-radius: 0.38rem !important;
 }
 
+.entry-mode-button.is-disabled,
+.entry-mode-button[aria-disabled="true"],
+.entry-mode-button:disabled {
+  background: #e9edf4 !important;
+  color: #8a96a8 !important;
+  border-color: rgba(213, 221, 232, 0.95) !important;
+  box-shadow: none !important;
+  transform: none !important;
+  pointer-events: none;
+}
+
 .entry-mode-actions .entry-mode-option:first-child .entry-mode-button {
   background: #ffffff !important;
   color: #233044 !important;
@@ -1869,6 +1880,17 @@ select option:disabled {
   background: #5478f0 !important;
   color: #ffffff !important;
   border: 1px solid #5478f0 !important;
+}
+
+.entry-mode-actions .entry-mode-option:first-child .entry-mode-button.is-disabled,
+.entry-mode-actions .entry-mode-option:first-child .entry-mode-button[aria-disabled="true"],
+.entry-mode-actions .entry-mode-option:first-child .entry-mode-button:disabled,
+.entry-mode-button-confidential.is-disabled,
+.entry-mode-button-confidential[aria-disabled="true"],
+.entry-mode-button-confidential:disabled {
+  background: #e9edf4 !important;
+  color: #8a96a8 !important;
+  border-color: rgba(213, 221, 232, 0.95) !important;
 }
 
 .entry-mode-button-confidential.is-selected {
@@ -2085,6 +2107,7 @@ select option:disabled {
   width: min(38rem, calc(100vw - 3rem));
   max-height: min(34rem, calc(100vh - 4rem));
   display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr);
   gap: 1rem;
   padding: 1.2rem 1.2rem 1.1rem;
   border-radius: 1rem;
@@ -2119,6 +2142,7 @@ select option:disabled {
   display: grid;
   gap: 0.45rem;
   align-content: start;
+  min-height: 0;
   overflow: auto;
   padding-right: 0.15rem;
 }
@@ -2314,6 +2338,11 @@ select option:disabled {
   width: 100%;
   min-height: 2.85rem;
   justify-content: center;
+}
+
+.preliminary-link-search-button:hover,
+.preliminary-link-search-button:focus-visible {
+  background: #f3f5f8;
 }
 
 .preliminary-link-search-button.is-linked {

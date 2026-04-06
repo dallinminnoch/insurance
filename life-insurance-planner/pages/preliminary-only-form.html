@@ -354,23 +354,6 @@
             </div>
           </section>
 
-          <section class="profile-form-section">
-            <div class="profile-form-section-heading">
-              <h2>Client Link</h2>
-            </div>
-            <div class="form-grid preliminary-link-grid">
-              <div class="field-group preliminary-link-button-group">
-                <label for="preliminary-link-button">Search Client Directory</label>
-                <button id="preliminary-link-button" class="btn btn-secondary preliminary-link-search-button" type="button" data-preliminary-link-open>Search Client Directory</button>
-              </div>
-              <div class="field-group">
-                <label for="preliminary-case-ref">Case Ref Number</label>
-                <input id="preliminary-case-ref" name="preliminaryCaseRef" type="text" placeholder="CL/00000" data-preliminary-case-ref>
-              </div>
-            </div>
-            <p class="underwriting-helper-text preliminary-link-helper">Use either the search button or the case reference number to link this preliminary form to a client profile.</p>
-          </section>
-
           <div class="actions-row">
             <button class="btn btn-secondary pmi-save-exit-button" type="button" data-preliminary-save-button>Save Preliminary Underwriting</button>
           </div>
@@ -525,206 +508,49 @@
   <script>
     (function () {
       document.addEventListener("DOMContentLoaded", () => {
-      const authSessionKey = "lipPlannerAuthSession";
-      const clientRecordsKey = "lensClientRecords";
-      const linkOpenButton = document.querySelector("[data-preliminary-link-open]");
-      const linkModal = document.querySelector("[data-preliminary-link-modal]");
-      const linkModalInput = document.querySelector("[data-preliminary-link-search-input]");
-      const linkModalResults = document.querySelector("[data-preliminary-link-results]");
-      const linkModalClose = document.querySelectorAll("[data-preliminary-link-close]");
-      const caseRefField = document.querySelector("[data-preliminary-case-ref]");
-      const saveButton = document.querySelector("[data-preliminary-save-button]");
-      const form = document.getElementById("preliminary-underwriting-form");
+        const params = new URLSearchParams(window.location.search);
+        const caseRefFromUrl = String(params.get("caseRef") || "").trim().toUpperCase();
+        const form = document.getElementById("preliminary-underwriting-form");
+        const saveButton = document.querySelector("[data-preliminary-save-button]");
 
-      if (caseRefField) {
-        caseRefField.addEventListener("input", () => {
-          caseRefField.value = caseRefField.value.toUpperCase();
+        if (caseRefFromUrl) {
+          window.setLensLinkedCaseRef?.(caseRefFromUrl);
+        }
+
+        function getLinkedCaseRef() {
+          return String(caseRefFromUrl || window.getLensLinkedCaseRef?.() || "").trim().toUpperCase();
+        }
+
+        if (!getLinkedCaseRef()) {
+          window.location.replace("preliminary-linked.html");
+          return;
+        }
+
+        saveButton?.addEventListener("click", () => {
+          const normalizedCaseRef = getLinkedCaseRef();
+          if (!form || !normalizedCaseRef) {
+            window.alert("Link this preliminary underwriting form to a client profile before saving.");
+            window.location.href = "preliminary-linked.html";
+            return;
+          }
+
+          if (window.saveLensLinkedWorkflowSection && window.serializeLensFormSnapshot) {
+            window.saveLensLinkedWorkflowSection(
+              normalizedCaseRef,
+              "preliminaryUnderwriting",
+              window.serializeLensFormSnapshot(form),
+              {
+                variant: "preliminary-only",
+                page: "preliminary-only-form"
+              }
+            );
+          }
+
+          window.location.href = "clients.html";
         });
-      }
-
-      function getClientRecordsStorageKey() {
-        let session = null;
-        try {
-          session = JSON.parse(localStorage.getItem(authSessionKey) || "null");
-        } catch (error) {
-          session = null;
-        }
-
-        const identity = session?.email ? String(session.email).trim().toLowerCase() : "guest";
-        return `${clientRecordsKey}:${identity}`;
-      }
-
-      function loadClientRecords() {
-        try {
-          const records = JSON.parse(localStorage.getItem(getClientRecordsStorageKey()) || "[]");
-          return Array.isArray(records)
-            ? records.filter((record) => String(record.viewType || "").trim() === "individuals")
-            : [];
-        } catch (error) {
-          return [];
-        }
-      }
-
-      function findRecordByCaseRef(caseRef) {
-        const normalizedCaseRef = String(caseRef || "").trim().toUpperCase();
-        if (!normalizedCaseRef) {
-          return null;
-        }
-
-        return loadClientRecords().find((record) => String(record.caseRef || "").trim().toUpperCase() === normalizedCaseRef) || null;
-      }
-
-      function updateLinkedClientButton(record) {
-        if (!linkOpenButton) {
-          return;
-        }
-
-        if (!record) {
-          linkOpenButton.classList.remove("is-linked");
-          linkOpenButton.innerHTML = "Search Client Directory";
-          return;
-        }
-
-        linkOpenButton.classList.add("is-linked");
-        linkOpenButton.innerHTML = `
-          <span class="preliminary-link-button-primary">${String(record.displayName || "").trim()}</span>
-          <span class="preliminary-link-button-secondary">Click to change</span>
-        `;
-      }
-
-      function syncLinkedClientFromCaseRef() {
-        const matchedRecord = findRecordByCaseRef(caseRefField?.value || "");
-        updateLinkedClientButton(matchedRecord);
-      }
-
-      function openLinkModal() {
-        if (!linkModal) {
-          return;
-        }
-
-        linkModal.hidden = false;
-        linkModal.classList.add("is-open");
-        renderLinkResults();
-        window.setTimeout(() => {
-          linkModalInput?.focus();
-        }, 20);
-      }
-
-      function closeLinkModal() {
-        if (!linkModal) {
-          return;
-        }
-
-        linkModal.hidden = true;
-        linkModal.classList.remove("is-open");
-      }
-
-      function renderLinkResults() {
-        if (!linkModalResults) {
-          return;
-        }
-
-        const query = String(linkModalInput?.value || "").trim().toLowerCase();
-        const records = loadClientRecords()
-          .filter((record) => String(record.caseRef || "").trim())
-          .sort((left, right) => String(left.displayName || "").localeCompare(String(right.displayName || "")));
-        const filtered = records.filter((record) => {
-          const displayName = String(record.displayName || "").toLowerCase();
-          const caseRef = String(record.caseRef || "").toLowerCase();
-          const summary = String(record.summary || "").toLowerCase();
-          return !query || displayName.includes(query) || caseRef.includes(query) || summary.includes(query);
-        });
-
-        linkModalResults.innerHTML = "";
-
-        if (!filtered.length) {
-          const emptyState = document.createElement("div");
-          emptyState.className = "profile-search-results-empty";
-          emptyState.textContent = "No matching client profiles found.";
-          linkModalResults.appendChild(emptyState);
-          return;
-        }
-
-        filtered.forEach((record) => {
-          const button = document.createElement("button");
-          button.type = "button";
-          button.className = "profile-search-result-button";
-          button.textContent = `${record.displayName} - ${record.caseRef}`;
-          button.addEventListener("click", () => {
-            if (caseRefField) {
-              caseRefField.value = String(record.caseRef || "").trim();
-            }
-            syncLinkedClientFromCaseRef();
-            closeLinkModal();
-          });
-          linkModalResults.appendChild(button);
-        });
-      }
-
-      if (caseRefField) {
-        caseRefField.addEventListener("input", () => {
-          caseRefField.value = String(caseRefField.value || "").toUpperCase();
-          syncLinkedClientFromCaseRef();
-        });
-      }
-
-      linkOpenButton?.addEventListener("click", openLinkModal);
-      linkModalInput?.addEventListener("input", renderLinkResults);
-      linkModalClose.forEach((button) => {
-        button.addEventListener("click", closeLinkModal);
-      });
-
-      document.addEventListener("keydown", (event) => {
-        if (event.key === "Escape" && linkModal && !linkModal.hidden) {
-          closeLinkModal();
-        }
-      });
-
-      linkModal?.querySelector(".profile-search-modal-backdrop")?.addEventListener("click", closeLinkModal);
-
-      saveButton?.addEventListener("click", () => {
-        const normalizedCaseRef = String(caseRefField?.value || "").trim().toUpperCase();
-        if (!form || !normalizedCaseRef) {
-          window.alert("Link this preliminary underwriting form to a client profile before saving.");
-          caseRefField?.focus();
-          return;
-        }
-
-        if (window.saveLensLinkedWorkflowSection && window.serializeLensFormSnapshot) {
-          window.saveLensLinkedWorkflowSection(
-            normalizedCaseRef,
-            "preliminaryUnderwriting",
-            window.serializeLensFormSnapshot(form),
-            {
-              variant: "preliminary-only",
-              page: "preliminary-only-form"
-            }
-          );
-        }
-
-        window.location.href = "clients.html";
-      });
-
-      renderLinkResults();
-      syncLinkedClientFromCaseRef();
       });
     })();
   </script>
-
-  <div class="profile-search-modal" data-preliminary-link-modal hidden>
-    <div class="profile-search-modal-backdrop" data-preliminary-link-close></div>
-    <div class="profile-search-modal-panel" role="dialog" aria-modal="true" aria-labelledby="preliminary-link-modal-title">
-      <button class="profile-search-modal-close" type="button" aria-label="Close search" data-preliminary-link-close>x</button>
-      <div class="profile-search-modal-header">
-        <h2 id="preliminary-link-modal-title">Select Client Profile</h2>
-      </div>
-      <div class="field-group full-width">
-        <label for="preliminary-link-search-input">Search</label>
-        <input id="preliminary-link-search-input" type="text" placeholder="Search client directory" data-preliminary-link-search-input>
-      </div>
-      <div class="profile-search-results" data-preliminary-link-results></div>
-    </div>
-  </div>
 </body>
 </html>
 
