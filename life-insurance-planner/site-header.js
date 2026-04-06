@@ -85,6 +85,7 @@
   function getHeaderMarkup() {
     const isNestedPage = window.location.pathname.includes("/pages/");
     const homeHref = isNestedPage ? "../index.html" : "index.html";
+    const brandSrc = isNestedPage ? "../Images/MODEL 90 (30 x 10 in).png" : "Images/MODEL 90 (30 x 10 in).png";
     const clientsHref = isNestedPage ? "clients.html" : "pages/clients.html";
     const resourcesHref = isNestedPage ? "resources.html" : "pages/resources.html";
     const lensHref = isNestedPage ? "lens.html" : "pages/lens.html";
@@ -92,13 +93,12 @@
     const policyHref = isNestedPage ? "policy-web.html" : "pages/policy-web.html";
     const signInHref = isNestedPage ? "sign-in.html" : "pages/sign-in.html";
     const adminHref = isNestedPage ? "admin-accounts.html" : "pages/admin-accounts.html";
-    const languageIconPath = isNestedPage ? "../Images/Untitled design.png" : "Images/Untitled design.png";
 
     return `
       <header class="site-header">
         <div class="site-header-inner">
           <a class="site-brand" href="${homeHref}">
-            <span class="site-brand-mark">MODEL90</span>
+            <img class="site-brand-mark" src="${brandSrc}" alt="MODEL90">
           </a>
           <div class="site-header-actions">
             <form class="site-search has-icon" role="search">

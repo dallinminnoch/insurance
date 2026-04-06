@@ -114,19 +114,18 @@ textarea {
   display: inline-flex;
   align-items: center;
   gap: 0;
+  justify-self: start;
+  margin-left: -0.4rem;
 }
 
 .site-brand-mark {
   display: block;
-  width: clamp(15.5rem, 25vw, 20rem);
-  height: 2.3rem;
-  background: left center / contain no-repeat url("Images/MODEL 90 (30 x 10 in).png");
-  color: transparent;
-  font-size: 0;
-  line-height: 0;
-  overflow: hidden;
-  white-space: nowrap;
+  width: auto;
+  height: clamp(2.85rem, 4.8vw, 3.4rem);
+  max-width: min(27rem, 34vw);
   flex-shrink: 0;
+  object-fit: contain;
+  object-position: left center;
 }
 
 .site-header-actions {
@@ -6134,8 +6133,8 @@ textarea {
   }
 
   .site-brand-mark {
-    width: 12.5rem;
-    height: 2rem;
+    height: 2.35rem;
+    max-width: 15.5rem;
   }
 
   .language-trigger,
