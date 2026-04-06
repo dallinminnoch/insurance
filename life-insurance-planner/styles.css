@@ -113,20 +113,20 @@ textarea {
 .site-brand {
   display: inline-flex;
   align-items: center;
-  gap: var(--space-md);
+  gap: 0;
 }
 
 .site-brand-mark {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: clamp(2.25rem, 4vw, 2.75rem);
-  height: clamp(2.25rem, 4vw, 2.75rem);
-  border-radius: var(--radius-sm);
-  background: #1e3a2c;
-  color: #f7faf8;
-  font-weight: 800;
-  letter-spacing: 0.06em;
+  display: block;
+  width: clamp(15.5rem, 25vw, 20rem);
+  height: 2.3rem;
+  background: left center / contain no-repeat url("Images/MODEL 90 (30 x 10 in).png");
+  color: transparent;
+  font-size: 0;
+  line-height: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .site-header-actions {
@@ -1505,6 +1505,10 @@ select option:disabled {
 
 .profile-creation-form .field-group.is-disabled {
   opacity: 0.95;
+}
+
+.profile-creation-form .field-group.is-hidden {
+  display: none !important;
 }
 
 .profile-age-retirement-row .profile-small-number-field {
@@ -5797,11 +5801,42 @@ body[data-step] {
   color: #1f5b34;
 }
 
+.profile-creation-form .income-calculation-grid.income-calculation-grid-single .primary-net-income-group,
+.profile-creation-form .income-calculation-grid.income-calculation-grid-joint .primary-net-income-group {
+  grid-column: 1 / -1;
+  justify-self: center;
+  width: min(100%, 24rem);
+}
+
+.profile-creation-form .income-calculation-grid.income-calculation-grid-single .primary-net-income-group > label,
+.profile-creation-form .income-calculation-grid.income-calculation-grid-joint .primary-net-income-group > label {
+  justify-content: center;
+  text-align: center;
+  width: 100%;
+}
+
+.profile-creation-form .income-calculation-grid.income-calculation-grid-single .primary-net-income-group .profile-currency-field,
+.profile-creation-form .income-calculation-grid.income-calculation-grid-joint .primary-net-income-group .profile-currency-field {
+  justify-self: center;
+  width: 100%;
+}
+
+.profile-creation-form .income-calculation-grid.income-calculation-grid-single .primary-net-income-group input[readonly],
+.profile-creation-form .income-calculation-grid.income-calculation-grid-joint .primary-net-income-group input[readonly] {
+  text-align: center;
+}
+
+.profile-creation-form .income-calculation-grid.income-calculation-grid-joint .primary-net-income-group .profile-currency-suffix {
+  display: none;
+}
+
 .income-calculation-circle-row {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 0.55rem;
-  padding-top: 0.15rem;
+  padding-top: 0.4rem;
+  padding-bottom: 0.35rem;
 }
 
 .income-calculation-circle {
@@ -6099,8 +6134,8 @@ textarea {
   }
 
   .site-brand-mark {
-    width: 2.75rem;
-    height: 2.75rem;
+    width: 12.5rem;
+    height: 2rem;
   }
 
   .language-trigger,

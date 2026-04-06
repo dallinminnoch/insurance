@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -10,54 +10,6 @@
   <link rel="stylesheet" href="../styles.css">
 </head>
 <body class="home-page prospect-page profile-creation-page" data-page="confidential-inputs">
-  <header class="site-header">
-    <div class="site-header-inner">
-      <a class="site-brand" href="../index.html">
-        <span class="site-brand-mark">LENS</span>
-      </a>
-      <div class="site-header-actions">
-        <form class="site-search has-icon" role="search">
-          <input type="search" placeholder="Search" data-i18n-placeholder="search.placeholder">
-        </form>
-        <nav class="site-nav" aria-label="Main navigation">
-          <div class="site-dropdown">
-            <button class="site-nav-link site-dropdown-toggle is-active" type="button" aria-expanded="true" data-i18n="nav.records">Records</button>
-            <div class="site-dropdown-menu">
-              <a class="site-dropdown-link" href="clients.html" data-i18n="nav.clients" data-client-directory-nav>Clients</a>
-            </div>
-          </div>
-          <a class="site-nav-link" href="resources.html" data-i18n="nav.resources">Resources</a>
-          <div class="site-dropdown">
-            <button class="site-nav-link site-dropdown-toggle" type="button" aria-expanded="false" data-i18n="nav.financialProducts">Financial Products</button>
-            <div class="site-dropdown-menu">
-              <a class="site-dropdown-link" href="lens.html">LENS Analysis</a>
-              <a class="site-dropdown-link" href="strategy-builder.html">Strategy Builder</a>
-              <a class="site-dropdown-link" href="policy-web.html">Policy Web</a>
-            </div>
-          </div>
-          <div class="language-slot" data-language-slot>
-            <div class="language-dropdown">
-              <button class="language-trigger" type="button" aria-label="Language">
-                <img class="language-icon-image" src="../Images/Untitled design.png" alt="" aria-hidden="true">
-              </button>
-            </div>
-          </div>
-          <div class="account-slot" data-account-slot>
-            <div class="account-dropdown">
-              <a class="account-profile account-dropdown-toggle account-profile-signed-out" href="sign-in.html">
-                <span class="account-icon" aria-hidden="true">
-                  <span class="account-icon-head"></span>
-                  <span class="account-icon-body"></span>
-                </span>
-                <span class="sr-only">Open sign in menu</span>
-              </a>
-            </div>
-          </div>
-        </nav>
-      </div>
-    </div>
-  </header>
-
   <main class="home-shell app-home-shell prospect-shell">
     <section class="prospect-stage">
       <section class="prospect-empty-panel">
@@ -89,7 +41,7 @@
             <div class="profile-form-section-heading">
               <h2>Income Calculation</h2>
             </div>
-            <div class="form-grid">
+            <div class="form-grid income-calculation-grid">
               <div class="field-group">
                 <label for="linked-marital-status">Marital Status</label>
                 <input id="linked-marital-status" name="linkedMaritalStatusDisplay" type="text" readonly>
@@ -281,14 +233,14 @@
                   <span class="profile-currency-suffix">USD</span>
                 </div>
               </div>
-              <div class="field-group profile-net-income-highlight">
+              <div class="field-group profile-net-income-highlight primary-net-income-group">
                 <label for="net-annual-income">Net Annual Income</label>
                 <div class="profile-currency-field">
                   <input id="net-annual-income" name="netAnnualIncome" type="text" inputmode="decimal" readonly>
                   <span class="profile-currency-suffix">USD</span>
                 </div>
               </div>
-              <div class="field-group profile-net-income-highlight">
+              <div class="field-group profile-net-income-highlight spouse-net-income-group">
                 <label for="spouse-net-annual-income">Spouse Net Annual Income</label>
                 <div class="profile-currency-field">
                   <input id="spouse-net-annual-income" name="spouseNetAnnualIncome" type="text" inputmode="decimal" readonly>
@@ -985,7 +937,7 @@
   </main>
 
   <div class="floating-calculator" id="confidential-calculator" hidden aria-hidden="true">
-    <div class="floating-calculator-header" data-calculator-drag-handle><button class="floating-calculator-close" type="button" aria-label="Close calculator">×</button>
+    <div class="floating-calculator-header" data-calculator-drag-handle><button class="floating-calculator-close" type="button" aria-label="Close calculator">�</button>
     </div>
     <div class="floating-calculator-body">
       <input
@@ -1024,6 +976,7 @@
   <script src="../data.js"></script>
   <script src="../calculations.js"></script>
   <script src="../charts.js"></script>
+  <script src="../site-header.js"></script>
   <script src="../app.js"></script>
   <script src="../pmi-tax-utils.js"></script>
   <script src="../pmi-calculator.js"></script>
@@ -1319,7 +1272,7 @@
       }
 
       function evaluateDisplay() {
-        const expression = sanitizeExpression(display.value).replace(/[Ã—]/g, "*").replace(/[Ã·]/g, "/");
+        const expression = sanitizeExpression(display.value).replace(/[×]/g, "*").replace(/[÷]/g, "/");
 
         if (!expression.trim()) {
           return;
@@ -1521,6 +1474,7 @@
       const spousePayrollTaxesField = form.elements.namedItem("spousePayrollTaxes");
       const netAnnualIncomeField = form.elements.namedItem("netAnnualIncome");
       const spouseNetAnnualIncomeField = form.elements.namedItem("spouseNetAnnualIncome");
+      const incomeCalculationGrid = form.querySelector(".income-calculation-grid");
       const urlLinkedCaseRef = new URLSearchParams(window.location.search).get("caseRef");
       const federalTaxBracketStorageKey = "lensFederalTaxBrackets";
       const standardDeductionStorageKey = "lensStandardDeductions";
@@ -1792,6 +1746,22 @@
         );
       }
 
+      function getIncomeCalculationMode() {
+        const linkedMaritalStatus = String(linkedMaritalStatusField?.value || "").trim();
+        const filingStatus = String(filingStatusField?.value || "").trim();
+        const isMarried = linkedMaritalStatus === "Married";
+
+        if (isMarried && filingStatus === "Married Filing Jointly") {
+          return "joint";
+        }
+
+        if (isMarried && filingStatus === "Married Filing Separately") {
+          return "separate";
+        }
+
+        return "single";
+      }
+
       function getDeductionMethodValue(field, fallback) {
         if (!field || field instanceof RadioNodeList) {
           return fallback;
@@ -1810,6 +1780,19 @@
       function syncStandardDeductionFields() {
         const filingStatus = String(filingStatusField?.value || "").trim();
         const deductionAmount = getSelectedStandardDeductionAmount();
+        const incomeCalculationMode = getIncomeCalculationMode();
+
+        if (incomeCalculationMode === "joint") {
+          if (standardDeductionField && !(standardDeductionField instanceof RadioNodeList)) {
+            standardDeductionField.value = formatNumberWithCommas(deductionAmount);
+          }
+
+          if (spouseStandardDeductionField && !(spouseStandardDeductionField instanceof RadioNodeList)) {
+            spouseStandardDeductionField.value = "";
+          }
+          return;
+        }
+
         const deductionSplit = window.LensPmiTaxUtils.getStandardDeductionSplit({
           filingStatus,
           deductionAmount,
@@ -1827,6 +1810,11 @@
       }
 
       function getEffectiveDeductionValue(role) {
+        const incomeCalculationMode = getIncomeCalculationMode();
+        if (incomeCalculationMode === "joint" && role === "spouse") {
+          return 0;
+        }
+
         const isSpouse = role === "spouse";
         const methodField = isSpouse ? spouseDeductionMethodField : deductionMethodField;
         const standardField = isSpouse ? spouseStandardDeductionField : standardDeductionField;
@@ -1852,6 +1840,7 @@
       }
 
       function syncDeductionMethodState() {
+        const incomeCalculationMode = getIncomeCalculationMode();
         const primaryMethod = getDeductionMethodValue(deductionMethodField, "standard");
         const spouseMethod = getDeductionMethodValue(spouseDeductionMethodField, "standard");
         const primaryStandardAmount = parseCurrencyLikeNumber(standardDeductionField?.value);
@@ -1871,7 +1860,7 @@
         }
 
         if (spouseYearlyTaxDeductionsField && !(spouseYearlyTaxDeductionsField instanceof RadioNodeList)) {
-          const useItemized = spouseMethod === "itemized";
+          const useItemized = incomeCalculationMode === "separate" && spouseMethod === "itemized";
           spouseYearlyTaxDeductionsField.disabled = !useItemized;
           spouseYearlyTaxDeductionsField.closest(".field-group")?.classList.toggle("is-disabled", !useItemized);
           if (useItemized && parseCurrencyLikeNumber(spouseYearlyTaxDeductionsField.value) < spouseStandardAmount) {
@@ -1880,7 +1869,7 @@
         }
 
         if (spouseStandardDeductionField && !(spouseStandardDeductionField instanceof RadioNodeList)) {
-          spouseStandardDeductionField.closest(".field-group")?.classList.toggle("is-disabled", spouseMethod === "itemized");
+          spouseStandardDeductionField.closest(".field-group")?.classList.toggle("is-disabled", incomeCalculationMode !== "separate" || spouseMethod === "itemized");
         }
 
         syncDeductionMethodButtons("primary");
@@ -1941,23 +1930,21 @@
       }
 
       function syncTaxableIncomeFields() {
-        const filingStatus = String(filingStatusField?.value || "").trim();
+        const incomeCalculationMode = getIncomeCalculationMode();
         const primaryGrossIncome = parseCurrencyLikeNumber(grossAnnualIncomeField?.value);
         const spouseGrossIncome = parseCurrencyLikeNumber(spouseIncomeField?.value);
 
-        if (filingStatus === "Married Filing Jointly") {
+        if (incomeCalculationMode === "joint") {
           const combinedGrossIncome = primaryGrossIncome + spouseGrossIncome;
-          const combinedDeduction = getEffectiveDeductionValue("primary") + getEffectiveDeductionValue("spouse");
+          const combinedDeduction = getEffectiveDeductionValue("primary");
           const combinedTaxableIncome = Math.max(0, combinedGrossIncome - combinedDeduction);
-          const primaryShare = combinedGrossIncome > 0 ? primaryGrossIncome / combinedGrossIncome : 1;
-          const spouseShare = combinedGrossIncome > 0 ? spouseGrossIncome / combinedGrossIncome : 0;
 
           if (taxableIncomeField && !(taxableIncomeField instanceof RadioNodeList)) {
-            taxableIncomeField.value = formatNumberWithCommas(combinedTaxableIncome * primaryShare);
+            taxableIncomeField.value = formatNumberWithCommas(combinedTaxableIncome);
           }
 
           if (spouseTaxableIncomeField && !(spouseTaxableIncomeField instanceof RadioNodeList)) {
-            spouseTaxableIncomeField.value = formatNumberWithCommas(combinedTaxableIncome * spouseShare);
+            spouseTaxableIncomeField.value = "";
           }
           return;
         }
@@ -2018,48 +2005,70 @@
           return;
         }
 
-        const linkedMaritalStatus = String(linkedMaritalStatusField.value || "").trim();
-        const shouldEnableSpouseFields = linkedMaritalStatus === "Married";
-        const spouseFieldNames = [
-          "spouseIncome",
-          "spouseDeductionMethod",
-          "spouseStandardDeduction",
-          "spouseYearlyTaxDeductions",
-          "spouseTaxableIncome",
-          "spouseFederalTaxBracket",
-          "spouseStateIncomeTaxBracket",
-          "spousePayrollTaxes",
-          "spouseNetAnnualIncome"
-        ];
-
-        spouseFieldNames.forEach((name) => {
+        const incomeCalculationMode = getIncomeCalculationMode();
+        const fieldGroupFor = (name) => {
           const field = form.elements.namedItem(name);
-          if (!field || field instanceof RadioNodeList) {
+          return field && !(field instanceof RadioNodeList) ? field.closest(".field-group") : null;
+        };
+        const setGroupState = (group, isVisible, isDisabled) => {
+          if (!group) {
             return;
           }
-
-          const fieldGroup = field.closest(".field-group");
-          const isReadonly = field.hasAttribute("readonly");
-          const canBeActive = shouldEnableSpouseFields;
-
-          field.disabled = !canBeActive;
-          fieldGroup?.classList.toggle("is-disabled", !canBeActive);
-
-          if (!canBeActive) {
-            field.value = "";
-            if (field.tagName === "SELECT") {
-              field.innerHTML = '<option value="">Please select</option>';
+          group.classList.toggle("is-hidden", !isVisible);
+          group.classList.toggle("is-disabled", isDisabled);
+          group.querySelectorAll("input, select, button").forEach((control) => {
+            if (control.closest(".profile-form-toggle-group")) {
+              return;
             }
-          } else if (isReadonly) {
-            field.disabled = false;
+            const isReadonly = control.hasAttribute("readonly");
+            control.disabled = isDisabled && !isReadonly;
+          });
+        };
+        const setToggleGroupState = (role, isVisible, isDisabled) => {
+          const group = form.querySelector(`[data-deduction-method-group="${role}"]`);
+          const wrapper = group?.closest(".field-group");
+          setGroupState(wrapper, isVisible, isDisabled);
+          group?.querySelectorAll("[data-deduction-method-toggle]").forEach((button) => {
+            button.disabled = isDisabled;
+          });
+        };
+        const setLabel = (forId, text) => {
+          const label = form.querySelector(`label[for="${forId}"]`);
+          if (label) {
+            label.textContent = text;
           }
-        });
+        };
 
-        const spouseMethodGroup = form.querySelector('[data-deduction-method-group="spouse"]');
-        spouseMethodGroup?.querySelectorAll("[data-deduction-method-toggle]").forEach((button) => {
-          button.disabled = !shouldEnableSpouseFields;
-        });
-        spouseMethodGroup?.classList.toggle("is-disabled", !shouldEnableSpouseFields);
+        const isJoint = incomeCalculationMode === "joint";
+        const isSeparate = incomeCalculationMode === "separate";
+        const showSpouseIncome = isJoint || isSeparate;
+        const showDetailedSpouseFields = isSeparate;
+
+        if (incomeCalculationGrid) {
+          incomeCalculationGrid.classList.toggle("income-calculation-grid-single", !isJoint && !isSeparate);
+          incomeCalculationGrid.classList.toggle("income-calculation-grid-joint", isJoint);
+          incomeCalculationGrid.classList.toggle("income-calculation-grid-separate", isSeparate);
+        }
+
+        setGroupState(fieldGroupFor("spouseIncome"), showSpouseIncome, !showSpouseIncome);
+        setToggleGroupState("spouse", showDetailedSpouseFields, !showDetailedSpouseFields);
+        setGroupState(fieldGroupFor("spouseStandardDeduction"), showDetailedSpouseFields, !showDetailedSpouseFields);
+        setGroupState(fieldGroupFor("spouseYearlyTaxDeductions"), showDetailedSpouseFields, !showDetailedSpouseFields);
+        setGroupState(fieldGroupFor("spouseTaxableIncome"), showDetailedSpouseFields, !showDetailedSpouseFields);
+        setGroupState(fieldGroupFor("spouseFederalTaxBracket"), showDetailedSpouseFields, !showDetailedSpouseFields);
+        setGroupState(fieldGroupFor("spouseStateIncomeTaxBracket"), showDetailedSpouseFields, !showDetailedSpouseFields);
+        setGroupState(fieldGroupFor("spousePayrollTaxes"), showDetailedSpouseFields, !showDetailedSpouseFields);
+        setGroupState(fieldGroupFor("spouseNetAnnualIncome"), showDetailedSpouseFields, !showDetailedSpouseFields);
+
+        setLabel("gross-annual-income", isJoint || isSeparate ? "Primary Gross Annual Income" : "Gross Annual Income");
+        setLabel("deduction-method", isJoint ? "Household Deduction Method" : isSeparate ? "Primary Deduction Method" : "Deduction Method");
+        setLabel("standard-deduction", isJoint ? "Household Standard Deduction" : isSeparate ? "Primary Standard Deduction" : "Standard Deduction");
+        setLabel("yearly-tax-deductions", isJoint ? "Household Yearly Tax Deductions" : isSeparate ? "Primary Yearly Tax Deductions" : "Yearly Tax Deductions");
+        setLabel("taxable-income", isJoint ? "Combined Taxable Income" : isSeparate ? "Primary Taxable Income" : "Taxable Income");
+        setLabel("federal-tax-bracket", isSeparate ? "Primary Federal Tax Bracket" : "Federal Tax Bracket");
+        setLabel("state-income-tax-bracket", isSeparate ? "Primary State Income Tax Bracket" : "State Income Tax Bracket");
+        setLabel("primary-payroll-taxes", isJoint ? "Combined Payroll Taxes" : isSeparate ? "Primary Payroll Taxes" : "Payroll Taxes");
+        setLabel("net-annual-income", isJoint ? "Combined Household Net Income" : isSeparate ? "Primary Net Annual Income" : "Net Annual Income");
       }
 
       function populateFederalTaxBracketOptions() {
@@ -2435,13 +2444,19 @@
 
       function syncPayrollTaxFields() {
         const payrollTaxes = getPrimaryAndSpousePayrollTaxAmounts();
+        const incomeCalculationMode = getIncomeCalculationMode();
+        const combinedPayrollTaxes = payrollTaxes.primary + payrollTaxes.spouse;
 
         if (primaryPayrollTaxesField && !(primaryPayrollTaxesField instanceof RadioNodeList)) {
-          primaryPayrollTaxesField.value = formatNumberWithCommas(payrollTaxes.primary);
+          primaryPayrollTaxesField.value = formatNumberWithCommas(
+            incomeCalculationMode === "joint" ? combinedPayrollTaxes : payrollTaxes.primary
+          );
         }
 
         if (spousePayrollTaxesField && !(spousePayrollTaxesField instanceof RadioNodeList)) {
-          spousePayrollTaxesField.value = formatNumberWithCommas(payrollTaxes.spouse);
+          spousePayrollTaxesField.value = incomeCalculationMode === "separate"
+            ? formatNumberWithCommas(payrollTaxes.spouse)
+            : "";
         }
 
       }
@@ -2450,27 +2465,42 @@
         const federalTaxes = getPrimaryAndSpouseFederalTaxAmounts();
         const stateTaxes = getPrimaryAndSpouseStateTaxAmounts();
         const payrollTaxes = getPrimaryAndSpousePayrollTaxAmounts();
+        const incomeCalculationMode = getIncomeCalculationMode();
         const primaryGrossIncome = parseCurrencyLikeNumber(grossAnnualIncomeField?.value);
         const spouseGrossIncome = parseCurrencyLikeNumber(spouseIncomeField?.value);
+        const combinedNetIncome = window.LensPmiTaxUtils.getNetIncome(
+          primaryGrossIncome + spouseGrossIncome,
+          federalTaxes.primary + federalTaxes.spouse,
+          stateTaxes.primary + stateTaxes.spouse,
+          payrollTaxes.primary + payrollTaxes.spouse
+        );
 
         if (netAnnualIncomeField && !(netAnnualIncomeField instanceof RadioNodeList)) {
-          const primaryNetIncome = window.LensPmiTaxUtils.getNetIncome(
-            primaryGrossIncome,
-            federalTaxes.primary,
-            stateTaxes.primary,
-            payrollTaxes.primary
-          );
-          netAnnualIncomeField.value = formatNumberWithCommas(primaryNetIncome);
+          const primaryNetIncome = incomeCalculationMode === "joint"
+            ? combinedNetIncome
+            : window.LensPmiTaxUtils.getNetIncome(
+                primaryGrossIncome,
+                federalTaxes.primary,
+                stateTaxes.primary,
+                payrollTaxes.primary
+              );
+          netAnnualIncomeField.value = incomeCalculationMode === "joint"
+            ? `$${formatNumberWithCommas(primaryNetIncome)}`
+            : formatNumberWithCommas(primaryNetIncome);
         }
 
         if (spouseNetAnnualIncomeField && !(spouseNetAnnualIncomeField instanceof RadioNodeList)) {
-          const spouseNetIncome = window.LensPmiTaxUtils.getNetIncome(
-            spouseGrossIncome,
-            federalTaxes.spouse,
-            stateTaxes.spouse,
-            payrollTaxes.spouse
-          );
-          spouseNetAnnualIncomeField.value = formatNumberWithCommas(spouseNetIncome);
+          const spouseNetIncome = incomeCalculationMode === "separate"
+            ? window.LensPmiTaxUtils.getNetIncome(
+                spouseGrossIncome,
+                federalTaxes.spouse,
+                stateTaxes.spouse,
+                payrollTaxes.spouse
+              )
+            : 0;
+          spouseNetAnnualIncomeField.value = incomeCalculationMode === "separate"
+            ? formatNumberWithCommas(spouseNetIncome)
+            : "";
         }
       }
 
@@ -2648,6 +2678,7 @@
 
       if (filingStatusField && !(filingStatusField instanceof RadioNodeList)) {
         const syncFederalBracketState = () => {
+          syncIncomeCalculationSpouseFields();
           syncFilingStatusCircles();
           syncStandardDeductionFields();
           syncDeductionMethodState();
@@ -2763,8 +2794,8 @@
       syncTaxableIncomeFields();
       syncLinkedMaritalStatus();
       syncFilingStatusOptions();
-      syncFilingStatusCircles();
       syncIncomeCalculationSpouseFields();
+      syncFilingStatusCircles();
       syncStandardDeductionFields();
       syncDeductionMethodState();
       populateFederalTaxBracketOptions();

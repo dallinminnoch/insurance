@@ -1,4 +1,4 @@
-ï»¿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -10,54 +10,6 @@
   <link rel="stylesheet" href="../styles.css">
 </head>
 <body class="home-page prospect-page profile-creation-page client-detail-page">
-  <header class="site-header">
-    <div class="site-header-inner">
-      <a class="site-brand" href="../index.html">
-        <span class="site-brand-mark">LENS</span>
-      </a>
-      <div class="site-header-actions">
-        <form class="site-search has-icon" role="search">
-          <input type="search" placeholder="Search" data-i18n-placeholder="search.placeholder">
-        </form>
-        <nav class="site-nav" aria-label="Main navigation">
-          <div class="site-dropdown">
-            <button class="site-nav-link site-dropdown-toggle is-active" type="button" aria-expanded="true" data-i18n="nav.records">Records</button>
-            <div class="site-dropdown-menu">
-              <a class="site-dropdown-link is-active" href="clients.html" data-i18n="nav.clients" data-client-directory-nav>Clients</a>
-            </div>
-          </div>
-          <a class="site-nav-link" href="resources.html" data-i18n="nav.resources">Resources</a>
-          <div class="site-dropdown">
-            <button class="site-nav-link site-dropdown-toggle" type="button" aria-expanded="false" data-i18n="nav.financialProducts">Financial Products</button>
-            <div class="site-dropdown-menu">
-              <a class="site-dropdown-link" href="lens.html">LENS Analysis</a>
-              <a class="site-dropdown-link" href="strategy-builder.html">Strategy Builder</a>
-              <a class="site-dropdown-link" href="policy-web.html">Policy Web</a>
-            </div>
-          </div>
-          <div class="language-slot" data-language-slot>
-            <div class="language-dropdown">
-              <button class="language-trigger" type="button" aria-label="Language">
-                <img class="language-icon-image" src="../Images/Untitled design.png" alt="" aria-hidden="true">
-              </button>
-            </div>
-          </div>
-          <div class="account-slot" data-account-slot>
-            <div class="account-dropdown">
-              <a class="account-profile account-dropdown-toggle account-profile-signed-out" href="sign-in.html">
-                <span class="account-icon" aria-hidden="true">
-                  <span class="account-icon-head"></span>
-                  <span class="account-icon-body"></span>
-                </span>
-                <span class="sr-only">Open sign in menu</span>
-              </a>
-            </div>
-          </div>
-        </nav>
-      </div>
-    </div>
-  </header>
-
   <main class="home-shell app-home-shell prospect-shell">
     <section class="prospect-stage">
       <section class="prospect-empty-panel client-detail-panel">
@@ -69,6 +21,7 @@
   <script src="../data.js"></script>
   <script src="../calculations.js"></script>
   <script src="../charts.js"></script>
+  <script src="../site-header.js"></script>
   <script src="../app.js"></script>
   <script>
     (function () {
@@ -941,7 +894,7 @@
                           <h2 id="client-activity-modal-title">Log Activity</h2>
                           <p>Choose the activity you want to add to this profile.</p>
                         </div>
-                        <button class="client-activity-modal-close" type="button" data-activity-modal-close aria-label="Close activity options">Ã—</button>
+                        <button class="client-activity-modal-close" type="button" data-activity-modal-close aria-label="Close activity options">×</button>
                       </div>
                       <div class="client-activity-modal-grid">
                         <button type="button" class="client-activity-option" data-activity-option="note">
@@ -1375,7 +1328,7 @@
             <div class="client-policy-modal-panel" role="dialog" aria-modal="true" aria-labelledby="client-policy-modal-title">
               <div class="client-policy-modal-header">
                 <button class="client-policy-edit-button" type="button" data-policy-edit-toggle>Edit</button>
-                <button class="client-policy-modal-close" type="button" data-policy-modal-close aria-label="Close policy details">Ã—</button>
+                <button class="client-policy-modal-close" type="button" data-policy-modal-close aria-label="Close policy details">×</button>
               </div>
               <h2 id="client-policy-modal-title" data-policy-modal-title>Policy Details</h2>
               <div class="client-policy-modal-body" data-policy-modal-body></div>
@@ -1392,7 +1345,7 @@
             <div class="client-policy-modal-panel client-policy-list-modal-panel" role="dialog" aria-modal="true" aria-labelledby="client-policy-list-modal-title">
               <div class="client-policy-modal-header">
                 <div></div>
-                <button class="client-policy-modal-close" type="button" data-policy-list-modal-close aria-label="Close policy list">Ã—</button>
+                <button class="client-policy-modal-close" type="button" data-policy-list-modal-close aria-label="Close policy list">×</button>
               </div>
               <h2 id="client-policy-list-modal-title">All Policies</h2>
               <div class="client-policy-list-modal-body" data-policy-list-modal-body></div>
@@ -1414,7 +1367,7 @@
             <div class="client-policy-modal-panel client-pmi-detail-modal-panel" role="dialog" aria-modal="true" aria-labelledby="client-pmi-detail-modal-title">
               <div class="client-policy-modal-header">
                 <div></div>
-                <button class="client-policy-modal-close" type="button" data-pmi-detail-close aria-label="Close protection modeling inputs">Ã—</button>
+                <button class="client-policy-modal-close" type="button" data-pmi-detail-close aria-label="Close protection modeling inputs">×</button>
               </div>
               <h2 id="client-pmi-detail-modal-title">Protection Modeling Inputs</h2>
               <div class="client-policy-modal-body" data-pmi-detail-body></div>
@@ -1425,7 +1378,7 @@
             <form class="client-activity-widget-modal-panel client-activity-widget" data-activity-widget role="dialog" aria-modal="true" aria-labelledby="client-activity-widget-title">
               <div class="client-activity-widget-header">
                 <button type="button" class="client-activity-widget-back" data-activity-widget-back>Back</button>
-                <button class="client-activity-modal-close" type="button" data-activity-widget-close aria-label="Close activity widget">Ã—</button>
+                <button class="client-activity-modal-close" type="button" data-activity-widget-close aria-label="Close activity widget">×</button>
               </div>
               <div class="client-activity-widget-heading">
                 <h2 id="client-activity-widget-title" data-activity-widget-title>Activity</h2>
