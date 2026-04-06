@@ -1544,9 +1544,9 @@ select option:disabled {
 }
 
 .profile-creation-form .profile-state-select-shell.is-placeholder {
-  width: 7.4rem;
-  min-width: 7.4rem;
-  max-width: 7.4rem;
+  width: 8.4rem;
+  min-width: 8.4rem;
+  max-width: 8.4rem;
 }
 
 .profile-state-select-shell::after {
